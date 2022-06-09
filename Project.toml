@@ -3,6 +3,9 @@ uuid = "07099795-ef6b-4fe9-a603-943f0b8ed328"
 authors = ["Don Boyd"]
 version = "0.1.0"
 
+[deps]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
 [compat]
 julia = "1"
 
