@@ -2,14 +2,14 @@
 # g(x, y) = 2x + 3y
 
 
-function geo_weights(beta, wh, xmat)
+function geo_weights(beta, wh, xmat, targshape)
     # beta: coefficients, s x k
     # wh: weight for each household, h values
     # xmat: hh characteristics, h x k
     # betax = beta.dot(xmat.T)
 
     # bdims = size(geotargets)
-    # beta = reshape(beta, size(geotargets))
+    beta = reshape(beta, targshape)
 
     betaxp = beta * xmat'  # (s x k) * (k x h) = s x h
 
@@ -47,8 +47,9 @@ function sspd(calctargets, geotargets)
 end
 
 function objfn(beta, wh, xmat, geotargets)
-    beta = reshape(beta, size(geotargets))
-    whs = geo_weights(beta, wh, xmat)
+    # beta = reshape(beta, )
+    targshape = size(geotargets)
+    whs = geo_weights(beta, wh, xmat, targshape)
     calctargets = geo_targets(whs, xmat)
     obj = sspd(calctargets, geotargets)
     obj
@@ -56,7 +57,7 @@ end
 
 function objvec(beta, wh, xmat, geotargets)
     beta = reshape(beta, size(geotargets))
-    whs = geo_weights(beta, wh, xmat)
+    whs = geo_weights(beta, wh, xmat, s, k)
     calctargets = geo_targets(whs, xmat)
     objvec = targ_pdiffs(calctargets, geotargets)
     vec(objvec)
