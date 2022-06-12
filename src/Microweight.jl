@@ -3,14 +3,15 @@ module Microweight
 # using Revise  # in REPL
 using LsqFit
 
-# export f, g
-export geo_targets, geo_weights, objfn, sspd, lsq
+export geo_targets, geo_weights, objfn, sspd, lsq, objvec,
+    mtp,
+    get_taxprob
 
-include("functions_poisson.jl")
-include("functions_poisson_fg.jl")
+include("functions_poisson_typestable.jl")
+include("functions_poisson_fg_typestable.jl")
+include("make_test_problems.jl")
+include("get_taxdata_problems.jl")
 
-function lsq(ibeta, wh, xmat, geotargets)
-  LsqFit.lmfit(f, ibeta, Float64[]; autodiff=:forwarddiff, show_trace=true, maxIter=50)
-end
+include("functions_test.jl")
 
 end

@@ -29,7 +29,7 @@ function fvec!(out, beta)
   out .= objvec(beta, wh, xmat, geotargets)
 end
 
-## jacobian functiond ----
+## jacobian function ----
 
 function gvec(beta)
     ForwardDiff.jacobian(x -> fvec(x), beta)
