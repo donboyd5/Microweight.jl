@@ -18,14 +18,12 @@ function mtp(h, s, k)
     d = Normal(0., ssd)
     r = rand(d, (h, s)) # whs dimensions
     r[r .< -.9] .= -.9 # not sure about this
-    whs = 10 .+ 10 .* (1 .+ r)
-    ws = sum(whs, dims=1)
+    whs = 10 .+ 10 .* (1 .+ r) # no place for this yet
+    ws = sum(whs, dims=1) # no place for this yet
     wh = sum(whs, dims=2)
     geotargets = whs' * xmat
-    targets = sum(geotargets, dims=1) # one target per k (characteristic)
 
-    return (h=h, s=s, k=k, xmat=xmat, wh=wh, whs=whs, targets=targets, geotargets=geotargets)
-
+    return GeoweightProblem(wh, xmat, geotargets)
 end
 
 

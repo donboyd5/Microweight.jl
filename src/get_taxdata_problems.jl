@@ -1,7 +1,5 @@
 using CSV
 using Tables
-# using DataFrames
-# using DelimitedFiles
 
 function get_taxprob(stubnum)
     dir = "data/"
@@ -19,10 +17,6 @@ function get_taxprob(stubnum)
     xmat = CSV.File(fname; header=false, types=Float64) |>
       Tables.matrix
 
-    return (wh=wh, geotargets=geotargets, xmat=xmat)
+    # return (wh=wh, geotargets=geotargets, xmat=xmat)
+    return GeoweightProblem(wh, xmat, geotargets)
 end
-
-# prob = get_taxprob(1)
-# prob.wh
-# prob.geotargets
-# prob.xmat
