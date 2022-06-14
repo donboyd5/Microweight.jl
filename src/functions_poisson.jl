@@ -1,5 +1,5 @@
 
-function geo_weights(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64}, targshape::Tuple{Int64, Int64})
+function geo_weights(beta, wh, xmat, targshape)
     # beta: coefficients, s x k
     # wh: weight for each household, h values
     # xmat: hh characteristics, h x k
@@ -25,17 +25,25 @@ function geo_weights(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Fl
     whs
 end
 
-function geo_targets(whs::Matrix{Float64}, xmat::Matrix{Float64})
+function geo_targets(whs, xmat)
     whs' * xmat
 end
 
-function targ_pdiffs(calctargets::Matrix{Float64}, geotargets::Matrix{Float64})
+function targ_pdiffs(calctargets, geotargets)
     diffs = calctargets - geotargets
     pdiffs = diffs ./ geotargets * 100.
     pdiffs
 end
 
-function objfn(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64}, geotargets::Matrix{Float64})
+function sspd(calctargets, geotargets)
+    # worry about what to do when a geotarget is zero
+    pdiffs = targ_pdiffs(calctargets, geotargets)
+    sqpdiffs = pdiffs.^2
+    sspd = sum(sqpdiffs)
+    sspd
+end
+
+function objfn(beta, wh, xmat, geotargets)
     # beta = reshape(beta, )
     targshape = size(geotargets)
     whs = geo_weights(beta, wh, xmat, targshape)
@@ -44,17 +52,20 @@ function objfn(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64}
     obj
 end
 
-function objvec(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64}, geotargets::Matrix{Float64})
+function objvec(beta, wh, xmat, geotargets)
     targshape = size(geotargets)
-    # beta = reshape(beta, targshape)
+    beta = reshape(beta, targshape)
     whs = geo_weights(beta, wh, xmat, targshape)
     calctargets = geo_targets(whs, xmat)
     objvec = targ_pdiffs(calctargets, geotargets)
     vec(objvec)
 end
 
-# f2(x) = x.^4 .- x.^2
-# f3 = x -> f2(x)
-
-# f = beta -> objvec(beta, wh, xmat, geotargets)
-
+function objvec!(out, beta, wh, xmat, geotargets)
+    targshape = size(geotargets)
+    beta = reshape(beta, targshape)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+    objvec = targ_pdiffs(calctargets, geotargets)
+    out .= vec(objvec)
+end

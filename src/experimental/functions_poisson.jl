@@ -1,5 +1,5 @@
 
-function geo_weights(beta, wh, xmat, targshape)
+function geo_weights(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64}, targshape::Tuple{Int64, Int64})
     # beta: coefficients, s x k
     # wh: weight for each household, h values
     # xmat: hh characteristics, h x k
@@ -25,25 +25,17 @@ function geo_weights(beta, wh, xmat, targshape)
     whs
 end
 
-function geo_targets(whs, xmat)
+function geo_targets(whs::Matrix{Float64}, xmat::Matrix{Float64})
     whs' * xmat
 end
 
-function targ_pdiffs(calctargets, geotargets)
+function targ_pdiffs(calctargets::Matrix{Float64}, geotargets::Matrix{Float64})
     diffs = calctargets - geotargets
     pdiffs = diffs ./ geotargets * 100.
     pdiffs
 end
 
-function sspd(calctargets, geotargets)
-    # worry about what to do when a geotarget is zero
-    pdiffs = targ_pdiffs(calctargets, geotargets)
-    sqpdiffs = pdiffs.^2
-    sspd = sum(sqpdiffs)
-    sspd
-end
-
-function objfn(beta, wh, xmat, geotargets)
+function objfn(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64}, geotargets::Matrix{Float64})
     # beta = reshape(beta, )
     targshape = size(geotargets)
     whs = geo_weights(beta, wh, xmat, targshape)
@@ -52,11 +44,17 @@ function objfn(beta, wh, xmat, geotargets)
     obj
 end
 
-function objvec(beta, wh, xmat, geotargets)
+function objvec(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64}, geotargets::Matrix{Float64})
     targshape = size(geotargets)
-    beta = reshape(beta, targshape)
+    # beta = reshape(beta, targshape)
     whs = geo_weights(beta, wh, xmat, targshape)
     calctargets = geo_targets(whs, xmat)
     objvec = targ_pdiffs(calctargets, geotargets)
     vec(objvec)
 end
+
+# f2(x) = x.^4 .- x.^2
+# f3 = x -> f2(x)
+
+# f = beta -> objvec(beta, wh, xmat, geotargets)
+

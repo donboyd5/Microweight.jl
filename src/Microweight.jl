@@ -21,8 +21,10 @@ module Microweight
 ##
 ##############################################################################
 
-using LsqFit, NLSolversBase, Statistics
 using Parameters
+using ForwardDiff, NLSolversBase, Statistics
+using LsqFit, MINPACK
+
 
 ##############################################################################
 ##
@@ -58,20 +60,21 @@ include("api.jl") # function to route things
 
 # helpers
 include("functions_utilities.jl")
-
-# solvers
-include("functions_lsqfit.jl")
-
-# functions underlying all calculations
-include("functions_poisson_typeunstable.jl")
-include("functions_poisson_fg_typeunstable.jl")
-
-# utilities
 include("make_test_problems.jl")
 include("get_taxdata_problems.jl")
 include("scaling.jl")
 
+# solvers
+include("functions_lsqfit.jl")
+include("functions_minpack.jl")
+
+# functions underlying all calculations
+include("functions_poisson.jl")
+include("functions_poisson_fg.jl")
+
+# misc
+
 # testing and play
-include("functions_test.jl")
+include("experimental/functions_test.jl")
 
 end

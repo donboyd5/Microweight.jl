@@ -55,7 +55,7 @@ end
   method::Symbol = :missing
   success::Bool = false
   iterations::Int = -999
-  etime::Float64 = -Inf
+  eseconds::Float64 = -Inf
   sspd::Float64 = Inf
   beta::Vector{Float64} = [Inf]
   whs::Array{Float64,2} = Array{Float64}(undef, 0, 0)

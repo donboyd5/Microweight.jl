@@ -91,21 +91,25 @@ end
 #     # LsqFit.lmfit(f10, x, Float64[]; autodiff=:forwarddiff, show_trace=true, maxIter=50)
 # end
 
-function geosolve(prob, method::Symbol=:lsqlm; beta0=zeros(length(prob.geotargets)), maxiter=100, kwargs...)
+function geosolve(prob, method; beta0=zeros(length(prob.geotargets)), maxiter=100, kwargs...)
     println("Solving problem...")
+    # println(method)
+    # return
     result = Result(method=method)
     result.problem = prob
 
     tstart = time()
     if method == :lsqlm
         lsqlm(prob, beta0, result; maxiter=maxiter, kwargs...)
-    elseif method == :abc
+    elseif method == :minpack
+        println("calling minpack")
+        minpack(prob, beta0, result; maxiter=100, kwargs...)
     else
         error("Unknown method!")
         return;
     end
     tend = time()
-    result.etime = tend - tstart
+    result.eseconds = tend - tstart
 
     if result.success
         result.whs = geo_weights(result.beta, prob.wh, prob.xmat, size(prob.geotargets))
