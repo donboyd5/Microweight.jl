@@ -55,10 +55,13 @@ end
   method::Symbol = :missing
   success::Bool = false
   iterations::Int = -999
+  etime::Float64 = -Inf
   sspd::Float64 = Inf
   beta::Vector{Float64} = [Inf]
   whs::Array{Float64,2} = Array{Float64}(undef, 0, 0)
   wh_calc = nothing
+  wh_pdiffs = nothing
+  wh_pdqtiles::Vector{Float64} = [Inf]
   geotargets_calc::Array{Float64,2} = Array{Float64}(undef, 0, 0)
   targ_pdiffs::Array{Float64,2} = Array{Float64}(undef, 0, 0)
   targ_pdqtiles::Vector{Float64} = [Inf]

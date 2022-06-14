@@ -91,25 +91,30 @@ end
 #     # LsqFit.lmfit(f10, x, Float64[]; autodiff=:forwarddiff, show_trace=true, maxIter=50)
 # end
 
-function geosolve(ibeta, prob; method::Symbol=:lsqlm, maxiter=100, kwargs...)
+function geosolve(prob, method::Symbol=:lsqlm; beta0=zeros(length(prob.geotargets)), maxiter=100, kwargs...)
     println("Solving problem...")
     result = Result(method=method)
     result.problem = prob
 
+    tstart = time()
     if method == :lsqlm
-        lsqlm(ibeta, prob, result; maxiter=maxiter, kwargs...)
+        lsqlm(prob, beta0, result; maxiter=maxiter, kwargs...)
     elseif method == :abc
     else
         error("Unknown method!")
         return;
     end
+    tend = time()
+    result.etime = tend - tstart
 
     if result.success
         result.whs = geo_weights(result.beta, prob.wh, prob.xmat, size(prob.geotargets))
         result.wh_calc = sum(result.whs, dims=2)
+        result.wh_pdiffs =  (result.wh_calc - prob.wh) ./ prob.wh * 100.
+        result.wh_pdqtiles = Statistics.quantile(vec(result.wh_pdiffs))
         result.geotargets_calc = geo_targets(result.whs, prob.xmat)
         result.targ_pdiffs = targ_pdiffs(result.geotargets_calc, prob.geotargets)
-        result.targ_pdqtiles = quantile(vec(result.targ_pdiffs))
+        result.targ_pdqtiles = Statistics.quantile(vec(result.targ_pdiffs))
     end
 
     return result

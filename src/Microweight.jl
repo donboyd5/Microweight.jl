@@ -21,7 +21,7 @@ module Microweight
 ##
 ##############################################################################
 
-using LsqFit, NLSolversBase
+using LsqFit, NLSolversBase, Statistics
 using Parameters
 
 ##############################################################################
@@ -31,7 +31,7 @@ using Parameters
 ##############################################################################
 
 # order these alphabetically by file
-export mtp, geosolve, harness, harness2, harness_a, harness2_a, harness3_a, router
+export mtp, geosolve, get_taxprob
   # # src\api.jl
   # geosolve,
   # # src\functions_poisson_typestable.jl
