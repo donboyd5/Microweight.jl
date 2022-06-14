@@ -1,6 +1,3 @@
-# f(x) = 2.0 * x
-# g(x, y) = 2x + 3y
-
 
 function geo_weights(beta, wh, xmat, targshape)
     # beta: coefficients, s x k

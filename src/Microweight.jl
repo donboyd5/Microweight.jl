@@ -21,7 +21,8 @@ module Microweight
 ##
 ##############################################################################
 
-using LsqFit
+using LsqFit, NLSolversBase
+using Parameters
 
 ##############################################################################
 ##
@@ -30,15 +31,17 @@ using LsqFit
 ##############################################################################
 
 # order these alphabetically by file
-export
-  # src\functions_poisson_typestable.jl
-  geo_targets, geo_weights, objfn, sspd, lsq, objvec,
-  # src\functions_poisson_fg_typestable.jl
-  # src\make_test_problems.jl
-  mtp,
-  # src\get_taxdata_problems.jl
-  get_taxprob,
-  GeoweightProblem
+export mtp, geosolve, harness, harness2, harness_a, harness2_a, harness3_a, router
+  # # src\api.jl
+  # geosolve,
+  # # src\functions_poisson_typestable.jl
+  # # geo_targets, geo_weights, objfn, sspd, lsq, objvec,
+  # # src\functions_poisson_fg_typestable.jl
+  # # src\make_test_problems.jl
+  # mtp,
+  # # src\get_taxdata_problems.jl
+  # get_taxprob,
+  # GeoweightProblem
 
 ##############################################################################
 ##
@@ -46,14 +49,29 @@ export
 ##
 ##############################################################################
 
-# files in src
-include("functions_poisson_typestable.jl")
-include("functions_poisson_fg_typestable.jl")
+# files in src ---------------------------------------------------------------
+
+# types are needed in several functions so load them first
+include("types.jl")
+
+include("api.jl") # function to route things
+
+# helpers
+include("functions_utilities.jl")
+
+# solvers
+include("functions_lsqfit.jl")
+
+# functions underlying all calculations
+include("functions_poisson_typeunstable.jl")
+include("functions_poisson_fg_typeunstable.jl")
+
+# utilities
 include("make_test_problems.jl")
 include("get_taxdata_problems.jl")
-
-include("functions_test.jl")
 include("scaling.jl")
-include("types.jl")
+
+# testing and play
+include("functions_test.jl")
 
 end

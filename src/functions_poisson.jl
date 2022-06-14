@@ -53,4 +53,8 @@ function objvec(beta::Vector{Float64}, wh::Matrix{Float64}, xmat::Matrix{Float64
     vec(objvec)
 end
 
+# f2(x) = x.^4 .- x.^2
+# f3 = x -> f2(x)
+
+# f = beta -> objvec(beta, wh, xmat, geotargets)
 

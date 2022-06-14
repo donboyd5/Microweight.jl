@@ -34,3 +34,34 @@ mutable struct GeoweightProblem
         new(wh, xmat, geotargets, h, k, s, target_sums, target_calcs, target_diffs)
     end
 end
+
+##############################################################################
+##
+## Results struct
+##
+##############################################################################
+# mutable struct Result
+#   # https://discourse.julialang.org/t/default-value-of-some-fields-in-a-mutable-struct/33408
+#   method::Symbol # we must create a Result struct with at least this field
+#   minimizer::Vector{Float64}
+#   minimum::Float64
+#   solver_result
+#   function Result(method; minimizer=[Inf], minimum=Inf, solver_result=nothing) =
+#     Result(method, minimizer, minimum, solver_result)
+# end
+
+@with_kw mutable struct Result
+  # https://discourse.julialang.org/t/default-value-of-some-fields-in-a-mutable-struct/33408
+  method::Symbol = :missing
+  success::Bool = false
+  iterations::Int = -999
+  sspd::Float64 = Inf
+  beta::Vector{Float64} = [Inf]
+  whs::Array{Float64,2} = Array{Float64}(undef, 0, 0)
+  wh_calc = nothing
+  geotargets_calc::Array{Float64,2} = Array{Float64}(undef, 0, 0)
+  targ_pdiffs::Array{Float64,2} = Array{Float64}(undef, 0, 0)
+  targ_pdqtiles::Vector{Float64} = [Inf]
+  solver_result = nothing
+  problem = nothing
+end
