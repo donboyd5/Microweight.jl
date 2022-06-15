@@ -92,18 +92,17 @@ end
 # end
 
 function geosolve(prob, method; beta0=zeros(length(prob.geotargets)), maxiter=100, kwargs...)
+    # allowable methods:
+    #   lm_lsqfit, lm_minpack
     println("Solving problem...")
-    # println(method)
-    # return
     result = Result(method=method)
     result.problem = prob
 
     tstart = time()
-    if method == :lsqlm
+    if method == :lm_lsqfit
         lsqlm(prob, beta0, result; maxiter=maxiter, kwargs...)
-    elseif method == :minpack
-        println("calling minpack")
-        minpack(prob, beta0, result; maxiter=100, kwargs...)
+    elseif method == :lm_minpack
+        minpack(prob, beta0, result; maxiter=maxiter, kwargs...)
     else
         error("Unknown method!")
         return;
@@ -112,13 +111,15 @@ function geosolve(prob, method; beta0=zeros(length(prob.geotargets)), maxiter=10
     result.eseconds = tend - tstart
 
     if result.success
+        p = [0.0, 0.10, 0.25, 0.50, 0.75, 0.90, 1.0]
         result.whs = geo_weights(result.beta, prob.wh, prob.xmat, size(prob.geotargets))
         result.wh_calc = sum(result.whs, dims=2)
         result.wh_pdiffs =  (result.wh_calc - prob.wh) ./ prob.wh * 100.
-        result.wh_pdqtiles = Statistics.quantile(vec(result.wh_pdiffs))
+        result.wh_pdqtiles = Statistics.quantile(vec(result.wh_pdiffs), p)
         result.geotargets_calc = geo_targets(result.whs, prob.xmat)
+        result.sspd = sspd(result.geotargets_calc, prob.geotargets)
         result.targ_pdiffs = targ_pdiffs(result.geotargets_calc, prob.geotargets)
-        result.targ_pdqtiles = Statistics.quantile(vec(result.targ_pdiffs))
+        result.targ_pdqtiles = Statistics.quantile(vec(result.targ_pdiffs), p)
     end
 
     return result

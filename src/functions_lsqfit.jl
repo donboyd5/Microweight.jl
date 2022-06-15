@@ -13,7 +13,7 @@ function lsqlm(prob, beta0, result; maxiter=100, kwargs...)
 
     result.success = opt.iteration_converged || opt.x_converged || opt.g_converged
     result.iterations = opt.iterations
-    result.sspd = opt.minimum
+    # result.sspd = opt.minimum
     result.beta = opt.minimizer
     result.solver_result = opt
 
