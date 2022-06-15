@@ -91,18 +91,38 @@ end
 #     # LsqFit.lmfit(f10, x, Float64[]; autodiff=:forwarddiff, show_trace=true, maxIter=50)
 # end
 
-function geosolve(prob, method; beta0=zeros(length(prob.geotargets)), maxiter=100, kwargs...)
+function geosolve(prob, method; beta0=zeros(length(prob.geotargets)),
+    maxiter=100, scaling=false, scaling_target_goal=10.0,
+    kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
     println("Solving problem...")
     result = Result(method=method)
-    result.problem = prob
 
     tstart = time()
-    if method == :lm_lsqfit
+    if scaling
+        prob.wh_scaled = prob.wh
+        # targscale = targ_goal ./ maximum(abs.(tp.geotargets), dims=1)
+        # targscale = targ_goal ./ sum(tp.geotargets, dims=1)
+        scaling_target_factor = scaling_target_goal ./ sum(prob.xmat, dims=1)
+        prob.geotargets_scaled = scaling_target_factor .* prob.geotargets
+        prob.xmat_scaled = scaling_target_factor .* prob.xmat
+    else
+        prob.wh_scaled = prob.wh
+        prob.geotargets_scaled = prob.geotargets
+        prob.xmat_scaled = prob.xmat
+    end
+
+    result.problem = prob
+
+    if method == :lm_lsoptim
+        lsoptim(prob, beta0, result; maxiter=maxiter, kwargs...)
+    elseif method == :lm_lsqfit
         lsqlm(prob, beta0, result; maxiter=maxiter, kwargs...)
     elseif method == :lm_minpack
         minpack(prob, beta0, result; maxiter=maxiter, kwargs...)
+    elseif method == :lm_mads
+        mads(prob, beta0, result; maxiter=maxiter, kwargs...)
     else
         error("Unknown method!")
         return;

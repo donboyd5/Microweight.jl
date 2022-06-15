@@ -15,6 +15,13 @@ documentation online at link .
 """
 module Microweight
 
+
+#= TODO:
+- scaling
+- show function call
+
+=#
+
 ##############################################################################
 ##
 ## Dependencies
@@ -23,7 +30,8 @@ module Microweight
 
 using Parameters
 using ForwardDiff, NLSolversBase, Statistics
-using LsqFit, MINPACK
+using LeastSquaresOptim, LsqFit, MINPACK
+using Mads
 
 
 ##############################################################################
@@ -65,7 +73,9 @@ include("get_taxdata_problems.jl")
 include("scaling.jl")
 
 # solvers
+include("functions_lsoptim.jl")
 include("functions_lsqfit.jl")
+include("functions_mads.jl")
 include("functions_minpack.jl")
 
 # functions underlying all calculations

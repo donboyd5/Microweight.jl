@@ -14,6 +14,9 @@ mutable struct GeoweightProblem
     target_sums::Matrix{Float64}
     target_calcs
     target_diffs
+    wh_scaled::Matrix{Float64}
+    xmat_scaled::Matrix{Float64}
+    geotargets_scaled::Matrix{Float64}
 
     function GeoweightProblem(wh, xmat, geotargets)
         # check dimensions
