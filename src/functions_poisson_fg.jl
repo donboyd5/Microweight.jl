@@ -2,11 +2,11 @@
 ## objective functions ---------------------------
 
 function f(beta)
-  objfn(beta, wh, xmat, geotargets) # / obj_scale
+  objfn(beta, wh, xmat, geotargets)
 end
 
 function f!(out, beta)
-  out = objfn(beta, wh, xmat, geotargets) # / obj_scale
+  out = objfn(beta, wh, xmat, geotargets)
 end
 
 function g!(G, x)

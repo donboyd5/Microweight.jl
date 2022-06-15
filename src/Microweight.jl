@@ -19,6 +19,38 @@ module Microweight
 #= TODO:
 - scaling
 - show function call
+- better trace arrangement
+
+res5 = Optim.optimize(f, lsres.param, ConjugateGradient(),
+Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
+ autodiff = :forward)
+
+res6 = Optim.optimize(f, ibeta, GradientDescent(),
+  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
+  autodiff = :forward) # seems to become very slow as problem size increases
+
+res7 = Optim.optimize(f, ibeta, MomentumGradientDescent(),
+  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
+  autodiff = :forward)
+# 1602.8 3.078448e-11
+
+# really good after 3 iterations 562 secs
+res8 = Optim.optimize(f, ibeta, AcceleratedGradientDescent(),
+  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
+  autodiff = :forward)
+
+res12 = Optim.optimize(f, g!, ibeta, ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
+  Optim.Options(g_tol = 1e-6, iterations = 1_000, store_trace = true, show_trace = true))
+# 4.669833e+03 after 10k
+# 2.030909e+03 after 20k
+# 1.173882e+03 after 30k
+#  after 40k
+#  after 50k
+res12a = Optim.optimize(f, g!, minimizer(res12a), ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
+  Optim.Options(g_tol = 1e-6, iterations = 10_000, store_trace = true, show_trace = true))
+
+nlboxsolve??
+
 
 =#
 
@@ -30,8 +62,8 @@ module Microweight
 
 using Parameters
 using ForwardDiff, NLSolversBase, Statistics
-using LeastSquaresOptim, LsqFit, MINPACK
-using Mads
+using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
+using Mads  # haven't figured out how to make it work well
 
 
 ##############################################################################
@@ -77,6 +109,8 @@ include("functions_lsoptim.jl")
 include("functions_lsqfit.jl")
 include("functions_mads.jl")
 include("functions_minpack.jl")
+include("functions_nlsolve.jl")
+include("functions_optim.jl")
 
 # functions underlying all calculations
 include("functions_poisson.jl")

@@ -1,5 +1,11 @@
 
 #=
+
+See http://www2.imm.dtu.dk/pubdb/edoc/imm3215.pdf
+Example 3.19
+
+# noted here: http://carlmeyer.com/Least%20Squares%20Discussion.pdf
+
 different opinions:
 
 https://scicomp.stackexchange.com/questions/7954/scaling-of-optimisation-function-in-non-linear-least-squares-problem
@@ -19,19 +25,23 @@ you can even better so that if you change any single parameter by a given amount
 the objective function will change similarly
  (eg. http://www.alglib.net/optimization/scaling.php)
 
- 
+
 
 =#
 
 
-function scale_prob(geoproblem, target_goal=10.0)
-    # xmat scaling multiplicative based on max abs of each col of geotargets
-    target_goal = 10.0
-    # targscale = targ_goal ./ maximum(abs.(tp.geotargets), dims=1)
-    # targscale = targ_goal ./ sum(tp.geotargets, dims=1)
-    geoproblem.scaled = true
-    geoproblem.target_scale = target_goal ./ sum(geoproblem.xmat, dims=1)
-    geoproblem.geotargets_scaled = geoproblem.target_scale .* geoproblem.geotargets
-    geoproblem.xmat_scaled = geoproblem.target_scale .* geoproblem.xmat
-    return geoproblem
+function scale_prob(prob; scaling, scaling_target_goal)
+    if scaling
+        prob.wh_scaled = prob.wh
+        # targscale = targ_goal ./ maximum(abs.(tp.geotargets), dims=1)
+        # targscale = targ_goal ./ sum(tp.geotargets, dims=1)
+        scaling_target_factor = scaling_target_goal ./ sum(prob.xmat, dims=1)
+        prob.geotargets_scaled = scaling_target_factor .* prob.geotargets
+        prob.xmat_scaled = scaling_target_factor .* prob.xmat
+    else
+        prob.wh_scaled = prob.wh
+        prob.geotargets_scaled = prob.geotargets
+        prob.xmat_scaled = prob.xmat
+    end
+    return prob
 end
