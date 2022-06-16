@@ -1,6 +1,6 @@
 
 function geosolve(prob, method; beta0=zeros(length(prob.geotargets)),
-    maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=10.0,
+    maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=1000.0,
     kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
@@ -25,6 +25,8 @@ function geosolve(prob, method; beta0=zeros(length(prob.geotargets)),
         mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
     elseif method == :newttr_nlsolve
         newttr_nlsolve(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+    elseif method == :lbfgs
+        algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
     else
         error("Unknown method!")
         return;

@@ -20,6 +20,10 @@ module Microweight
 - scaling
 - show function call
 - better trace arrangement
+- lbgfs
+- krylov
+
+https://github.com/JuliaNLSolvers/Optim.jl/blob/master/src/multivariate/solvers/second_order/krylov_trust_region.jl
 
 res5 = Optim.optimize(f, lsres.param, ConjugateGradient(),
 Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
@@ -61,8 +65,9 @@ nlboxsolve??
 ##############################################################################
 
 using Parameters
-using ForwardDiff, NLSolversBase, Statistics
+using ForwardDiff, LineSearches, NLSolversBase, Statistics
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
+using Optimization, OptimizationOptimJL, OptimizationNLopt
 using Mads  # haven't figured out how to make it work well
 
 
@@ -105,6 +110,7 @@ include("get_taxdata_problems.jl")
 include("scaling.jl")
 
 # solvers
+include("functions_galactic_optimization.jl")
 include("functions_lsoptim.jl")
 include("functions_lsqfit.jl")
 include("functions_mads.jl")
