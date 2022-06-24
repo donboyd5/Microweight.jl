@@ -64,11 +64,12 @@ nlboxsolve??
 ##
 ##############################################################################
 
-using Parameters
-using ForwardDiff, LineSearches, NLSolversBase, Statistics
+using Parameters, Printf, Statistics
+# optimization helpers
+using LineSearches, ForwardDiff, LineSearches, NLSolversBase, Zygote
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationOptimJL, OptimizationNLopt
-using Mads  # haven't figured out how to make it work well
+# using Mads  # haven't figured out how to make it work well
 
 
 ##############################################################################
