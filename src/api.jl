@@ -13,6 +13,8 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
 
     result.problem = prob
 
+    global fcalls = 0  # global within this module
+
     if approach == :poisson
         if method == :cg_optim
             cg_optim(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)

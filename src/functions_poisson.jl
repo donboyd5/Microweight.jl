@@ -69,3 +69,19 @@ function objvec!(out, beta, wh, xmat, geotargets)
     objvec = targ_pdiffs(calctargets, geotargets)
     out .= vec(objvec)
 end
+
+function objvec2(beta, wh, xmat, geotargets, fcalls; interval=2)
+    targshape = size(geotargets)
+    beta = reshape(beta, targshape)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+    objvec = targ_pdiffs(calctargets, geotargets)
+
+    display_progress = true
+    if display_progress
+        # interval = 1
+        display1(fcalls, interval, geotargets, calctargets, wh, whs)
+    end
+
+    return vec(objvec)
+end
