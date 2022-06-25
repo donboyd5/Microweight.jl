@@ -70,7 +70,7 @@ function objvec!(out, beta, wh, xmat, geotargets)
     out .= vec(objvec)
 end
 
-function objvec2(beta, wh, xmat, geotargets, fcalls; interval=2)
+function objvec2(beta, wh, xmat, geotargets, fcalls, interval=1)
     targshape = size(geotargets)
     beta = reshape(beta, targshape)
     whs = geo_weights(beta, wh, xmat, targshape)
@@ -79,7 +79,6 @@ function objvec2(beta, wh, xmat, geotargets, fcalls; interval=2)
 
     display_progress = true
     if display_progress
-        # interval = 1
         display1(fcalls, interval, geotargets, calctargets, wh, whs)
     end
 

@@ -39,11 +39,13 @@ function display1(fcalls, interval, geotargets, p_calctargets, wh, p_whs)
             #
             # maxabswt = maximum(abs.(p_whpdiffs))
             # nshown - how many lines have we displayed, including this one?
-            if fcalls == 1
-                nshown = 1
+            # this if-else block allows us to count sequentially without keeping another global variable
+            if interval == 1 || fcalls == 1
+                nshown = fcalls
             else
                 nshown = fcalls / interval + 1
             end
+
             if nshown ==1 || mod(nshown, 20) == 0
                 println()
                 println("  fcalls     ss_targets  ss_weightsums         objval     maxabstarg       maxabswt   nshown")

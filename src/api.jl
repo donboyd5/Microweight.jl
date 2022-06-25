@@ -1,6 +1,7 @@
 
 function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length(prob.geotargets)),
     maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=1000.0,
+    interval=1,
     kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
@@ -17,19 +18,19 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
 
     if approach == :poisson
         if method == :cg_optim
-            cg_optim(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            cg_optim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsoptim
-            lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsqfit
-            lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_minpack
-            minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         # elseif method == :lm_mads
         #     mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :newttr_nlsolve
-            newttr_nlsolve(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            newttr_nlsolve(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lbfgs
-            algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         else
             error("Unknown method!")
             return;
