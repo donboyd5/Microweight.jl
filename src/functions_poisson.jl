@@ -71,6 +71,7 @@ function objvec!(out, beta, wh, xmat, geotargets)
 end
 
 function objvec2(beta, wh, xmat, geotargets, fcalls, interval=1)
+    # global fcalls
     targshape = size(geotargets)
     beta = reshape(beta, targshape)
     whs = geo_weights(beta, wh, xmat, targshape)

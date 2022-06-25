@@ -17,7 +17,7 @@ function lsoptim(prob, beta0, result; maxiter=100, objscale, interval=1, kwargs.
     f = beta -> objvec2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, fcalls, interval) .* objscale
 
     opt = LeastSquaresOptim.optimize(f, beta0, LevenbergMarquardt(LeastSquaresOptim.LSMR()),
-      autodiff = :forward, show_trace=true, iterations=maxiter)
+      autodiff = :forward, show_trace=false, iterations=maxiter)
     # defaults
 
     result.success = false
