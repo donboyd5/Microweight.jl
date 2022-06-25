@@ -1,5 +1,5 @@
 
-function geosolve(prob, method; beta0=zeros(length(prob.geotargets)),
+function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length(prob.geotargets)),
     maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=1000.0,
     kwargs...)
     # allowable methods:
@@ -13,24 +13,27 @@ function geosolve(prob, method; beta0=zeros(length(prob.geotargets)),
 
     result.problem = prob
 
-    if method == :cg_optim
-        cg_optim(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-    elseif method == :lm_lsoptim
-        lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-    elseif method == :lm_lsqfit
-        lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-    elseif method == :lm_minpack
-        minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-    elseif method == :lm_mads
-        mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-    elseif method == :newttr_nlsolve
-        newttr_nlsolve(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-    elseif method == :lbfgs
-        algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-    else
-        error("Unknown method!")
-        return;
+    if approach == :poisson
+        if method == :cg_optim
+            cg_optim(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lm_lsoptim
+            lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lm_lsqfit
+            lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lm_minpack
+            minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        # elseif method == :lm_mads
+        #     mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :newttr_nlsolve
+            newttr_nlsolve(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lbfgs
+            algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        else
+            error("Unknown method!")
+            return;
+        end
     end
+
     tend = time()
     result.eseconds = tend - tstart
 
