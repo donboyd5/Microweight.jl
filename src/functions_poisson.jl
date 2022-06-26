@@ -52,6 +52,21 @@ function objfn(beta, wh, xmat, geotargets)
     obj
 end
 
+function objfn2(beta, wh, xmat, geotargets, fcalls, interval, display_progress=true)
+    # beta = reshape(beta, )
+    targshape = size(geotargets)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+
+    # display_progress = false
+    if display_progress
+        display1(fcalls, interval, geotargets, calctargets, wh, whs)
+    end
+
+    obj = sspd(calctargets, geotargets)
+    obj
+end
+
 function objvec(beta, wh, xmat, geotargets)
     targshape = size(geotargets)
     beta = reshape(beta, targshape)

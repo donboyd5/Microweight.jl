@@ -29,7 +29,7 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
         #     mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :newttr_nlsolve
             newttr_nlsolve(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
-        elseif method == :lbfgs
+        elseif method == :krylov
             algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         else
             error("Unknown method!")
