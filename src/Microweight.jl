@@ -114,13 +114,13 @@ include("scaling.jl")
 include("functions_brute_force.jl")
 
 # poisson solvers
-include("functions_galactic_optimization.jl")
 include("functions_lsoptim.jl")
 include("functions_lsqfit.jl")
 # include("functions_mads.jl")
 include("functions_minpack.jl")
 include("functions_nlsolve.jl")
 include("functions_optim.jl")
+include("functions_optimization_package.jl")
 
 # functions underlying all calculations
 include("functions_poisson.jl")
