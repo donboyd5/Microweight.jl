@@ -78,7 +78,7 @@ function objvec2(beta, wh, xmat, geotargets, fcalls, interval, display_progress=
     calctargets = geo_targets(whs, xmat)
     objvec = targ_pdiffs(calctargets, geotargets)
 
-    display_progress = false
+    # display_progress = false
     if display_progress
         display1(fcalls, interval, geotargets, calctargets, wh, whs)
     end
