@@ -160,13 +160,17 @@ KrylovTrustRegion(; initial_radius::Real = 1.0,
 #endregion
 
 
-function algo_optz(prob, beta0, result; maxiter=100, objscale, kwargs...)
+function algo_optz(prob, beta0, result; maxiter=100, objscale, interval=1, kwargs...)
     # for allowable arguments:
 
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
-    fbeta = (beta, p) -> objfn(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
+    global fcalls
+
+    # fbeta = (beta, p) -> objfn(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
+    fbeta = (beta, p) -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, fcalls, interval) .* objscale
+
     f = OptimizationFunction(fbeta, Optimization.AutoZygote())
     fprob = OptimizationProblem(f, beta0)
     # opt = Optimization.solve(fprob,
@@ -177,7 +181,7 @@ function algo_optz(prob, beta0, result; maxiter=100, objscale, kwargs...)
       Optim.KrylovTrustRegion(; initial_radius = 0.1, max_radius = 100.0,
        eta = 0.1, rho_lower=0.101, rho_upper=0.75,
        cg_tol=0.01),
-      maxiters=500, show_trace=true, show_every=10)
+      maxiters=500, store_trace=true, show_trace=false, show_every=10)
 
     result.solver_result = opt
     result.success = opt.retcode == Symbol("true") || (opt.original.iterations >= 100)
