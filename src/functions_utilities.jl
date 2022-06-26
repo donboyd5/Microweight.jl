@@ -34,6 +34,8 @@ function display1(fcalls, interval, geotargets, p_calctargets, wh, p_whs)
     # , p_pdiffs, p_whpdiffs, ss_pdiffs, ss_whpdiffs, sspd
     global fcalls
     fcalls += 1
+
+    global tstart
     Zygote.ignore() do
         if mod(fcalls, interval) == 0 || fcalls ==1
             #
@@ -48,7 +50,7 @@ function display1(fcalls, interval, geotargets, p_calctargets, wh, p_whs)
 
             if nshown ==1 || mod(nshown, 20) == 0
                 println()
-                println("  fcalls     ss_targets  ss_weightsums         objval     maxabstarg       maxabswt   nshown")
+                println("  fcalls     ss_targets  ss_weightsums         objval     maxabstarg       maxabswt   nshown  totseconds")
             end
             p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.
             ss_pdiffs = sum(p_pdiffs.^2)
@@ -58,8 +60,10 @@ function display1(fcalls, interval, geotargets, p_calctargets, wh, p_whs)
             ss_whpdiffs = sum(p_whpdiffs.^2)
             maxabswt = maximum(abs.(p_whpdiffs))
 
+            totseconds = time() - tstart
+
             #@printf("%8i %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, maxabstarg, nshown)
-            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, ss_pdiffs, maxabstarg, maxabswt, nshown)
+            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g    %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, ss_pdiffs, maxabstarg, maxabswt, nshown, totseconds)
             # @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, sspd, maxabstarg, maxabswt, nshown)
         end
     end

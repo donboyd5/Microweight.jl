@@ -8,7 +8,7 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
     println("Solving problem...")
     result = Result(method=method)
 
-    tstart = time()
+    global tstart = time()
 
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
 
