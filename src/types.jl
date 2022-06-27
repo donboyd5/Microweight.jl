@@ -61,6 +61,7 @@ end
   eseconds::Float64 = -Inf
   sspd::Float64 = Inf
   beta::Vector{Float64} = [Inf]
+  shares::Vector{Float64} = [Inf]
   whs::Array{Float64,2} = Array{Float64}(undef, 0, 0)
   wh_calc = nothing
   wh_pdiffs = nothing
