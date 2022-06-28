@@ -166,10 +166,7 @@ function poisson_krylov(prob, beta0, result; maxiter=100, objscale, interval=1, 
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
-    global fcalls
-
-    # fbeta = (beta, p) -> objfn(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
-    fbeta = (beta, p) -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, fcalls, interval) .* objscale
+    fbeta = (beta, p) -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) .* objscale
 
     f = OptimizationFunction(fbeta, Optimization.AutoZygote())
     fprob = OptimizationProblem(f, beta0)
