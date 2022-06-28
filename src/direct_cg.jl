@@ -5,8 +5,6 @@ function direct_cg(prob, result; shares0=fill(1. / prob.s, prob.h * prob.s), max
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
-    global fcalls
-
     # %% setup preallocations
     p = 1.0
     shares0 = fill(1. / prob.s, prob.h * prob.s)
@@ -16,7 +14,8 @@ function direct_cg(prob, result; shares0=fill(1. / prob.s, prob.h * prob.s), max
     p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-    fp = (shares, p) -> fcons(shares, prob.wh, prob.xmat, prob.geotargets, p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, targweight)
+    fp = (shares, p) -> fcons(shares, prob.wh, prob.xmat, prob.geotargets,
+        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, targweight)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
     fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))
