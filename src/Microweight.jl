@@ -112,18 +112,20 @@ include("scaling.jl")
 
 # direct functions and solvers
 include("functions_direct.jl")
+
 include("direct_cg.jl")
 
 # poisson functions and solvers
 include("functions_poisson.jl")
 include("functions_poisson_fg.jl")
-include("functions_lsoptim.jl")
-include("functions_lsqfit.jl")
-# include("functions_mads.jl")
-include("functions_minpack.jl")
-include("functions_nlsolve.jl")
-include("functions_optim.jl")
-include("functions_optimization_package.jl")
+
+include("poisson_cgoptim.jl")
+include("poisson_lsoptim.jl")
+include("poisson_lsqlm.jl")
+# include("poisson_mads.jl")
+include("poisson_minpack.jl")
+include("poisson_newttrust.jl")
+include("poisson_krylov.jl")
 
 # functions underlying all calculations
 

@@ -160,7 +160,7 @@ KrylovTrustRegion(; initial_radius::Real = 1.0,
 #endregion
 
 
-function algo_optz(prob, beta0, result; maxiter=100, objscale, interval=1, kwargs...)
+function poisson_krylov(prob, beta0, result; maxiter=100, objscale, interval=1, kwargs...)
     # for allowable arguments:
 
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)

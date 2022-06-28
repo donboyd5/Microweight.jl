@@ -4,7 +4,7 @@ Options
 
 =#
 
-function newttr_nlsolve(prob, beta0, result; maxiter=100, objscale, interval=1, kwargs...)
+function poisson_newttrust(prob, beta0, result; maxiter=100, objscale, interval=1, kwargs...)
     # for allowable arguments:
     # https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
