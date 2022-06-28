@@ -30,7 +30,6 @@ function fwhs(shares, wh) # , xmat
 
 # %% opt functions
 function fcons(shares, wh, xmat, geotargets, p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, targweight, display_progress=true)
-    # global fcalls += 1
 
     # part 1
     p_mshares = reshape(shares, length(wh), :) # matrix of shares will be h x s
