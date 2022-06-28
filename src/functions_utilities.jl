@@ -63,7 +63,7 @@ function display1(fcalls, interval, geotargets, p_calctargets, wh, p_whs)
             totseconds = time() - tstart
 
             #@printf("%8i %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, maxabstarg, nshown)
-            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g    %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, ss_pdiffs, maxabstarg, maxabswt, nshown, totseconds)
+            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g %11.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, ss_pdiffs, maxabstarg, maxabswt, nshown, totseconds)
             # @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, sspd, maxabstarg, maxabswt, nshown)
         end
     end

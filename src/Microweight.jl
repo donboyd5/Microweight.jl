@@ -110,10 +110,13 @@ include("make_test_problems.jl")
 include("get_taxdata_problems.jl")
 include("scaling.jl")
 
-# brute force solvers
-include("functions_brute_force.jl")
+# direct functions and solvers
+include("functions_direct.jl")
+include("direct_cg.jl")
 
-# poisson solvers
+# poisson functions and solvers
+include("functions_poisson.jl")
+include("functions_poisson_fg.jl")
 include("functions_lsoptim.jl")
 include("functions_lsqfit.jl")
 # include("functions_mads.jl")
@@ -123,8 +126,7 @@ include("functions_optim.jl")
 include("functions_optimization_package.jl")
 
 # functions underlying all calculations
-include("functions_poisson.jl")
-include("functions_poisson_fg.jl")
+
 
 # misc
 

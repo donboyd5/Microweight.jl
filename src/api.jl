@@ -32,9 +32,18 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
         elseif method == :krylov
             algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         else
-            error("Unknown method!")
+            error("Unknown poisson method!")
             return;
         end
+    elseif approach == :direct
+        if method==:direct_cg
+            direct_cg(prob, result)
+        else
+            error("Unknown direct method!")
+            return;
+        end
+    else
+        error("Unknown approach!")
     end
 
     tend = time()
@@ -42,7 +51,13 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
 
     if result.success | (result.iterations >= maxiter)
         p = [0.0, 0.10, 0.25, 0.50, 0.75, 0.90, 1.0]
-        result.whs = geo_weights(result.beta, prob.wh, prob.xmat, size(prob.geotargets))
+
+        if approach == :poisson
+            result.whs = geo_weights(result.beta, prob.wh, prob.xmat, size(prob.geotargets))
+        elseif approach == :direct
+            result.whs = fwhs(result.shares, prob.wh)
+        end
+
         result.wh_calc = sum(result.whs, dims=2)
         result.wh_pdiffs =  (result.wh_calc - prob.wh) ./ prob.wh * 100.
         result.wh_pdqtiles = Statistics.quantile(vec(result.wh_pdiffs), p)
