@@ -85,7 +85,7 @@ function objvec!(out, beta, wh, xmat, geotargets)
     out .= vec(objvec)
 end
 
-function objvec2(beta, wh, xmat, geotargets, fcalls, interval, display_progress=true)
+function objvec2(beta, wh, xmat, geotargets, interval, display_progress=true)
     # global fcalls
     targshape = size(geotargets)
     beta = reshape(beta, targshape)

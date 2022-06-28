@@ -6,15 +6,14 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
     # allowable methods:
     #   lm_lsqfit, lm_minpack
     println("Solving problem...")
-    result = Result(method=method)
 
     global tstart = time()
+    global fcalls = 0  # global within this module
 
+    result = Result(method=method)
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
 
     result.problem = prob
-
-    global fcalls = 0  # global within this module
 
     if approach == :poisson
         if method == :cg_optim

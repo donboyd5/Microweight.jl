@@ -22,9 +22,8 @@ function poisson_lsqlm(prob, beta0, result; maxiter=100, objscale=1, interval=1,
     # https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    global fcalls
 
-    f = beta -> objvec2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, fcalls, interval) .* objscale
+    f = beta -> objvec2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) .* objscale
     f_init = f(beta0)
     od = NLSolversBase.OnceDifferentiable(f, beta0, copy(f_init); inplace = false, autodiff = :forward)
     opt = LsqFit.levenberg_marquardt(od, beta0; maxIter=maxiter, kwargs_keep...)
