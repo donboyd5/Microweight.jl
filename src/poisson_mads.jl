@@ -1,6 +1,6 @@
 
 
-function mads(prob, beta0, result; maxiter=100, objscale, kwargs...)
+function poisson_mads(prob, beta0, result; maxiter=100, objscale, kwargs...)
     # for allowable arguments:
     # https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)

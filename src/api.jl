@@ -18,19 +18,19 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
 
     if approach == :poisson
         if method == :cg_optim
-            cg_optim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_cgoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsoptim
-            lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsqfit
-            lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_minpack
-            minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         # elseif method == :lm_mads
-        #     mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        #     poisson_mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :newttr_nlsolve
-            newttr_nlsolve(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_newttrust(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :krylov
-            algo_optz(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_krylov(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         else
             error("Unknown poisson method!")
             return;

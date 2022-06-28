@@ -11,7 +11,7 @@ Options
 
 =#
 
-function cg_optim(prob, beta0, result; maxiter=100, objscale, interval, kwargs...)
+function poisson_cgoptim(prob, beta0, result; maxiter=100, objscale, interval, kwargs...)
     # for allowable arguments:
 
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
