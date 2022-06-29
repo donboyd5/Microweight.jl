@@ -37,8 +37,8 @@ function poisson_cgoptim(prob, beta0, result; maxiter=100, objscale, interval, k
     od = NLSolversBase.OnceDifferentiable(f, beta0, copy(f(beta0)); inplace = false, autodiff = :forward)
 
     opt = Optim.optimize(od, beta0,
-    Optim.ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
-    Optim.Options(x_abstol = 1e-8, x_reltol = 1e-8, f_abstol = 1e-8, f_reltol =1e-8, g_tol = 0.,
+          Optim.ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
+          Optim.Options(x_abstol = 1e-8, x_reltol = 1e-8, f_abstol = 1e-8, f_reltol =1e-8, g_tol = 0.,
                   iterations = maxiter, store_trace = true, show_trace = false))
 
     # opt = Optim.optimize(od, beta0,
