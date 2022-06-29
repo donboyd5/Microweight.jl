@@ -35,7 +35,8 @@ function scale_prob(prob; scaling, scaling_target_goal)
         prob.wh_scaled = prob.wh
         # targscale = targ_goal ./ maximum(abs.(tp.geotargets), dims=1)
         # targscale = targ_goal ./ sum(tp.geotargets, dims=1)
-        scaling_target_factor = scaling_target_goal ./ maximum(abs.(prob.xmat), dims=1)
+        # scaling_target_factor = scaling_target_goal ./ maximum(abs.(prob.xmat), dims=1)
+        scaling_target_factor = scaling_target_goal ./ sum(prob.xmat, dims=1)
         prob.geotargets_scaled = scaling_target_factor .* prob.geotargets
         prob.xmat_scaled = scaling_target_factor .* prob.xmat
     else

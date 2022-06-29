@@ -14,7 +14,7 @@ function direct_cg(prob, result; shares0=fill(1. / prob.s, prob.h * prob.s), max
     p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-    fp = (shares, p) -> fcons(shares, prob.wh, prob.xmat, prob.geotargets,
+    fp = (shares, p) -> fcons(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
         p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, targweight)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
