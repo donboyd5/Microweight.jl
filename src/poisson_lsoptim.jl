@@ -15,7 +15,6 @@ function poisson_lsoptim(prob, beta0, result; maxiter=100, objscale, interval=1,
     opt = LeastSquaresOptim.optimize(f, beta0, LevenbergMarquardt(LeastSquaresOptim.LSMR()),
       autodiff = :forward, show_trace=false, iterations=maxiter)
 
-    result.success = false
     result.success = opt.converged
     result.iterations = opt.iterations
     result.beta = opt.minimizer

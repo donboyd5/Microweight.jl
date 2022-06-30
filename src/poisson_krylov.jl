@@ -181,7 +181,7 @@ function poisson_krylov(prob, beta0, result; maxiter=100, objscale, interval=1, 
       maxiters=500, store_trace=true, show_trace=false, show_every=10)
 
     result.solver_result = opt
-    result.success = opt.retcode == Symbol("true") || (opt.original.iterations >= 100)
+    result.success = opt.retcode == Symbol("true")
     result.iterations = opt.original.iterations
     result.beta = opt.minimizer
 
