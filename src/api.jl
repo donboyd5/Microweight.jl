@@ -18,6 +18,8 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
     if approach == :poisson
         if method == :cg_optim
             poisson_cgoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+        elseif method == :cg_optim2
+            poisson_cgoptim2(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsoptim
             poisson_lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsqfit

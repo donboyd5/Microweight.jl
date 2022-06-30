@@ -24,7 +24,7 @@ function direct_cg(prob, result; shares0=fill(1. / prob.s, prob.h * prob.s), max
     opt = Optimization.solve(fprob, Optim.ConjugateGradient(linesearch = LineSearches.HagerZhang(), eta = 0.1), maxiters=maxiter)
 
     result.solver_result = opt
-    result.success = opt.retcode == Symbol("true") || (opt.original.iterations >= 100)
+    result.success = opt.retcode == Symbol("true") || (opt.original.iterations >= maxiter)
     result.iterations = opt.original.iterations
     result.shares = opt.minimizer
     return result

@@ -120,6 +120,7 @@ include("functions_poisson.jl")
 include("functions_poisson_fg.jl")
 
 include("poisson_cgoptim.jl")
+include("poisson_cgoptim2.jl")
 include("poisson_lsoptim.jl")
 include("poisson_lsqlm.jl")
 # include("poisson_mads.jl")
