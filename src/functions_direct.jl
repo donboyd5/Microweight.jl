@@ -29,8 +29,9 @@ function fwhs(shares, wh) # , xmat
 
 
 # %% opt functions
-function objfn_direct(shares, wh, xmat, geotargets, p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
-    interval, targweight, display_progress=true)
+function objfn_direct(shares, wh, xmat, geotargets,
+    p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
+    interval, whweight, display_progress=true)
 
     # part 1
     p_mshares = reshape(shares, length(wh), :) # matrix of shares will be h x s
@@ -44,7 +45,7 @@ function objfn_direct(shares, wh, xmat, geotargets, p_mshares, p_whs, p_calctarg
     ss_whpdiffs = sum(p_whpdiffs.^2)
 
     # combine
-    objval = ss_pdiffs*targweight + ss_whpdiffs
+    objval = ss_pdiffs + ss_whpdiffs*whweight
 
     if display_progress
        display1(interval, geotargets, p_calctargets, wh, p_whs, objval)
