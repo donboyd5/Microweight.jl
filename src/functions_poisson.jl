@@ -60,7 +60,7 @@ function objfn2(beta, wh, xmat, geotargets, interval, display_progress=true)
 
     # display_progress = false
     if display_progress
-        display1(fcalls, interval, geotargets, calctargets, wh, whs)
+        display1(interval, geotargets, calctargets, wh, whs)
     end
 
     obj = sspd(calctargets, geotargets)
@@ -95,7 +95,7 @@ function objvec2(beta, wh, xmat, geotargets, interval, display_progress=true)
 
     # display_progress = false
     if display_progress
-        display1(fcalls, interval, geotargets, calctargets, wh, whs)
+        display1(interval, geotargets, calctargets, wh, whs)
     end
 
     return vec(objvec)

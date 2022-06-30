@@ -38,7 +38,7 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
         end
     elseif approach == :direct
         if method==:direct_cg
-            direct_cg(prob, result)
+            direct_cg(prob, result; whweight=1.0, maxiter=maxiter, interval)
         else
             error("Unknown direct method!")
             return;
