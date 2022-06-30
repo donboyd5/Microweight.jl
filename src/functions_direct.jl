@@ -29,7 +29,8 @@ function fwhs(shares, wh) # , xmat
 
 
 # %% opt functions
-function fcons(shares, wh, xmat, geotargets, p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, targweight, display_progress=true)
+function objfn_direct(shares, wh, xmat, geotargets, p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
+    interval, targweight, display_progress=true)
 
     # part 1
     p_mshares = reshape(shares, length(wh), :) # matrix of shares will be h x s
@@ -43,32 +44,13 @@ function fcons(shares, wh, xmat, geotargets, p_mshares, p_whs, p_calctargets, p_
     ss_whpdiffs = sum(p_whpdiffs.^2)
 
     # combine
-    sspd = ss_pdiffs*targweight + ss_whpdiffs*(1. - targweight)
+    objval = ss_pdiffs*targweight + ss_whpdiffs
 
-        # display_progress = false
     if display_progress
-       display1(fcalls, interval, geotargets, p_calctargets, wh, p_whs)
+       display1(interval, geotargets, p_calctargets, wh, p_whs, objval)
     end
 
-    # report
-    # Zygote.ignore() do
-    #     if mod(fcalls, interval) == 0 || fcalls ==1
-    #         maxabstarg = maximum(abs.(p_pdiffs))
-    #         maxabswt = maximum(abs.(p_whpdiffs))
-    #         # nshown - how many lines have we displayed, including this one?
-    #         if fcalls == 1
-    #             nshown = 1
-    #         else
-    #             nshown = fcalls / interval + 1
-    #         end
-    #         if nshown ==1 || mod(nshown, 20) == 0
-    #             println()
-    #             println("  fcalls     ss_targets  ss_weightsums    ss_combined     maxabstarg       maxabswt   nshown")
-    #         end
-    #         @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, sspd, maxabstarg, maxabswt, nshown)
-    #     end
-    # end
-    return sspd
+    return objval
 end
 
 # end # module
