@@ -54,4 +54,33 @@ function objfn_direct(shares, wh, xmat, geotargets,
     return objval
 end
 
+function objfn_direct_negpen(shares, wh, xmat, geotargets,
+  p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
+  interval, whweight, display_progress=true)
+
+  # part 1
+  p_mshares = reshape(shares, length(wh), :) # matrix of shares will be h x s
+  p_whs = wh .* p_mshares # this allocates memory
+  p_calctargets = p_whs' * xmat
+  p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.  # allocates a tiny bit
+  ss_pdiffs = sum(p_pdiffs.^2)
+
+  # part 2 - get sum of squared diffs from zero for wh diffs
+  p_whpdiffs = (sum(p_mshares, dims=2) .- 1.) * 100.
+  ss_whpdiffs = sum(p_whpdiffs.^2)
+
+  # part 3 penalty for negative weights
+  penalty = sum(p_whs .< 0.) * fcalls
+
+  # combine
+  objval = ss_pdiffs + ss_whpdiffs*whweight + penalty
+
+  if display_progress
+     display1(interval, geotargets, p_calctargets, wh, p_whs, objval)
+  end
+
+  return objval
+end
+
+
 # end # module

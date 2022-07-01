@@ -178,7 +178,7 @@ function poisson_krylov(prob, beta0, result; maxiter=100, objscale, interval=1, 
       Optim.KrylovTrustRegion(; initial_radius = 0.1, max_radius = 100.0,
        eta = 0.1, rho_lower=0.101, rho_upper=0.75,
        cg_tol=0.01),
-      maxiters=500, store_trace=true, show_trace=false, show_every=10)
+      maxiters=maxiter, store_trace=true, show_trace=false, show_every=10)
 
     result.solver_result = opt
     result.success = opt.retcode == Symbol("true")

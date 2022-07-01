@@ -1,5 +1,6 @@
 
 function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length(prob.geotargets)),
+    shares0=fill(1. / prob.s, prob.h * prob.s),
     maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=1000.0,
     interval=1,
     kwargs...)
@@ -38,7 +39,13 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
         end
     elseif approach == :direct
         if method==:direct_cg
-            direct_cg(prob, result; whweight=1.0, maxiter=maxiter, interval)
+            direct_cg(prob, result; whweight=nothing, maxiter=maxiter, interval)
+        elseif method == :direct_krylov
+            direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+        elseif method == :direct_test
+            direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+        # elseif method == :direct_krylov_bounds
+        #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         else
             error("Unknown direct method!")
             return;
@@ -50,7 +57,7 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
     tend = time()
     result.eseconds = tend - tstart
 
-    if result.success | (result.iterations >= maxiter)
+    if result.success || (result.iterations >= maxiter) || (result.iterations == -9)
         p = [0.0, 0.10, 0.25, 0.50, 0.75, 0.90, 1.0]
 
         if approach == :poisson
