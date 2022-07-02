@@ -39,16 +39,17 @@ function direct_test(prob, shares0, result; maxiter=100, objscale=1.0, interval=
     # fprob = OptimizationProblem(fpof, shares0)
 
     # opt = Optimization.solve(fprob, Optim.LBFGS(), maxiters=maxiter)
+    # opt = Optimization.solve(fprob, Optim.GradientDescent(linesearch=LineSearches.BackTracking(order=3)), maxiters=maxiter)
     # opt = Optimization.solve(fprob, NLopt.LD_MMA(), maxiters=maxiter)
     # opt = Optimization.solve(fprob, NLopt.LD_LBFGS(), maxiters=maxiter)
-    # opt = Optimization.solve(fprob, NLopt.LD_CCSAQ(), maxiters=maxiter)  # Excellent
+    opt = Optimization.solve(fprob, NLopt.LD_CCSAQ(), maxiters=maxiter)  # Excellent
     # opt = Optimization.solve(fprob, NLopt.LD_MMA(), maxiters=maxiter)
 
     # ERROR: AutoZygote does not currently support constraints
     # opt = Optimization.solve(fprob, IPNewton(), maxiters=maxiter)
     # opt = Optimization.solve(fprob, Ipopt.Optimizer()) # no options other than max time; not practical
 
-    opt = Optimization.solve(fprob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=maxiter)
+    # opt = Optimization.solve(fprob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=maxiter)
     # opt = Optimization.solve(fprob, NLopt.LD_CCSAQ(), maxiters=maxiter)
 
     # LD_TNEWTON_PRECOND slow progress
