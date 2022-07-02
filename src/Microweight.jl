@@ -70,9 +70,11 @@ using LineSearches, ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, Revers
 using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationOptimJL, OptimizationNLopt
+using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
-
-
+# import Pkg; Pkg.precompile()
+# import Pkg; Pkg.add("OptimizationMOI")
+# import Pkg; Pkg.add("Ipopt")
 ##############################################################################
 ##
 ## Exported methods and types
@@ -115,6 +117,9 @@ include("scaling.jl")
 include("functions_direct.jl")
 
 include("direct_cg.jl")
+include("direct_krylov.jl")
+# include("direct_krylov_bounds.jl")
+include("direct_test.jl")
 
 # poisson functions and solvers
 include("functions_poisson.jl")
