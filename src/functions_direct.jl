@@ -54,6 +54,49 @@ function objfn_direct(shares, wh, xmat, geotargets,
     return objval
 end
 
+function objfn_direct_scaled(shares, wh, xmat, geotargets,
+  p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
+  interval, whweight, display_progress=true)
+
+  # part 1
+  # if fcalls in (2, 7) println("shares: ", shares) end
+  p_mshares = reshape(shares, length(wh), :) # matrix of shares will be h x s
+  p_whs = wh .* p_mshares ./ s_scale # this allocates memory
+  p_calctargets = p_whs' * xmat
+  p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.  # allocates a tiny bit
+  ss_pdiffs = sum((p_pdiffs).^pow) ./ objdiv
+
+  # part 2 - get sum of squared diffs from zero for wh diffs
+  # p_whpdiffs = (sum(p_mshares, dims=2) .- s_scale) * 100.
+  # ss_whpdiffs = sum(p_whpdiffs.^2)
+  p_whpdiffs = (sum(p_whs, dims=2) .- wh) ./ wh * 100.
+  ss_whpdiffs = sum((p_whpdiffs ).^pow) ./ objdiv
+
+  # combine
+  # objval = ss_pdiffs + ss_whpdiffs*whweight
+  global whweight2
+  # whweight2 = ss_whpdiffs / ss_pdiffs
+  whweight2 = whweight
+  # objval = ss_pdiffs + ss_whpdiffs*whweight2  # MAIN
+  objval = ss_pdiffs / length(p_pdiffs) + (ss_whpdiffs / length(p_whpdiffs))*whweight2  # MAIN
+
+  # part 3 penalty for negative weights
+  # penalty = sum(p_whs .< 0.) * fcalls
+  # objval = ss_pdiffs + ss_whpdiffs*whweight2 + penalty  # FOR KRYLOV
+
+  if display_progress
+    display1(interval, geotargets, p_calctargets, wh, p_whs, objval)
+    # if mod(fcalls, interval) == 0 #  || fcalls ==1
+    #   # @printf("%11.5g %11.5g %11.5g \n", ss_pdiffs, ss_whpdiffs, whweight2)
+    #   println("ss_pdiffs: ", sspdiffs)
+    #   println("ss_whpdiffs: ", ss_whpdiffs)
+    #   println("whweight2: ", whweight2)
+    # end
+  end
+
+  return objval
+end
+
 function objfn_direct_negpen(shares, wh, xmat, geotargets,
   p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
   interval, whweight, display_progress=true)

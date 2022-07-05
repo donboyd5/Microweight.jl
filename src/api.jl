@@ -2,7 +2,7 @@
 function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length(prob.geotargets)),
     shares0=fill(1. / prob.s, prob.h * prob.s),
     maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=1000.0,
-    interval=1,
+    interval=1, whweight=nothing,
     kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
@@ -10,6 +10,14 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
 
     global tstart = time()
     global fcalls = 0  # global within this module
+    global h = prob.h
+    global s = prob.s
+    global k = prob.k
+    global objdiv = 100.
+    global pow = 4
+    global s_scale = 1.
+    global plevel = .98
+    global whweight2
 
     result = Result(method=method)
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
@@ -44,6 +52,8 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
             direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method == :direct_test
             direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+        elseif method == :direct_test2
+            direct_test_scaled(prob, shares0, result; whweight=whweight, maxiter=maxiter, interval)
         # elseif method == :direct_krylov_bounds
         #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         else

@@ -24,7 +24,7 @@ function display_progress(fcalls, interval, p_pdiffs, p_whpdiffs, ss_pdiffs, ss_
                 println()
                 println("  fcalls     ss_targets  ss_weightsums    ss_combined     maxabstarg       maxabswt   nshown")
             end
-            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, sspd, maxabstarg, maxabswt, nshown)
+            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %9.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, sspd, maxabstarg, maxabswt, nshown)
         end
     end
 end
@@ -49,14 +49,18 @@ function display1(interval, geotargets, p_calctargets, wh, p_whs, objval=nothing
 
             if nshown ==1 || mod(nshown, 20) == 0
                 println()
-                println("  fcalls     ss_targets  ss_weightsums         objval     maxabstarg       maxabswt   nshown  totseconds")
+                println("  fcalls     ss_targets  ss_weightsums         objval     maxabstarg       maxabswt   nshown  totseconds    whweight     s_scale")
             end
             p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.
-            ss_pdiffs = sum(p_pdiffs.^2)
+            # ss_pdiffs = sum(p_pdiffs.^2)
+            # ss_pdiffs = (sum(p_pdiffs.^pow) / length(p_pdiffs))^(1 / 4)
+            ss_pdiffs = Statistics.quantile!(vec(abs.(p_pdiffs)), plevel)
             maxabstarg = maximum(abs.(p_pdiffs))
 
             p_whpdiffs = (sum(p_whs, dims=2) .- wh) ./ wh * 100.
-            ss_whpdiffs = sum(p_whpdiffs.^2)
+            # ss_whpdiffs = sum(p_whpdiffs.^2)
+            # ss_whpdiffs = (sum(p_whpdiffs.^pow) / length(p_whpdiffs))^(1 / pow)
+            ss_whpdiffs = Statistics.quantile!(vec(abs.(p_whpdiffs)), plevel)
             maxabswt = maximum(abs.(p_whpdiffs))
 
             if objval === nothing
@@ -66,7 +70,7 @@ function display1(interval, geotargets, p_calctargets, wh, p_whs, objval=nothing
             totseconds = time() - tstart
 
             #@printf("%8i %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, maxabstarg, nshown)
-            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g %11.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, objval, maxabstarg, maxabswt, nshown, totseconds)
+            @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g %11.5g %11.5g %11.5g \n", fcalls, ss_pdiffs, ss_whpdiffs, objval, maxabstarg, maxabswt, nshown, totseconds, whweight2, s_scale)
             # @printf("%8i %14.5g %14.5g %14.5g %14.5g %14.5g %8.4g \n", fcalls, ss_pdiffs, ss_whpdiffs, sspd, maxabstarg, maxabswt, nshown)
         end
     end
