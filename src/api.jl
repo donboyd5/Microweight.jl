@@ -18,6 +18,9 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
     global s_scale = 1e0
     global plevel = .99
     global whweight2
+    global bestobjval = 1e99
+    global nshown = 0
+    global iter_calc = 0
 
     result = Result(method=method)
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)

@@ -132,3 +132,63 @@ function display2(interval, geotargets, p_calctargets, wh, p_whs, objval=nothing
     end
 end
 
+
+
+function display3(interval, geotargets, p_calctargets, wh, p_whs, objval=nothing)
+    global fcalls
+    global nshown
+    global bestobjval
+    global iter_calc
+    fcalls += 1
+
+    # global tstart
+    Zygote.ignore() do
+        # if objval===nothing && (mod(fcalls, interval) == 0 || fcalls ==1)
+        new_iter = false
+        if objval < bestobjval
+            bestobjval = objval
+            new_iter = true
+            iter_calc += 1
+        end
+
+        show_iter = mod(iter_calc, interval) == 0 || iter_calc == 1
+
+        if new_iter && show_iter
+            nshown += 1
+
+            if nshown ==1 || mod(nshown, 20) == 0
+                println()
+                hdr1 = "iter_calc   fcalls  totseconds       objval    targ_rmse   wtsum_rmse     tot_rmse     targ_max    wtsum_max"
+                hdr2 = "      "
+                hdr3 = "targ_" * string(floor(Int, plevel * 100.))
+                hdr4 = "     "
+                hdr5 = "wtsum_" * string(floor(Int, plevel * 100.))
+                hdr = hdr1 * hdr2 * hdr3 * hdr4 * hdr5
+                println(hdr)
+            end
+
+            # get statistics for targets
+            p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.
+            targ_max = maximum(abs.(p_pdiffs))
+            targ_ptile = Statistics.quantile!(vec(abs.(p_pdiffs)), plevel)
+
+            # get statistics for weights
+            p_whpdiffs = (sum(p_whs, dims=2) .- wh) ./ wh * 100.
+            wtsum_max = maximum(abs.(p_whpdiffs))
+            wtsum_ptile = Statistics.quantile!(vec(abs.(p_whpdiffs)), plevel)
+
+            targ_sse = sum(p_pdiffs.^2)
+            wtsum_sse = sum(p_whpdiffs.^2)
+
+            targ_rmse = sqrt(targ_sse / length(p_pdiffs))
+            wtsum_rmse = sqrt(wtsum_sse / length(p_whpdiffs))
+            tot_rmse = sqrt((targ_sse + wtsum_sse) / (length(p_pdiffs) + length(p_whpdiffs)))
+
+            totseconds = time() - tstart
+
+            @printf(" %8i %8i %11.5g %12.5g %12.5g %12.5g %12.5g %12.5g %12.5g %12.5g %12.5g \n",
+              iter_calc, fcalls, totseconds, objval, targ_rmse,  wtsum_rmse, tot_rmse, targ_max, wtsum_max, targ_ptile, wtsum_ptile)
+        end
+    end
+end
+

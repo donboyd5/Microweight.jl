@@ -85,7 +85,7 @@ function objfn_direct_scaled(shares, wh, xmat, geotargets,
   # objval = ss_pdiffs + ss_whpdiffs*whweight2 + penalty  # FOR KRYLOV
 
   if display_progress
-    display2(interval, geotargets, p_calctargets, wh, p_whs, objval)
+    display3(interval, geotargets, p_calctargets, wh, p_whs, objval)
   end
 
   return objval
