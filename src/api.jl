@@ -15,8 +15,8 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
     global k = prob.k
     global objdiv = 100.
     global pow = 4
-    global s_scale = 1.
-    global plevel = .98
+    global s_scale = 1e0
+    global plevel = .99
     global whweight2
 
     result = Result(method=method)
