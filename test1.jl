@@ -183,7 +183,7 @@ sum(res.mult .* res.x.^2 + res.x.^-4)
 
 x0 = [1., 2., 3.]
 ck.f(x0)
-sol = caller2(x0)
+# sol = caller2(x0)
 
 prob = OptimizationProblem(ck.f, x0,p)
 sol = Optimization.solve(prob, Optim.NelderMead())
