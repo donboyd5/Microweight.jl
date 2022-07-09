@@ -67,7 +67,7 @@ function direct_test(prob, shares0, result; maxiter=100, objscale=1.0, interval=
     return result
 end
 
-function direct_test_scaled(prob, shares0, result; maxiter=100, objscale=1.0, interval=1, whweight, kwargs...)
+function direct_test_scaled(prob, shares0, result; maxiter=100, interval=1, whweight=nothing, objscale=1.0, kwargs...)
     # println("shares0 start: ", Statistics.quantile(vec(shares0)))
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
@@ -86,7 +86,7 @@ function direct_test_scaled(prob, shares0, result; maxiter=100, objscale=1.0, in
     p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-    if whweight===nothing
+    if isnothing(whweight)
         whweight = (length(shares0) / length(p_calctargets)) / (s_scale / 1.)
     end
     println("Household weights component weight: ", whweight)

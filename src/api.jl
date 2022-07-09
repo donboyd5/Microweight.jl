@@ -1,8 +1,13 @@
 
-function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length(prob.geotargets)),
-    shares0=fill(1. / prob.s, prob.h * prob.s),
-    maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=1000.0,
-    interval=1, whweight=nothing,
+function geosolve(prob;
+    approach=nothing,
+    method=nothing,
+    beta0=nothing,
+    shares0=nothing,
+    maxiter=100,
+    objscale=1.0, scaling=false, scaling_target_goal=1000.0,
+    interval=1,
+    whweight=nothing,
     kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
@@ -22,10 +27,22 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
     global nshown = 0
     global iter_calc = 0
 
-    result = Result(method=method)
-    prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
+    # define defaults
+    if isnothing(approach) approach=:poisson end
 
-    result.problem = prob
+    if approach==:poisson
+        if isnothing(method) method=:lm_lsqfit end
+        if isnothing(beta0) beta0 = zeros(length(prob.geotargets)) end
+    elseif approach==:direct
+        if isnothing(method) method=:direct_test2 end
+        if isnothing(shares0) shares0=fill(1. / prob.s, prob.h * prob.s) end
+    else
+        return "ERROR: approach must be :poisson or :direct"
+    end
+
+    # initialize result
+    prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
+    result = Result(approach=approach, method=method, problem=prob, beta0=beta0, shares0=shares0)
 
     if approach == :poisson
         if method == :cg_optim
@@ -49,6 +66,9 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
             return;
         end
     elseif approach == :direct
+        okmethod = (:direct_cg, :direct_krylov)
+        println("goodmethod = ", method in okmethod)
+
         if method==:direct_cg
             direct_cg(prob, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method == :direct_krylov
@@ -56,7 +76,7 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
         elseif method == :direct_test
             direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method == :direct_test2
-            direct_test_scaled(prob, shares0, result; whweight=whweight, maxiter=maxiter, interval)
+            direct_test_scaled(prob, shares0, result, maxiter=maxiter, interval=interval, whweight=whweight)
         # elseif method == :direct_krylov_bounds
         #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         else
