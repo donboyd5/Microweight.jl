@@ -161,7 +161,7 @@ end
 
 
 
-function direct_nlopt(prob, result; method=:ccsaq, maxiter=100, interval=1, whweight=nothing, kwargs...)
+function direct_nlopt(prob, result; method=:ccsaq, maxiter=100, interval=1, whweight=0.5, kwargs...)
     # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
     kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
@@ -179,9 +179,9 @@ function direct_nlopt(prob, result; method=:ccsaq, maxiter=100, interval=1, whwe
     p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-    if isnothing(whweight)
-        whweight = (length(shares0) / length(p_calctargets)) / (s_scale / 1.)
-    end
+    # if isnothing(whweight)
+    #     whweight = (length(shares0) / length(p_calctargets)) / (s_scale / 1.)
+    # end
     println("Household weights component weight: ", whweight)
 
     fp = (shares, p) -> objfn_direct_scaled(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
