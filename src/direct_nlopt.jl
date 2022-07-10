@@ -161,31 +161,33 @@ end
 
 
 
-function direct_nlopt(prob, result; method=:ccsaq, maxiter=100, interval=1, whweight=0.5, kwargs...)
+function direct_nlopt(prob, result;
+    method=:ccsaq,
+    maxiter=100,
+    interval=1,
+    whweight=.5,
+    pow=4,
+    kwargs...)
+
     # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
     kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
     println("kwargs: $kwargs_keep")
 
-    println("s_scale: ", s_scale)
     shares0 = result.shares0
 
     # %% setup preallocations
     p = 1.0
-    # shares0 = fill(1. / prob.s, prob.h * prob.s)
     p_mshares = Array{Float64,2}(undef, prob.h, prob.s)
     p_whs = Array{Float64,2}(undef, prob.h, prob.s)
     p_calctargets = Array{Float64,2}(undef, prob.s, prob.k)
     p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-    # if isnothing(whweight)
-    #     whweight = (length(shares0) / length(p_calctargets)) / (s_scale / 1.)
-    # end
     println("Household weights component weight: ", whweight)
 
-    fp = (shares, p) -> objfn_direct_scaled(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
-        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight)
+    fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
+        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
     fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))  # MAIN ONE
@@ -214,6 +216,6 @@ function direct_nlopt(prob, result; method=:ccsaq, maxiter=100, interval=1, whwe
     result.solver_result = opt
     result.success = opt.retcode == Symbol("true")
     result.iterations = iter_calc # opt.original.iterations
-    result.shares = opt.minimizer ./ s_scale
+    result.shares = opt.minimizer
     return result
 end

@@ -8,24 +8,25 @@ function geosolve(prob;
             objscale=1.0, scaling=false, scaling_target_goal=1000.0,
             interval=1,
             whweight=nothing,
+            pow=4,
             kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
     println("Solving problem...")
 
+    # globals accessed within the display_progress function
     global tstart = time()
     global fcalls = 0  # global within this module
-    global h = prob.h
-    global s = prob.s
-    global k = prob.k
-    global objdiv = 100.
-    global pow = 4
-    global s_scale = 1e0
-    global plevel = .99
-    global whweight2
     global bestobjval = 1e99
     global nshown = 0
     global iter_calc = 0
+
+    # global h = prob.h
+    # global s = prob.s
+    # global k = prob.k
+    # global s_scale = 1e0
+    global plevel = .99
+
 
     # define defaults
     if isnothing(approach) approach=:poisson end
@@ -77,7 +78,8 @@ function geosolve(prob;
         elseif method == :direct_test
             direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method in nlopt_methods
-            direct_nlopt(prob, result, method=method, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
+            # kwargs are those that should be passed through to NLopt from Optimization
+            direct_nlopt(prob, result, method=method, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
         # elseif method == :direct_krylov_bounds
         #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         else
