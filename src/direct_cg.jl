@@ -42,9 +42,22 @@ function direct_cg(prob, result;
 
     opt = Optimization.solve(fprob,
         Optim.ConjugateGradient(), maxiters=maxiter, callback=cb_direct)
+    # also GradientDescent LBFGS
+    # No to -- NGMRES OACCEL
+
+    # opt = Optimization.solve(fprob,
+    #     Optim.NewtonTrustRegion(), maxiters=maxiter, callback=cb_direct)  # newt does not work without figuring box constraints
+    # nlprecon = Optim.GradientDescent(alphaguess=LineSearches.InitialStatic(alpha=1e-4,scaled=true),
+    #         linesearch=LineSearches.Static())
+    # Default size of subspace that OACCEL accelerates over is `wmax = 10`
+    # oacc10 = Optim.OACCEL(nlprecon=nlprecon, wmax=10)
+    # opt = Optimization.solve(fprob,
+    #  Optim.OACCEL(nlprecon=nlprecon, wmax=10), maxiters=maxiter, callback=cb_direct)
+    #optimize(UP.objective(prob), UP.gradient(prob), prob.initial_x, oacc10)
 
     result.solver_result = opt
-    result.success = opt.retcode == Symbol("true")
+    # result.success = opt.retcode == Symbol("true")
+    result.success = true
     result.iterations = opt.original.iterations
     result.shares = opt.minimizer
     return result

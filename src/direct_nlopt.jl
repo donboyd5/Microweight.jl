@@ -56,8 +56,8 @@ function direct_nlopt(prob, result;
 
     result.solver_result = opt
     # result.success = (opt.retcode == Symbol("true")) || (opt.minimum <= kwargs_keep[:stopval])
-    #result.success = (opt.retcode == Symbol("true")) || (opt.retcode == :STOPVAL_REACHED)
-    result.success = true
+    result.success = (opt.retcode == Symbol("true")) || (opt.retcode == :STOPVAL_REACHED) || (iter_calc / 2.) >= maxiter
+    # result.success = true
     result.iterations = iter_calc # opt.original.iterations
     result.shares = opt.minimizer
     return result
