@@ -28,17 +28,20 @@ function direct_cg(prob, result;
     println("Household weights component weight: ", whweight)
 
     fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
-    p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
+        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
     fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))
 
+    # opt = Optimization.solve(fprob,
+    #     Optim.ConjugateGradient(
+    #         alphaguess = LineSearches.InitialConstantChange(ρ = 0.75),
+    #         linesearch = LineSearches.BackTracking(order=3),
+    #         eta = 0.7 # best
+    #         ), reltol=0.0, maxiters=maxiter, callback=cb_direct)
+
     opt = Optimization.solve(fprob,
-        Optim.ConjugateGradient(
-            alphaguess = LineSearches.InitialConstantChange(ρ = 0.75),
-            linesearch = LineSearches.BackTracking(order=3),
-            eta = 0.7 # best
-            ), reltol=0.0, maxiters=maxiter, callback=cb_direct)
+        Optim.ConjugateGradient(), maxiters=maxiter, callback=cb_direct)
 
     result.solver_result = opt
     result.success = opt.retcode == Symbol("true")

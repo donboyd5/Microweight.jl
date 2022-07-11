@@ -21,10 +21,6 @@ function geosolve(prob;
     global nshown = 0
     global iter_calc = 0
 
-    # global h = prob.h
-    # global s = prob.s
-    # global k = prob.k
-    # global s_scale = 1e0
     global plevel = .99
 
 
@@ -76,8 +72,8 @@ function geosolve(prob;
             direct_cg(prob, result, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
         elseif method == :direct_krylov
             direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
-        elseif method == :direct_test
-            direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+        # elseif method == :direct_test
+        #     direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
             direct_nlopt(prob, result, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)

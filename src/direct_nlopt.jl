@@ -10,8 +10,7 @@ function direct_nlopt(prob, result;
     kwargs...)
 
     # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
-    # kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
-    kwkeys_allowed = (:stopval2, ) # :show_trace, :x_tol, :g_tol,
+    kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
     println("kwargs: $kwargs_keep")
 
@@ -27,7 +26,7 @@ function direct_nlopt(prob, result;
 
     println("Household weights component weight: ", whweight)
 
-    fp = (shares, p) -> objfn_direct2(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
+    fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
         p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
@@ -49,25 +48,8 @@ function direct_nlopt(prob, result;
     end
     println("NLopt algorithm: ", algorithm)
 
-    callback = function(p, l)
-        # p is the current value of x (shares)
-        # l is the current loss (objective function)
-        # println("++++++++++++++++++")
-        # println(p[1], "***", l)
-        halt = false
-        println(l)
-        println("I'm in here")
-        # println(wh)
-        if l < .07
-            println("time to exit")
-            halt = true
-        end
-        return halt
-      end
-
-    global interval2 = 9784
     # opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_keep...)
-    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb2) # , callback=cb1
+    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_keep...)
 
     # ERROR: AutoZygote does not currently support constraints
     # opt = Optimization.solve(fprob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=maxiter)
