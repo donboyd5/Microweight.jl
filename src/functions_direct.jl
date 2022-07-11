@@ -53,12 +53,41 @@ function objfn_direct(shares, wh, xmat, geotargets,
   objval = objval^(1. / pow)
 
   if display_progress
-    display_status(interval, geotargets, p_calctargets, wh, p_whs, objval)
+    display_status2(interval, geotargets, p_calctargets, wh, p_whs, objval)
   end
 
   return objval
 end
 
+
+function objfn_direct2(shares, wh, xmat, geotargets,
+  p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
+  interval,
+  whweight=.5,
+  pow=4,
+  display_progress=true)
+
+  # part 1
+  p_mshares = reshape(shares, length(wh), :) # matrix of shares will be h x s
+  p_whs = wh .* p_mshares # this allocates memory
+  p_calctargets = p_whs' * xmat
+  p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.  # allocates a tiny bit
+  ss_pdiffs = sum((p_pdiffs).^pow)
+
+  # part 2 - get sum of squared diffs from zero for wh diffs
+  p_whpdiffs = (sum(p_whs, dims=2) .- wh) ./ wh * 100.
+  ss_whpdiffs = sum((p_whpdiffs ).^pow)
+
+  # combine
+  objval = (ss_pdiffs / length(p_pdiffs))*(1. - whweight) + (ss_whpdiffs / length(p_whpdiffs))*whweight
+  objval = objval^(1. / pow)
+
+  # if display_progress
+  #   display_status2(interval, geotargets, p_calctargets, wh, p_whs, objval)
+  # end
+
+  return objval, p_whpdiffs
+end
 
 
 # function objfn_direct(shares, wh, xmat, geotargets,

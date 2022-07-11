@@ -1,3 +1,87 @@
+# https://github.com/SciML/Optimization.jl
+
+# :ccsaq NLopt.LD_CCSAQ: CCSA (Conservative Convex Separable Approximations) with simple quadratic approximations (local, derivative)
+
+function direct_nlopt(prob, result;
+    maxiter=100,
+    interval=1,
+    whweight=.5,
+    pow=4,
+    kwargs...)
+
+    # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
+    # kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
+    kwkeys_allowed = (:stopval2, ) # :show_trace, :x_tol, :g_tol,
+    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+    println("kwargs: $kwargs_keep")
+
+    shares0 = result.shares0
+
+    # %% setup preallocations
+    p = 1.0
+    p_mshares = Array{Float64,2}(undef, prob.h, prob.s)
+    p_whs = Array{Float64,2}(undef, prob.h, prob.s)
+    p_calctargets = Array{Float64,2}(undef, prob.s, prob.k)
+    p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
+    p_whpdiffs = Array{Float64,1}(undef, prob.h)
+
+    println("Household weights component weight: ", whweight)
+
+    fp = (shares, p) -> objfn_direct2(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
+        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
+
+    fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
+    fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))  # MAIN ONE
+
+    # NLOPT gradient-based local algorithms that can handle bounds and that do NOT use dense matrix methods
+    #   I exclude slsqp because it uses dense methods
+    # https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/#local-gradient-based-optimization
+    # so far, ccsaq is best for this application
+    method = result.method
+    if method==:ccsaq algorithm=:(LD_CCSAQ())
+    elseif method==:lbfgs algorithm=:(LD_LBFGS())
+    elseif method==:mma algorithm=:(LD_MMA())
+    elseif method==:newton algorithm=:(LD_TNEWTON_PRECOND())
+    elseif method==:newtonrs algorithm=:(LD_TNEWTON_PRECOND_RESTART())
+    elseif method==:var1 algorithm=:(LD_VAR1())
+    elseif method==:var2 algorithm=:(LD_VAR2())
+    else return "ERROR: method must be one of (:ccsaq, :lbfgs, :mma, :newton, :var2)"
+    end
+    println("NLopt algorithm: ", algorithm)
+
+    callback = function(p, l)
+        # p is the current value of x (shares)
+        # l is the current loss (objective function)
+        # println("++++++++++++++++++")
+        # println(p[1], "***", l)
+        halt = false
+        println(l)
+        println("I'm in here")
+        # println(wh)
+        if l < .07
+            println("time to exit")
+            halt = true
+        end
+        return halt
+      end
+
+    global interval2 = 9784
+    # opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_keep...)
+    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb2) # , callback=cb1
+
+    # ERROR: AutoZygote does not currently support constraints
+    # opt = Optimization.solve(fprob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=maxiter)
+
+    result.solver_result = opt
+    # result.success = (opt.retcode == Symbol("true")) || (opt.minimum <= kwargs_keep[:stopval])
+    #result.success = (opt.retcode == Symbol("true")) || (opt.retcode == :STOPVAL_REACHED)
+    result.success = true
+    result.iterations = iter_calc # opt.original.iterations
+    result.shares = opt.minimizer
+    return result
+end
+
+
 function direct_test(prob, shares0, result; maxiter=100, objscale=1.0, interval=1, whweight, kwargs...)
     # println("shares0 start: ", Statistics.quantile(vec(shares0)))
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
@@ -160,62 +244,3 @@ function direct_test_scaled(prob, shares0, result; maxiter=100, interval=1, whwe
 end
 
 
-
-function direct_nlopt(prob, result;
-    method=:ccsaq,
-    maxiter=100,
-    interval=1,
-    whweight=.5,
-    pow=4,
-    kwargs...)
-
-    # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
-    kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs: $kwargs_keep")
-
-    shares0 = result.shares0
-
-    # %% setup preallocations
-    p = 1.0
-    p_mshares = Array{Float64,2}(undef, prob.h, prob.s)
-    p_whs = Array{Float64,2}(undef, prob.h, prob.s)
-    p_calctargets = Array{Float64,2}(undef, prob.s, prob.k)
-    p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
-    p_whpdiffs = Array{Float64,1}(undef, prob.h)
-
-    println("Household weights component weight: ", whweight)
-
-    fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
-        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
-
-    fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
-    fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))  # MAIN ONE
-
-    # NLOPT gradient-based local algorithms that can handle bounds and that do NOT use dense matrix methods
-    #   I exclude slsqp because it uses dense methods
-    # https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/#local-gradient-based-optimization
-    # so far, ccsaq is best for this application
-    if method==:ccsaq algorithm=:(LD_CCSAQ())
-    elseif method==:lbfgs algorithm=:(LD_LBFGS())
-    elseif method==:mma algorithm=:(LD_MMA())
-    elseif method==:newton algorithm=:(LD_TNEWTON_PRECOND())
-    elseif method==:newtonrs algorithm=:(LD_TNEWTON_PRECOND_RESTART())
-    elseif method==:var1 algorithm=:(LD_VAR1())
-    elseif method==:var2 algorithm=:(LD_VAR2())
-    else return "ERROR: method must be one of (:ccsaq, :lbfgs, :mma, :newton, :var2)"
-    end
-    println("NLopt algorithm: ", algorithm)
-
-    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter; kwargs_keep...)
-    # ERROR: AutoZygote does not currently support constraints
-
-    # opt = Optimization.solve(fprob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=maxiter)
-    # opt = Optimization.solve(fprob, NLopt.LD_CCSAQ(), maxiters=maxiter)
-
-    result.solver_result = opt
-    result.success = opt.retcode == Symbol("true")
-    result.iterations = iter_calc # opt.original.iterations
-    result.shares = opt.minimizer
-    return result
-end

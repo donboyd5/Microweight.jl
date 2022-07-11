@@ -17,7 +17,7 @@ function geosolve(prob;
     # globals accessed within the display_progress function
     global tstart = time()
     global fcalls = 0  # global within this module
-    global bestobjval = 1e99
+    global bestobjval = Inf
     global nshown = 0
     global iter_calc = 0
 
@@ -67,19 +67,20 @@ function geosolve(prob;
             return;
         end
     elseif approach == :direct
-        okmethod = (:direct_cg, :direct_krylov)
-        println("goodmethod = ", method in okmethod)
         nlopt_methods = (:ccsaq, :lbfgs, :mma, :newton, :newtonrs, :var1, :var2)
+        okmethod = (:direct_cg, :direct_krylov, nlopt_methods...)
+        # println("ok methods: $okmethod")
+        println("goodmethod = ", method in okmethod)
 
         if method==:direct_cg
-            direct_cg(prob, result; whweight=nothing, maxiter=maxiter, interval)
+            direct_cg(prob, result, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
         elseif method == :direct_krylov
             direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method == :direct_test
             direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
-            direct_nlopt(prob, result, method=method, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
+            direct_nlopt(prob, result, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
         # elseif method == :direct_krylov_bounds
         #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         else

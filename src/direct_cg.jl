@@ -1,4 +1,53 @@
-function direct_cg(prob, result; shares0=fill(1. / prob.s, prob.h * prob.s), maxiter=100, objscale=1.0, interval=1, whweight, kwargs...)
+
+# https://github.com/SciML/Optimization.jl
+
+function direct_cg(prob, result;
+    maxiter=100,
+    interval=1,
+    whweight=.5,
+    pow=4,
+    kwargs...)
+
+    kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
+    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+    println("kwargs: $kwargs_keep")
+
+    shares0 = result.shares0
+
+    # %% setup preallocations
+    p = 1.0
+    p_mshares = Array{Float64,2}(undef, prob.h, prob.s)
+    p_whs = Array{Float64,2}(undef, prob.h, prob.s)
+    p_calctargets = Array{Float64,2}(undef, prob.s, prob.k)
+    p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
+    p_whpdiffs = Array{Float64,1}(undef, prob.h)
+
+    if whweight===nothing
+        whweight = length(shares0) / length(p_calctargets)
+    end
+    println("Household weights component weight: ", whweight)
+
+    fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
+    p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
+
+    fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
+    fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))
+
+    opt = Optimization.solve(fprob,
+        Optim.ConjugateGradient(
+            alphaguess = LineSearches.InitialConstantChange(ρ = 0.75),
+            linesearch = LineSearches.BackTracking(order=3),
+            eta = 0.7 # best
+            ), reltol=0.0, maxiters=maxiter, callback=cb_direct)
+
+    result.solver_result = opt
+    result.success = opt.retcode == Symbol("true")
+    result.iterations = opt.original.iterations
+    result.shares = opt.minimizer
+    return result
+end
+
+function direct_cg_good(prob, result; shares0=fill(1. / prob.s, prob.h * prob.s), maxiter=100, objscale=1.0, interval=1, whweight, kwargs...)
     # caller(tp; ishares=fill(1. / tp.s, tp.h * tp.s), maxiters=10, interval=1, targweight=0.1)
     # for allowable arguments:
 

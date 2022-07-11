@@ -135,25 +135,27 @@ end
 
 
 function display_status(interval, geotargets, p_calctargets, wh, p_whs, objval=nothing)
-    global fcalls
-    global nshown
-    global bestobjval
-    global iter_calc
-    fcalls += 1
+    global fcalls  # init val 0
+    global nshown  # init val 0
+    global bestobjval  # init val Inf
+    global iter_calc  # init val 0
 
     # global tstart
     Zygote.ignore() do
-        # if objval===nothing && (mod(fcalls, interval) == 0 || fcalls ==1)
+        fcalls += 1
         new_iter = false
-        if objval < bestobjval
+
+        if objval < bestobjval || iter_calc in (0, 1)
             bestobjval = objval
             new_iter = true
             iter_calc += 1
         end
 
-        show_iter = mod(iter_calc, interval) == 0 || iter_calc == 1
+        show_iter = mod(iter_calc, interval) == 0 || iter_calc in (0, 1)
+        show_iter = true
 
         if new_iter && show_iter
+        # if true
             nshown += 1
 
             if nshown ==1 || mod(nshown, 20) == 0
@@ -191,4 +193,114 @@ function display_status(interval, geotargets, p_calctargets, wh, p_whs, objval=n
         end
     end
 end
+
+
+function cb_direct(p, l)
+    # p is the current value of x (shares)
+    # l is the current loss (objective function)
+    # println("++++++++++++++++++")
+    # println(p[1], "***", l)
+    # halt = false
+    println(l)
+    println("I'm in here again also")
+    println("i2: ", interval2)
+    # println("i2: ", interval)
+    return (true)
+    # display_status2(interval, geotargets, p_calctargets, wh, p_whs, objval)
+    # if l < .07
+    #     println("time to exit")
+    #     halt = true
+    # end
+    # return false
+end
+
+# cb = tr -> begin
+#             push!(xs, tr[end].metadata["x"])
+#             false
+#         end
+
+function cb1(p, l, ss_pdiffs)
+    # println(fieldnames(typeof(tr)))
+    println("hello")
+    println("loss: $l")
+    println("sum pdiffs ", ss_pdiffs)
+    return false
+end
+
+
+function cb2(p, l, p_whpdiffs)
+    # println(fieldnames(typeof(tr)))
+    println("hello")
+    println("loss: $l")
+    println("sum pdiffs ", sum(p_whpdiffs))
+    return false
+end
+
+
+function display_status2(interval, geotargets, p_calctargets, wh, p_whs, objval=nothing)
+    global fcalls  # init val 0
+    global nshown  # init val 0
+    global bestobjval  # init val Inf
+    global iter_calc  # init val 0
+
+    # global tstart
+    Zygote.ignore() do
+        fcalls += 1
+        new_iter = false
+
+        if objval < bestobjval || (fcalls<=5 && objval > bestobjval)
+            bestobjval = objval
+            new_iter = true
+            iter_calc += 1
+        end
+
+        # if objval < bestobjval || iter_calc in (0, 1)
+        #     bestobjval = objval
+        #     new_iter = true
+        #     iter_calc += 1
+        # end
+
+        show_iter = mod(iter_calc, interval) == 0 || iter_calc in (0, 1)
+        show_iter = true
+
+        if new_iter && show_iter
+        # if true
+            nshown += 1
+
+            if nshown ==1 || mod(nshown, 20) == 0
+                println()
+                hdr1 = "iter_calc   fcalls  totseconds       objval    targ_rmse   wtsum_rmse     tot_rmse     targ_max    wtsum_max"
+                hdr2 = "      "
+                hdr3 = "targ_" * string(floor(Int, plevel * 100.))
+                hdr4 = "     "
+                hdr5 = "wtsum_" * string(floor(Int, plevel * 100.))
+                hdr = hdr1 * hdr2 * hdr3 * hdr4 * hdr5
+                println(hdr)
+            end
+
+            # get statistics for targets
+            p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.
+            targ_max = maximum(abs.(p_pdiffs))
+            targ_ptile = Statistics.quantile!(vec(abs.(p_pdiffs)), plevel)
+
+            # get statistics for weights
+            p_whpdiffs = (sum(p_whs, dims=2) .- wh) ./ wh * 100.
+            wtsum_max = maximum(abs.(p_whpdiffs))
+            wtsum_ptile = Statistics.quantile!(vec(abs.(p_whpdiffs)), plevel)
+
+            targ_sse = sum(p_pdiffs.^2)
+            wtsum_sse = sum(p_whpdiffs.^2)
+
+            targ_rmse = sqrt(targ_sse / length(p_pdiffs))
+            wtsum_rmse = sqrt(wtsum_sse / length(p_whpdiffs))
+            tot_rmse = sqrt((targ_sse + wtsum_sse) / (length(p_pdiffs) + length(p_whpdiffs)))
+
+            totseconds = time() - tstart
+
+            @printf(" %8i %8i %11.5g %12.5g %12.5g %12.5g %12.5g %12.5g %12.5g %12.5g %12.5g \n",
+              iter_calc, fcalls, totseconds, objval, targ_rmse,  wtsum_rmse, tot_rmse, targ_max, wtsum_max, targ_ptile, wtsum_ptile)
+        end
+    end
+end
+
 
