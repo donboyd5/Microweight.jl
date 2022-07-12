@@ -4,11 +4,13 @@ function geosolve(prob;
             method=nothing,
             beta0=nothing,
             shares0=nothing,
-            maxiter=100,
+            maxiter=nothing,
             objscale=1.0, scaling=false, scaling_target_goal=1000.0,
-            interval=1,
+            interval=nothing,
             whweight=nothing,
-            pow=4,
+            pow=nothing,
+            targstop=.01,
+            whstop=.01,
             kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
@@ -63,20 +65,21 @@ function geosolve(prob;
             return;
         end
     elseif approach == :direct
-        nlopt_methods = (:ccsaq, :lbfgs, :mma, :newton, :newtonrs, :var1, :var2)
-        okmethod = (:direct_cg, :direct_krylov, nlopt_methods...)
+        nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
+        optim_methods = (:cg, :gd, :lbfgs_optim)
         # println("ok methods: $okmethod")
-        println("goodmethod = ", method in okmethod)
 
-        if method==:direct_cg
-            direct_cg(prob, result, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
-        elseif method == :direct_krylov
-            direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+        if method in optim_methods
+            direct_optim(prob, result, pow=pow, maxiter=maxiter, interval=interval,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+        # elseif method == :direct_krylov
+        #     direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         # elseif method == :direct_test
         #     direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
-            direct_nlopt(prob, result, pow=pow, maxiter=maxiter, interval=interval, whweight=whweight; kwargs...)
+            direct_nlopt(prob, result, pow=pow, maxiter=maxiter, interval=interval,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         # elseif method == :direct_krylov_bounds
         #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         else

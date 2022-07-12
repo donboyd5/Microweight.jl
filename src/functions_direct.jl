@@ -63,8 +63,9 @@ end
 function objfn_direct(shares, wh, xmat, geotargets,
   p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
   interval,
-  whweight=.5,
-  pow=4,
+  whweight,
+  pow,
+  targstop, whstop,
   display_progress=true)
 
   # part 1
@@ -82,7 +83,8 @@ function objfn_direct(shares, wh, xmat, geotargets,
   objval = (ss_pdiffs / length(p_pdiffs))*(1. - whweight) + (ss_whpdiffs / length(p_whpdiffs))*whweight
   objval = objval^(1. / pow)
 
-  return objval, p_pdiffs, p_whpdiffs, interval
+  # list extra variables on the return so that they are available to the callback function
+  return objval, p_pdiffs, p_whpdiffs, interval, targstop, whstop
 end
 
 

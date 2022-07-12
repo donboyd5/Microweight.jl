@@ -195,7 +195,7 @@ function display_status(interval, geotargets, p_calctargets, wh, p_whs, objval=n
 end
 
 
-function cb_direct(shares, objval, p_pdiffs, p_whpdiffs, interval)
+function cb_direct(shares, objval, p_pdiffs, p_whpdiffs, interval, targstop, whstop)
     halt = false
 
     # declare as global any variables that must persist from one call to the next, and may be changed
@@ -252,7 +252,7 @@ function cb_direct(shares, objval, p_pdiffs, p_whpdiffs, interval)
         wtsum_rmse = sqrt(wtsum_sse / length(p_whpdiffs))
         tot_rmse = sqrt((targ_sse + wtsum_sse) / (length(p_pdiffs) + length(p_whpdiffs)))
 
-        halt = targ_max < .01 && wtsum_max < .01
+        halt = targ_max < targstop && wtsum_max < whstop
 
         totseconds = time() - tstart
 

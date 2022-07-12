@@ -3,16 +3,18 @@
 # :ccsaq NLopt.LD_CCSAQ: CCSA (Conservative Convex Separable Approximations) with simple quadratic approximations (local, derivative)
 
 function direct_nlopt(prob, result;
-    maxiter=100,
-    interval=1,
-    whweight=.5,
-    pow=4,
+    maxiter,
+    interval,
+    whweight,
+    pow,
+    targstop, whstop,
     kwargs...)
 
     # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
     kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
     println("kwargs: $kwargs_keep")
+    println("Household weights component weight: ", whweight)
 
     shares0 = result.shares0
 
@@ -24,10 +26,8 @@ function direct_nlopt(prob, result;
     p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-    println("Household weights component weight: ", whweight)
-
     fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
-        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow)
+        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow, targstop, whstop)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
     fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))  # MAIN ONE
@@ -38,7 +38,7 @@ function direct_nlopt(prob, result;
     # so far, ccsaq is best for this application
     method = result.method
     if method==:ccsaq algorithm=:(LD_CCSAQ())
-    elseif method==:lbfgs algorithm=:(LD_LBFGS())
+    elseif method==:lbfgs_nlopt algorithm=:(LD_LBFGS())
     elseif method==:mma algorithm=:(LD_MMA())
     elseif method==:newton algorithm=:(LD_TNEWTON_PRECOND())
     elseif method==:newtonrs algorithm=:(LD_TNEWTON_PRECOND_RESTART())
