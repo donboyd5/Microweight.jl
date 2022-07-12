@@ -3,6 +3,16 @@ using Optimization
 using OptimizationOptimJL
 import .check as ck
 
+Dict3 = Dict(:a => 1, :b => "one")
+Dict3[:b]
+
+cb = tr -> begin
+            # push!(xs, tr[end].metadata["x"])
+            println(tr)
+            false
+        end
+cb("don")
+
 module check
     # You don’t have Classes in Julia. Instead you first define the data
     # structure (struct, e.g. what kind of data your objects should hold) and

@@ -116,10 +116,10 @@ include("scaling.jl")
 # direct functions and solvers
 include("functions_direct.jl")
 
-include("direct_cg.jl")
+include("direct_optim.jl")
 include("direct_krylov.jl")
 # include("direct_krylov_bounds.jl")
-include("direct_test.jl")
+include("direct_nlopt.jl")
 
 # poisson functions and solvers
 include("functions_poisson.jl")

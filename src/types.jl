@@ -55,13 +55,18 @@ end
 
 @with_kw mutable struct Result
   # https://discourse.julialang.org/t/default-value-of-some-fields-in-a-mutable-struct/33408
+  approach::Symbol = :missing
   method::Symbol = :missing
   success::Bool = false
   iterations::Int = -999
   eseconds::Float64 = -Inf
   sspd::Float64 = Inf
   beta::Vector{Float64} = [Inf]
+  # beta0::Vector{Float64} = [Inf]
+  beta0 = nothing
   shares::Vector{Float64} = [Inf]
+  # shares0::Vector{Float64} = [Inf]
+  shares0 = nothing
   whs::Array{Float64,2} = Array{Float64}(undef, 0, 0)
   wh_calc = nothing
   wh_pdiffs = nothing

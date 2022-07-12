@@ -1,31 +1,47 @@
 
-function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length(prob.geotargets)),
-    shares0=fill(1. / prob.s, prob.h * prob.s),
-    maxiter=100, objscale=1.0, scaling=false, scaling_target_goal=1000.0,
-    interval=1, whweight=nothing,
-    kwargs...)
+function geosolve(prob;
+            approach=nothing,
+            method=nothing,
+            beta0=nothing,
+            shares0=nothing,
+            maxiter=nothing,
+            objscale=1.0, scaling=false, scaling_target_goal=1000.0,
+            interval=nothing,
+            whweight=nothing,
+            pow=nothing,
+            targstop=.01,
+            whstop=.01,
+            kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
     println("Solving problem...")
 
+    # globals accessed within the display_progress function
     global tstart = time()
     global fcalls = 0  # global within this module
-    global h = prob.h
-    global s = prob.s
-    global k = prob.k
-    global objdiv = 100.
-    global pow = 4
-    global s_scale = 1e0
-    global plevel = .99
-    global whweight2
-    global bestobjval = 1e99
+    global bestobjval = Inf
     global nshown = 0
     global iter_calc = 0
 
-    result = Result(method=method)
-    prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
+    global plevel = .99
 
-    result.problem = prob
+
+    # define defaults
+    if isnothing(approach) approach=:poisson end
+
+    if approach==:poisson
+        if isnothing(method) method=:lm_lsqfit end
+        if isnothing(beta0) beta0 = zeros(length(prob.geotargets)) end
+    elseif approach==:direct
+        if isnothing(method) method=:ccsaq end
+        if isnothing(shares0) shares0=fill(1. / prob.s, prob.h * prob.s) end
+    else
+        return "ERROR: approach must be :poisson or :direct"
+    end
+
+    # initialize result
+    prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
+    result = Result(approach=approach, method=method, problem=prob, beta0=beta0, shares0=shares0)
 
     if approach == :poisson
         if method == :cg_optim
@@ -49,14 +65,21 @@ function geosolve(prob; approach=:poisson, method=:lm_lsqfit, beta0=zeros(length
             return;
         end
     elseif approach == :direct
-        if method==:direct_cg
-            direct_cg(prob, result; whweight=nothing, maxiter=maxiter, interval)
-        elseif method == :direct_krylov
-            direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
-        elseif method == :direct_test
-            direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
-        elseif method == :direct_test2
-            direct_test_scaled(prob, shares0, result; whweight=whweight, maxiter=maxiter, interval)
+        nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
+        optim_methods = (:cg, :gd, :lbfgs_optim)
+        # println("ok methods: $okmethod")
+
+        if method in optim_methods
+            direct_optim(prob, result, pow=pow, maxiter=maxiter, interval=interval,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+        # elseif method == :direct_krylov
+        #     direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+        # elseif method == :direct_test
+        #     direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+        elseif method in nlopt_methods
+            # kwargs are those that should be passed through to NLopt from Optimization
+            direct_nlopt(prob, result, pow=pow, maxiter=maxiter, interval=interval,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         # elseif method == :direct_krylov_bounds
         #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
         else
