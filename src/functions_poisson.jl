@@ -112,7 +112,7 @@ function objvec_poisson(beta, wh, xmat, geotargets, display_progress=true)
     calctargets = geo_targets(whs, xmat)
     objvec = vec(targ_pdiffs(calctargets, geotargets))
 
-    # huh? explicitly import package variables
+    # huh? "explicitly import package variables"
     ChainRules.@ignore_derivatives if display_progress show_iter(objvec, wh, whs) end
 
     return objvec
