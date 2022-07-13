@@ -66,21 +66,22 @@ nlboxsolve??
 
 using Parameters, Printf, Statistics
 # optimization helpers
-using LineSearches, ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
-using ModelingToolkit
+using LinearAlgebra, ChainRules
+using ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
+# using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationOptimJL, OptimizationNLopt
-using OptimizationMOI, Ipopt
+# using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()
 # import Pkg; Pkg.add("OptimizationMOI")
 # import Pkg; Pkg.add("Ipopt")
+
 ##############################################################################
 ##
 ## Exported methods and types
 ##
 ##############################################################################
-
 # order these alphabetically by file
 export mtp, geosolve, get_taxprob
   # # src\api.jl

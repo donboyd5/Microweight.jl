@@ -91,12 +91,43 @@ function objvec2(beta, wh, xmat, geotargets, interval, display_progress=true)
     beta = reshape(beta, targshape)
     whs = geo_weights(beta, wh, xmat, targshape)
     calctargets = geo_targets(whs, xmat)
-    objvec = targ_pdiffs(calctargets, geotargets)
+    objvec = vec(targ_pdiffs(calctargets, geotargets))
 
     # display_progress = false
     if display_progress
-        display1(interval, geotargets, calctargets, wh, whs)
+        display_status3(interval, objvec, sum(objvec.^2), wh, whs)
     end
 
-    return vec(objvec)
+    return objvec
+end
+
+
+function objvec_poisson(beta, wh, xmat, geotargets, display_progress=true)
+    global fcalls += 1
+    global bestobjval
+
+    targshape = size(geotargets)
+    beta = reshape(beta, targshape)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+    objvec = vec(targ_pdiffs(calctargets, geotargets))
+
+    # huh? explicitly import package variables
+    ChainRules.@ignore_derivatives if display_progress show_iter(objvec, wh, whs) end
+
+    return objvec
+end
+
+
+
+function objfn_poisson(beta, wh, xmat, geotargets, interval, targstop, whstop)
+    targshape = size(geotargets)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+
+    pdiffs = targ_pdiffs(calctargets, geotargets)
+    objval = sum(pdiffs.^2) # / length(pdiffs)
+    objval = objval * 1e-3
+
+    objval, pdiffs, whs, wh, interval, targstop, whstop
 end

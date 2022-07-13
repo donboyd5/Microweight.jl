@@ -5,8 +5,10 @@ function geosolve(prob;
             beta0=nothing,
             shares0=nothing,
             maxiter=nothing,
-            objscale=1.0, scaling=false, scaling_target_goal=1000.0,
-            interval=nothing,
+            objscale=1.0,
+            scaling=false,
+            scaling_target_goal=1000.0,
+            print_interval=1,
             whweight=nothing,
             pow=nothing,
             targstop=.01,
@@ -15,16 +17,6 @@ function geosolve(prob;
     # allowable methods:
     #   lm_lsqfit, lm_minpack
     println("Solving problem...")
-
-    # globals accessed within the display_progress function
-    global tstart = time()
-    global fcalls = 0  # global within this module
-    global bestobjval = Inf
-    global nshown = 0
-    global iter_calc = 0
-
-    global plevel = .99
-
 
     # define defaults
     if isnothing(approach) approach=:poisson end
@@ -43,15 +35,25 @@ function geosolve(prob;
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
     result = Result(approach=approach, method=method, problem=prob, beta0=beta0, shares0=shares0)
 
+    # globals accessed within the display_progress function
+    global tstart = time()
+    global fcalls = 0  # global within this module
+    global bestobjval = Inf
+    global nshown = 0
+    global iter_calc = 0
+    global plevel = .99
+    global interval = print_interval
+
     if approach == :poisson
         if method == :cg_optim
-            poisson_cgoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            # poisson_cgoptim(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_cgoptim(prob, result; maxiter=100, objscale, interval=interval, targstop=targstop, whstop=whstop, kwargs...)
         elseif method == :cg_optim2
             poisson_cgoptim2(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsoptim
-            poisson_lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsqfit
-            poisson_lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_minpack
             poisson_minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         # elseif method == :lm_mads
@@ -71,17 +73,11 @@ function geosolve(prob;
 
         if method in optim_methods
             direct_optim(prob, result, pow=pow, maxiter=maxiter, interval=interval,
-            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
-        # elseif method == :direct_krylov
-        #     direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
-        # elseif method == :direct_test
-        #     direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
             direct_nlopt(prob, result, pow=pow, maxiter=maxiter, interval=interval,
-            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
-        # elseif method == :direct_krylov_bounds
-        #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         else
             error("Unknown direct method!")
             return;

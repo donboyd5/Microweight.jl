@@ -11,14 +11,14 @@ Options
 
 =#
 
-function poisson_cgoptim(prob, beta0, result; maxiter=100, objscale, interval, kwargs...)
+function poisson_cgoptim_prior(prob, result; maxiter=100, objscale, interval, kwargs...)
     # for allowable arguments:
 
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
     # f = beta -> objfn(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
-    f = beta -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) .* objscale
+    f = beta -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) # .* objscale
     # fbeta = (beta, p) -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, fcalls, interval) .* objscale
 
     # f = beta -> objvec2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, fcalls, interval) .* objscale
@@ -34,9 +34,9 @@ function poisson_cgoptim(prob, beta0, result; maxiter=100, objscale, interval, k
     #   Optim.Options(g_tol = 1e-99, iterations = maxiter, store_trace = true, show_trace = true);
     #   autodiff = :forward)
 
-    od = NLSolversBase.OnceDifferentiable(f, beta0, copy(f(beta0)); inplace = false, autodiff = :forward)
+    od = NLSolversBase.OnceDifferentiable(f, result.beta0, copy(f(result.beta0)); inplace = false, autodiff = :forward)
 
-    opt = Optim.optimize(od, beta0,
+    opt = Optim.optimize(od, result.beta0,
           Optim.ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
           Optim.Options(x_abstol = 1e-8, x_reltol = 1e-8, f_abstol = 1e-8, f_reltol =1e-8, g_tol = 0.,
                   iterations = maxiter, store_trace = true, show_trace = false))
@@ -53,3 +53,45 @@ function poisson_cgoptim(prob, beta0, result; maxiter=100, objscale, interval, k
 
     return result
 end
+
+
+
+
+
+
+function poisson_cgoptim(prob, result; maxiter=100, objscale, interval,
+      targstop, whstop,
+      kwargs...)
+      # for allowable arguments:
+
+      kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
+      kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+
+      fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval, targstop, whstop)
+
+      fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
+      fprob = OptimizationProblem(fpof, result.beta0)
+
+      method = result.method
+      # if method==:cg algorithm=:(ConjugateGradient())
+      # elseif method==:gd algorithm=:(GradientDescent())
+      # elseif method==:lbfgs_optim algorithm=:(LBFGS())
+      # else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim)"
+      # end
+
+      algorithm=:(ConjugateGradient())
+      println("Optim algorithm: ", algorithm)
+
+      opt = Optimization.solve(fprob,
+            Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson)
+
+      # Optim.eval(algorithm), maxiters=maxiter, show_trace=true, callback=cb_poisson, g_tol=0)
+      result.solver_result = opt
+      result.success = true
+      result.iterations = opt.original.iterations
+      result.beta = opt.minimizer
+
+      return result
+  end
+
+
