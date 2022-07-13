@@ -45,8 +45,9 @@ function geosolve(prob;
     global interval = print_interval
 
     if approach == :poisson
-        if method == :cg_optim # objective function returns a scalar
-            poisson_cgoptim(prob, result; maxiter=maxiter, objscale=objscale, targstop=targstop, whstop=whstop, kwargs...)
+        optim_methods = (:cg, :gd, :lbfgs_optim)
+        if method in optim_methods # objective function returns a scalar
+            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, targstop=targstop, whstop=whstop; kwargs...)
         elseif method == :cg_optim2 # objective function returns a scalar
             poisson_cgoptim2(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_lsoptim   # objective function returns a vector

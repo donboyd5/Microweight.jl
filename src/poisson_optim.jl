@@ -55,32 +55,30 @@ function poisson_cgoptim_prior(prob, result; maxiter=100, objscale, interval, kw
 end
 
 
-function poisson_cgoptim(prob, result; maxiter=100, objscale, targstop, whstop,
+function poisson_optim(prob, result; maxiter=100, objscale, targstop, whstop,
       kwargs...)
       # for allowable arguments:
 
       kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
       kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
-      fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, targstop, whstop) .* objscale
+      fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, targstop, whstop) # .* objscale
 
       fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
       fprob = OptimizationProblem(fpof, result.beta0)
 
       method = result.method
-      # if method==:cg algorithm=:(ConjugateGradient())
-      # elseif method==:gd algorithm=:(GradientDescent())
-      # elseif method==:lbfgs_optim algorithm=:(LBFGS())
-      # else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim)"
-      # end
+      if method==:cg algorithm=:(ConjugateGradient())
+      elseif method==:gd algorithm=:(GradientDescent())
+      elseif method==:lbfgs_optim algorithm=:(LBFGS())
+      else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim)"
+      end
 
-      algorithm=:(ConjugateGradient())
       println("Optim algorithm: ", algorithm)
 
       opt = Optimization.solve(fprob,
-            Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson)
+            Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson) # , callback=cb_poisson
 
-      # Optim.eval(algorithm), maxiters=maxiter, show_trace=true, callback=cb_poisson, g_tol=0)
       result.solver_result = opt
       result.success = true
       result.iterations = opt.original.iterations

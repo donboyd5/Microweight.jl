@@ -89,8 +89,10 @@ function objfn_poisson(beta, wh, xmat, geotargets, targstop, whstop)
     calctargets = geo_targets(whs, xmat)
 
     pdiffs = targ_pdiffs(calctargets, geotargets)
-    objval = sum(pdiffs.^2) # / length(pdiffs)
-    objval = objval * 1e-3
+    objval = sum(pdiffs.^8) / length(pdiffs)
+    objval = (objval^(1. / 8.)) # *1e-4
+
+    # println("poisson objval :", objval)
 
     objval, pdiffs, whs, wh, targstop, whstop
 end
