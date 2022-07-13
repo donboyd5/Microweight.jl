@@ -35,37 +35,13 @@ function targ_pdiffs(calctargets, geotargets)
     pdiffs
 end
 
-function sspd(calctargets, geotargets)
-    # worry about what to do when a geotarget is zero
-    pdiffs = targ_pdiffs(calctargets, geotargets)
-    sqpdiffs = pdiffs.^2
-    sspd = sum(sqpdiffs)
-    sspd
-end
 
-function objfn(beta, wh, xmat, geotargets)
-    # beta = reshape(beta, )
-    targshape = size(geotargets)
-    whs = geo_weights(beta, wh, xmat, targshape)
-    calctargets = geo_targets(whs, xmat)
-    obj = sspd(calctargets, geotargets)
-    obj
-end
+##############################################################################
+##
+## functions that return a vector
+##
+##############################################################################
 
-function objfn2(beta, wh, xmat, geotargets, interval, display_progress=true)
-    # beta = reshape(beta, )
-    targshape = size(geotargets)
-    whs = geo_weights(beta, wh, xmat, targshape)
-    calctargets = geo_targets(whs, xmat)
-
-    # display_progress = false
-    if display_progress
-        display1(interval, geotargets, calctargets, wh, whs)
-    end
-
-    obj = sspd(calctargets, geotargets)
-    obj
-end
 
 function objvec(beta, wh, xmat, geotargets)
     targshape = size(geotargets)
@@ -101,9 +77,13 @@ function objvec_poisson(beta, wh, xmat, geotargets, display_progress=true)
     return objvec
 end
 
+##############################################################################
+##
+## functions that return a scalar
+##
+##############################################################################
 
-
-function objfn_poisson(beta, wh, xmat, geotargets, interval, targstop, whstop)
+function objfn_poisson(beta, wh, xmat, geotargets, targstop, whstop)
     targshape = size(geotargets)
     whs = geo_weights(beta, wh, xmat, targshape)
     calctargets = geo_targets(whs, xmat)
@@ -112,5 +92,40 @@ function objfn_poisson(beta, wh, xmat, geotargets, interval, targstop, whstop)
     objval = sum(pdiffs.^2) # / length(pdiffs)
     objval = objval * 1e-3
 
-    objval, pdiffs, whs, wh, interval, targstop, whstop
+    objval, pdiffs, whs, wh, targstop, whstop
 end
+
+
+function sspd(calctargets, geotargets)
+    # worry about what to do when a geotarget is zero
+    pdiffs = targ_pdiffs(calctargets, geotargets)
+    sqpdiffs = pdiffs.^2
+    sspd = sum(sqpdiffs)
+    sspd
+end
+
+function objfn(beta, wh, xmat, geotargets)
+    # beta = reshape(beta, )
+    targshape = size(geotargets)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+    obj = sspd(calctargets, geotargets)
+    obj
+end
+
+function objfn2(beta, wh, xmat, geotargets, interval, display_progress=true)
+    # beta = reshape(beta, )
+    targshape = size(geotargets)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+
+    # display_progress = false
+    if display_progress
+        display1(interval, geotargets, calctargets, wh, whs)
+    end
+
+    obj = sspd(calctargets, geotargets)
+    obj
+end
+
+

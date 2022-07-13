@@ -32,7 +32,6 @@ function fwhs(shares, wh) # , xmat
 
 function objfn_direct(shares, wh, xmat, geotargets,
   p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
-  interval,
   whweight,
   pow,
   targstop, whstop,
@@ -58,7 +57,7 @@ function objfn_direct(shares, wh, xmat, geotargets,
   objval = objval^(1. / pow)
 
   # list extra variables on the return so that they are available to the callback function
-  return objval, p_pdiffs, p_whpdiffs, interval, targstop, whstop
+  return objval, p_pdiffs, p_whpdiffs, targstop, whstop
 end
 
 # function objfn_direct_scaled(shares, wh, xmat, geotargets,

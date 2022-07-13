@@ -4,7 +4,6 @@
 
 function direct_nlopt(prob, result;
     maxiter,
-    interval,
     whweight,
     pow,
     targstop, whstop,
@@ -27,7 +26,7 @@ function direct_nlopt(prob, result;
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
     fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
-        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, interval, whweight, pow, targstop, whstop)
+        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, whweight, pow, targstop, whstop)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
     fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))  # MAIN ONE

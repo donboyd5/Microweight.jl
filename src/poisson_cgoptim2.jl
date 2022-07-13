@@ -11,7 +11,7 @@ Options
 
 =#
 
-function poisson_cgoptim2(prob, beta0, result; maxiter=100, objscale, interval, kwargs...)
+function poisson_cgoptim2(prob, beta0, result; maxiter=100, objscale, kwargs...)
     # for allowable arguments:
 
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
@@ -20,8 +20,7 @@ function poisson_cgoptim2(prob, beta0, result; maxiter=100, objscale, interval, 
     # f = beta -> objfn(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
     # f = beta -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) .* objscale
 
-
-    fp = (beta, p) -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) .* objscale
+    fp = (beta, p) -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
     fprob = OptimizationProblem(fpof, beta0)

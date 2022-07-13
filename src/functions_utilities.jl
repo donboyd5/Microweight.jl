@@ -67,7 +67,7 @@ end
 # end
 
 
-function cb_direct(shares, objval, p_pdiffs, p_whpdiffs, interval, targstop, whstop)
+function cb_direct(shares, objval, p_pdiffs, p_whpdiffs, targstop, whstop)
     # declare as global any variables that must persist from one call to the next, and may be changed
     global fcalls  # init val 0
     global nshown  # init val 0
@@ -114,9 +114,7 @@ function cb_direct(shares, objval, p_pdiffs, p_whpdiffs, interval, targstop, whs
     return halt
 end
 
-function cb_poisson(shares, objval, p_pdiffs, p_whs, wh, interval, targstop, whstop)
-    halt = false
-
+function cb_poisson(shares, objval, p_pdiffs, p_whs, wh, targstop, whstop)
     # declare as global any variables that must persist from one call to the next, and may be changed
     global fcalls  # init val 0
     global nshown  # init val 0
@@ -176,6 +174,7 @@ function cb_poisson(shares, objval, p_pdiffs, p_whs, wh, interval, targstop, whs
             iter_calc, fcalls, totseconds, objval, targ_rmse,  wtsum_rmse, tot_rmse, targ_max, wtsum_max, targ_ptile, wtsum_ptile)
     end
 
+    halt = targ_max < targstop && wtsum_max < whstop
     return halt
 end
 
