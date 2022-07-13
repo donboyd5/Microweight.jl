@@ -85,23 +85,6 @@ function objvec!(out, beta, wh, xmat, geotargets)
     out .= vec(objvec)
 end
 
-function objvec2(beta, wh, xmat, geotargets, interval, display_progress=true)
-    # global fcalls
-    targshape = size(geotargets)
-    beta = reshape(beta, targshape)
-    whs = geo_weights(beta, wh, xmat, targshape)
-    calctargets = geo_targets(whs, xmat)
-    objvec = vec(targ_pdiffs(calctargets, geotargets))
-
-    # display_progress = false
-    if display_progress
-        display_status3(interval, objvec, sum(objvec.^2), wh, whs)
-    end
-
-    return objvec
-end
-
-
 function objvec_poisson(beta, wh, xmat, geotargets, display_progress=true)
     global fcalls += 1
     global bestobjval
@@ -113,7 +96,7 @@ function objvec_poisson(beta, wh, xmat, geotargets, display_progress=true)
     objvec = vec(targ_pdiffs(calctargets, geotargets))
 
     # huh? "explicitly import package variables"
-    ChainRules.@ignore_derivatives if display_progress show_iter(objvec, wh, whs) end
+    ChainRules.@ignore_derivatives if display_progress display_poisson(objvec, wh, whs) end
 
     return objvec
 end

@@ -4,7 +4,7 @@ function geosolve(prob;
             method=nothing,
             beta0=nothing,
             shares0=nothing,
-            maxiter=nothing,
+            maxiter=1000,
             objscale=1.0,
             scaling=false,
             scaling_target_goal=1000.0,
@@ -49,19 +49,19 @@ function geosolve(prob;
             # poisson_cgoptim(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
             poisson_cgoptim(prob, result; maxiter=100, objscale, interval=interval, targstop=targstop, whstop=whstop, kwargs...)
         elseif method == :cg_optim2
-            poisson_cgoptim2(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_cgoptim2(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsoptim
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsqfit
-            poisson_lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_minpack
-            poisson_minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         # elseif method == :lm_mads
         #     poisson_mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :newttr_nlsolve
-            poisson_newttrust(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :krylov
-            poisson_krylov(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         else
             error("Unknown poisson method!")
             return;
