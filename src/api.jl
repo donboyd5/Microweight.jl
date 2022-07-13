@@ -51,7 +51,7 @@ function geosolve(prob;
         elseif method == :cg_optim2
             poisson_cgoptim2(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
         elseif method == :lm_lsoptim
-            poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+            poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_lsqfit
             poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_minpack

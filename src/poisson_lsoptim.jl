@@ -11,7 +11,7 @@ function poisson_lsoptim(prob, result; maxiter=100, objscale, interval=1, kwargs
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
-    f = beta -> objvec2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) # .* objscale
+    f = beta -> objvec_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
 
     opt = LeastSquaresOptim.optimize(f, result.beta0, LevenbergMarquardt(LeastSquaresOptim.LSMR()),
       autodiff = :forward, show_trace=false, iterations=maxiter)
