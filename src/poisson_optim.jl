@@ -87,4 +87,31 @@ function poisson_optim(prob, result; maxiter=100, objscale, targstop, whstop,
       return result
   end
 
+# ALTERNATIVE FORMULATIONS THAT MAY BE PROMISING
+
+#   opt = Optimization.solve(fprob,
+#             Optim.ConjugateGradient(
+#             # Optim.GradientDescent(
+#             # Optim.LBFGS(
+#                 # alphaguess = LineSearches.InitialStatic(), # NO; default
+#                 # alphaguess = LineSearches.InitialPrevious(), # NO
+#                 # alphaguess = LineSearches.InitialQuadratic(), # NO
+#                 # alphaguess = LineSearches.InitialConstantChange(ρ = 0.05), # NO ; ρ = 0.25 default
+#                 # alphaguess = LineSearches.InitialHagerZhang(),
+#                 alphaguess = LineSearches.InitialHagerZhang(α0=1.0),
+#                 # linesearch = LineSearches.HagerZhang(), # default
+#                 linesearch = LineSearches.BackTracking(order=3), # best
+#                 # linesearch = LineSearches.MoreThuente(), # NO
+#                 # linesearch = LineSearches.Static(), # NO
+#                 # linesearch = LineSearches.StrongWolfe(), # NO
+#                 # linesearch = LineSearches.MoreThuente(),
+#                 eta = 0.4  # 0.4 defaults
+#             ),
+#             maxiters=maxiter)
+
+    # opt = Optim.optimize(od, beta0,
+    #   Optim.ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
+    #   Optim.Options(x_abstol = 1e-8, x_reltol = 1e-8, f_abstol = 1e-8, f_reltol =1e-8, g_tol = 0.,
+    #                 iterations = maxiter, store_trace = true, show_trace = false))
+
 

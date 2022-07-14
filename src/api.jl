@@ -48,8 +48,6 @@ function geosolve(prob;
         optim_methods = (:cg, :gd, :lbfgs_optim)
         if method in optim_methods # objective function returns a scalar
             poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, targstop=targstop, whstop=whstop; kwargs...)
-        elseif method == :cg_optim2 # objective function returns a scalar
-            poisson_cgoptim2(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_lsoptim   # objective function returns a vector
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_lsqfit   # objective function returns a vector
