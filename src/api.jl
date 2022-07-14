@@ -46,14 +46,15 @@ function geosolve(prob;
 
     if approach == :poisson
         optim_methods = (:cg, :gd, :lbfgs_optim)
-        if method in optim_methods # objective function returns a scalar
+        minpack_methods = (:hybr_minpack, :lm_minpack)
+        if method in optim_methods # objective function returns a scalar, thus I can modify with powers
             poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, targstop=targstop, whstop=whstop; kwargs...)
         elseif method == :lm_lsoptim   # objective function returns a vector
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_lsqfit   # objective function returns a vector
             # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks
             poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :lm_minpack
+        elseif method in minpack_methods # objective function returns a vector
             poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :newttr_nlsolve
             poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
