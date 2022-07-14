@@ -53,6 +53,7 @@ function cb_poisson(beta, objval, p_pdiffs, p_whs, wh, targstop, whstop)
     global iter_calc  # init val 0
 
     new_iter = false
+    use_iter = false
     if objval < bestobjval || (fcalls<=5 && objval > bestobjval)
         # I want to see the first early iteration after the objval increased
         bestobjval = objval

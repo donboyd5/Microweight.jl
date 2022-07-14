@@ -19,7 +19,6 @@ function poisson_optim(prob, result; maxiter=100, objscale, targstop, whstop,
       kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
       fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, targstop, whstop) .* objscale
-
       fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
       fprob = OptimizationProblem(fpof, result.beta0)
 
@@ -27,11 +26,11 @@ function poisson_optim(prob, result; maxiter=100, objscale, targstop, whstop,
       if method==:cg algorithm=:(ConjugateGradient())
       elseif method==:gd algorithm=:(GradientDescent())
       elseif method==:lbfgs_optim algorithm=:(LBFGS())
-      else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim)"
+      elseif method==:krylov algorithm=:(KrylovTrustRegion())
+      else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim, krylov)"
       end
 
       println("Optim algorithm: ", algorithm)
-
       opt = Optimization.solve(fprob,
             Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson) # , callback=cb_poisson
 

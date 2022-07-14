@@ -34,6 +34,7 @@ function direct_optim(prob, result;
     if method==:cg algorithm=:(ConjugateGradient())
     elseif method==:gd algorithm=:(GradientDescent())
     elseif method==:lbfgs_optim algorithm=:(LBFGS())
+    # I do not allow krylov because it cannot use box constraints
     else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim)"
     end
     println("Optim algorithm: ", algorithm)

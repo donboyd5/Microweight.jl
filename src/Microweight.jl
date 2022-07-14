@@ -12,7 +12,18 @@ public use microdata files of pseudo tax returns, and other similar files.
 ## Documentation
 Besides the help provided at the REPL, it is possible to find help and general
 documentation online at link .
+
 """
+
+#= TODO
+- figure out krylov
+- objfn posson powers
+- kwargs
+
+
+=#
+
+
 module Microweight
 
 

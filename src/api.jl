@@ -45,7 +45,7 @@ function geosolve(prob;
     global interval = print_interval
 
     if approach == :poisson
-        optim_methods = (:cg, :gd, :lbfgs_optim)
+        optim_methods = (:cg, :gd, :lbfgs_optim, :krylov)
         minpack_methods = (:hybr_minpack, :lm_minpack)
         if method in optim_methods # objective function returns a scalar, thus I can modify with powers
             poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, targstop=targstop, whstop=whstop; kwargs...)
@@ -58,8 +58,8 @@ function geosolve(prob;
             poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :newttr_nlsolve # objective function returns a vector
             poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :krylov
-            poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        # elseif method == :krylov # objective function returns a vector
+        #     poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         else
             error("Unknown poisson method!")
             return;
