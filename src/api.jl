@@ -56,7 +56,7 @@ function geosolve(prob;
             poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method in minpack_methods # objective function returns a vector
             poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :newttr_nlsolve
+        elseif method == :newttr_nlsolve # objective function returns a vector
             poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :krylov
             poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
