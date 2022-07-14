@@ -4,9 +4,11 @@ function geosolve(prob;
             method=nothing,
             beta0=nothing,
             shares0=nothing,
-            maxiter=nothing,
-            objscale=1.0, scaling=false, scaling_target_goal=1000.0,
-            interval=nothing,
+            maxiter=1000,
+            objscale=1.0,
+            scaling=false,
+            scaling_target_goal=1000.0,
+            print_interval=1,
             whweight=nothing,
             pow=nothing,
             targstop=.01,
@@ -15,16 +17,6 @@ function geosolve(prob;
     # allowable methods:
     #   lm_lsqfit, lm_minpack
     println("Solving problem...")
-
-    # globals accessed within the display_progress function
-    global tstart = time()
-    global fcalls = 0  # global within this module
-    global bestobjval = Inf
-    global nshown = 0
-    global iter_calc = 0
-
-    global plevel = .99
-
 
     # define defaults
     if isnothing(approach) approach=:poisson end
@@ -43,23 +35,31 @@ function geosolve(prob;
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
     result = Result(approach=approach, method=method, problem=prob, beta0=beta0, shares0=shares0)
 
+    # globals accessed within the display_progress function
+    global tstart = time()
+    global fcalls = 0  # global within this module
+    global bestobjval = Inf
+    global nshown = 0
+    global iter_calc = 0
+    global plevel = .99
+    global interval = print_interval
+
     if approach == :poisson
-        if method == :cg_optim
-            poisson_cgoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
-        elseif method == :cg_optim2
-            poisson_cgoptim2(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
-        elseif method == :lm_lsoptim
-            poisson_lsoptim(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
-        elseif method == :lm_lsqfit
-            poisson_lsqlm(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
-        elseif method == :lm_minpack
-            poisson_minpack(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
-        # elseif method == :lm_mads
-        #     poisson_mads(prob, beta0, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :newttr_nlsolve
-            poisson_newttrust(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
-        elseif method == :krylov
-            poisson_krylov(prob, beta0, result; maxiter=maxiter, objscale=objscale, interval, kwargs...)
+        optim_methods = (:cg, :gd, :lbfgs_optim, :krylov)
+        minpack_methods = (:hybr_minpack, :lm_minpack)
+        if method in optim_methods # objective function returns a scalar, thus I can modify with powers
+            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, targstop=targstop, whstop=whstop; kwargs...)
+        elseif method == :lm_lsoptim   # objective function returns a vector
+            poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lm_lsqfit   # objective function returns a vector
+            # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks
+            poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method in minpack_methods # objective function returns a vector
+            poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :newttr_nlsolve # objective function returns a vector
+            poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        # elseif method == :krylov # objective function returns a vector
+        #     poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         else
             error("Unknown poisson method!")
             return;
@@ -67,21 +67,14 @@ function geosolve(prob;
     elseif approach == :direct
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
         optim_methods = (:cg, :gd, :lbfgs_optim)
-        # println("ok methods: $okmethod")
 
         if method in optim_methods
-            direct_optim(prob, result, pow=pow, maxiter=maxiter, interval=interval,
-            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
-        # elseif method == :direct_krylov
-        #     direct_krylov(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
-        # elseif method == :direct_test
-        #     direct_test(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+            direct_optim(prob, result, pow=pow, maxiter=maxiter,
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
-            direct_nlopt(prob, result, pow=pow, maxiter=maxiter, interval=interval,
-            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
-        # elseif method == :direct_krylov_bounds
-        #     direct_krylov_bounds(prob, shares0, result; whweight=nothing, maxiter=maxiter, interval)
+            direct_nlopt(prob, result, pow=pow, maxiter=maxiter,
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         else
             error("Unknown direct method!")
             return;

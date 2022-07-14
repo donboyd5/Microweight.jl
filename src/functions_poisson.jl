@@ -35,6 +35,69 @@ function targ_pdiffs(calctargets, geotargets)
     pdiffs
 end
 
+
+##############################################################################
+##
+## functions that return a vector
+##
+##############################################################################
+
+
+function objvec(beta, wh, xmat, geotargets)
+    targshape = size(geotargets)
+    beta = reshape(beta, targshape)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+    objvec = targ_pdiffs(calctargets, geotargets)
+    vec(objvec)
+end
+
+function objvec!(out, beta, wh, xmat, geotargets)
+    targshape = size(geotargets)
+    beta = reshape(beta, targshape)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+    objvec = targ_pdiffs(calctargets, geotargets)
+    out .= vec(objvec)
+end
+
+function objvec_poisson(beta, wh, xmat, geotargets, display_progress=true)
+    global fcalls += 1
+    global bestobjval
+
+    targshape = size(geotargets)
+    beta = reshape(beta, targshape)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+    objvec = vec(targ_pdiffs(calctargets, geotargets))
+
+    # huh? "explicitly import package variables"
+    ChainRules.@ignore_derivatives if display_progress display_poisson(objvec, wh, whs) end
+
+    return objvec
+end
+
+##############################################################################
+##
+## functions that return a scalar
+##
+##############################################################################
+
+function objfn_poisson(beta, wh, xmat, geotargets, targstop, whstop)
+    targshape = size(geotargets)
+    whs = geo_weights(beta, wh, xmat, targshape)
+    calctargets = geo_targets(whs, xmat)
+
+    pdiffs = targ_pdiffs(calctargets, geotargets)
+    objval = sum(pdiffs.^8) / length(pdiffs)
+    objval = (objval^(1. / 8.)) * 1e-8
+
+    # println("poisson objval :", objval)
+
+    objval, pdiffs, whs, wh, targstop, whstop
+end
+
+
 function sspd(calctargets, geotargets)
     # worry about what to do when a geotarget is zero
     pdiffs = targ_pdiffs(calctargets, geotargets)
@@ -67,36 +130,4 @@ function objfn2(beta, wh, xmat, geotargets, interval, display_progress=true)
     obj
 end
 
-function objvec(beta, wh, xmat, geotargets)
-    targshape = size(geotargets)
-    beta = reshape(beta, targshape)
-    whs = geo_weights(beta, wh, xmat, targshape)
-    calctargets = geo_targets(whs, xmat)
-    objvec = targ_pdiffs(calctargets, geotargets)
-    vec(objvec)
-end
 
-function objvec!(out, beta, wh, xmat, geotargets)
-    targshape = size(geotargets)
-    beta = reshape(beta, targshape)
-    whs = geo_weights(beta, wh, xmat, targshape)
-    calctargets = geo_targets(whs, xmat)
-    objvec = targ_pdiffs(calctargets, geotargets)
-    out .= vec(objvec)
-end
-
-function objvec2(beta, wh, xmat, geotargets, interval, display_progress=true)
-    # global fcalls
-    targshape = size(geotargets)
-    beta = reshape(beta, targshape)
-    whs = geo_weights(beta, wh, xmat, targshape)
-    calctargets = geo_targets(whs, xmat)
-    objvec = targ_pdiffs(calctargets, geotargets)
-
-    # display_progress = false
-    if display_progress
-        display1(interval, geotargets, calctargets, wh, whs)
-    end
-
-    return vec(objvec)
-end

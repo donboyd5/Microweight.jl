@@ -12,7 +12,18 @@ public use microdata files of pseudo tax returns, and other similar files.
 ## Documentation
 Besides the help provided at the REPL, it is possible to find help and general
 documentation online at link .
+
 """
+
+#= TODO
+- figure out krylov
+- objfn posson powers
+- kwargs
+
+
+=#
+
+
 module Microweight
 
 
@@ -66,21 +77,22 @@ nlboxsolve??
 
 using Parameters, Printf, Statistics
 # optimization helpers
-using LineSearches, ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
-using ModelingToolkit
+using LinearAlgebra, ChainRules
+using ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
+# using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationOptimJL, OptimizationNLopt
-using OptimizationMOI, Ipopt
+# using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()
 # import Pkg; Pkg.add("OptimizationMOI")
 # import Pkg; Pkg.add("Ipopt")
+
 ##############################################################################
 ##
 ## Exported methods and types
 ##
 ##############################################################################
-
 # order these alphabetically by file
 export mtp, geosolve, get_taxprob
   # # src\api.jl
@@ -108,9 +120,10 @@ include("types.jl")
 include("api.jl") # function to route things
 
 # helpers
+include("functions_display.jl")
 include("functions_utilities.jl")
-include("make_test_problems.jl")
 include("get_taxdata_problems.jl")
+include("make_test_problems.jl")
 include("scaling.jl")
 
 # direct functions and solvers
@@ -125,8 +138,7 @@ include("direct_nlopt.jl")
 include("functions_poisson.jl")
 include("functions_poisson_fg.jl")
 
-include("poisson_cgoptim.jl")
-include("poisson_cgoptim2.jl")
+include("poisson_optim.jl")
 include("poisson_lsoptim.jl")
 include("poisson_lsqlm.jl")
 # include("poisson_mads.jl")

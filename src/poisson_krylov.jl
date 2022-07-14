@@ -160,25 +160,61 @@ KrylovTrustRegion(; initial_radius::Real = 1.0,
 #endregion
 
 
-function poisson_krylov(prob, beta0, result; maxiter=100, objscale, interval=1, kwargs...)
+# function poisson_krylov(prob, result; maxiter=1000, objscale, kwargs...)
+#   # for allowable arguments:
+
+#   kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
+#   kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+
+#   fbeta = (beta, p) -> objvec_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
+
+#   f = OptimizationFunction(fbeta, Optimization.AutoZygote())
+#   fprob = OptimizationProblem(f, result.beta0)
+#   # opt = Optimization.solve(fprob,
+#   #   Optim.LBFGS(; alphaguess = LineSearches.InitialStatic(), linesearch = LineSearches.BackTracking()),
+#   #   maxiters=2000, g_tol=1e-12, show_trace=true, show_every=100)
+
+#   # opt = Optimization.solve(fprob,
+#   #   Optim.KrylovTrustRegion(; initial_radius = 0.1, max_radius = 100.0,
+#   #    eta = 0.1, rho_lower=0.101, rho_upper=0.75,
+#   #    cg_tol=0.01),
+#   #    maxiters=maxiter, store_trace=true, show_trace=false, show_every=10)
+
+#   opt = Optimization.solve(fprob,
+#      Optim.KrylovTrustRegion(),
+#      maxiters=maxiter)
+
+#   result.solver_result = opt
+#   result.success = opt.retcode == Symbol("true")
+#   result.iterations = opt.original.iterations
+#   result.beta = opt.minimizer
+
+#   return result
+# end
+
+function poisson_krylov(prob, result; maxiter=1000, objscale, kwargs...)
     # for allowable arguments:
 
     kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
-    fbeta = (beta, p) -> objfn2(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, interval) .* objscale
+    fbeta = (beta, p) -> objvec_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
 
     f = OptimizationFunction(fbeta, Optimization.AutoZygote())
-    fprob = OptimizationProblem(f, beta0)
+    fprob = OptimizationProblem(f, result.beta0)
     # opt = Optimization.solve(fprob,
     #   Optim.LBFGS(; alphaguess = LineSearches.InitialStatic(), linesearch = LineSearches.BackTracking()),
     #   maxiters=2000, g_tol=1e-12, show_trace=true, show_every=100)
 
+    # opt = Optimization.solve(fprob,
+    #   Optim.KrylovTrustRegion(; initial_radius = 0.1, max_radius = 100.0,
+    #    eta = 0.1, rho_lower=0.101, rho_upper=0.75,
+    #    cg_tol=0.01),
+    #    maxiters=maxiter, store_trace=true, show_trace=false, show_every=10)
+
     opt = Optimization.solve(fprob,
-      Optim.KrylovTrustRegion(; initial_radius = 0.1, max_radius = 100.0,
-       eta = 0.1, rho_lower=0.101, rho_upper=0.75,
-       cg_tol=0.01),
-      maxiters=maxiter, store_trace=true, show_trace=false, show_every=10)
+       Optim.KrylovTrustRegion(),
+       maxiters=maxiter)
 
     result.solver_result = opt
     result.success = opt.retcode == Symbol("true")
