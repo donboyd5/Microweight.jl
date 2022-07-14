@@ -8,6 +8,14 @@ res = Optim.optimize(once_diff, [1.25, -2.1], [Inf, Inf], [2.0, 2.0], Fminbox(Co
 
 Options
 
+KrylovTrustRegion(; initial_radius::Real = 1.0,
+                    max_radius::Real = 100.0,
+                    eta::Real = 0.1,  # AssertionError: 0 <= method.eta < method.rho_lower
+                    rho_lower::Real = 0.25,
+                    rho_upper::Real = 0.75,
+                    cg_tol::Real = 0.01) =
+                    KrylovTrustRegion(initial_radius, max_radius, eta,
+                                  rho_lower, rho_upper, cg_tol)
 
 =#
 
@@ -26,7 +34,9 @@ function poisson_optim(prob, result; maxiter=100, objscale, pow, targstop, whsto
       if method==:cg algorithm=:(ConjugateGradient())
       elseif method==:gd algorithm=:(GradientDescent())
       elseif method==:lbfgs_optim algorithm=:(LBFGS())
-      elseif method==:krylov algorithm=:(KrylovTrustRegion())
+      elseif method==:krylov algorithm=:(KrylovTrustRegion())  # ; eta=0.24 seems good
+      elseif method==:newton algorithm=:(Newton())
+      elseif method==:newtr algorithm=:(NewtonTrustRegion())
       else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim, krylov)"
       end
 

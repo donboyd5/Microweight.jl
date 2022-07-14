@@ -85,6 +85,11 @@ end
 
 function objfn_poisson(beta, wh, xmat, geotargets, pow, targstop, whstop, objscale)
     targshape = size(geotargets)
+    # betascale = maximum(x -> isnan(x) ? -Inf : x, beta) + 1e-12 #non-allocating #non-allocating
+    # betascale = 1.0
+    # print("max beta: ", maximum(x -> isnan(x) ? -Inf : x, beta))
+    # println("betascale: ", betascale)
+   # whs = geo_weights(beta ./ betascale, wh, xmat, targshape) # maximum(abs.(beta))
     whs = geo_weights(beta, wh, xmat, targshape)
     calctargets = geo_targets(whs, xmat)
 

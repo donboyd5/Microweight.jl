@@ -45,7 +45,7 @@ function geosolve(prob;
     global interval = print_interval
 
     if approach == :poisson
-        optim_methods = (:cg, :gd, :lbfgs_optim, :krylov)
+        optim_methods = (:cg, :gd, :lbfgs_optim, :krylov, :newton, :newtr)
         minpack_methods = (:hybr_minpack, :lm_minpack)
         if method in optim_methods # objective function returns a scalar, thus I can modify with powers
             poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
