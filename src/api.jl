@@ -48,7 +48,7 @@ function geosolve(prob;
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov)
         minpack_methods = (:hybr_minpack, :lm_minpack)
         if method in optim_methods # objective function returns a scalar, thus I can modify with powers
-            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, targstop=targstop, whstop=whstop; kwargs...)
+            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
         elseif method == :lm_lsoptim   # objective function returns a vector
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_lsqfit   # objective function returns a vector
