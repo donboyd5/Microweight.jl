@@ -17,8 +17,10 @@ documentation online at link .
 
 #= TODO
 - figure out krylov
-- objfn posson powers
+  why do callback results look good but final results do not???
 - kwargs
+- show function call
+- beta scaling
 
 
 =#
@@ -27,12 +29,7 @@ documentation online at link .
 module Microweight
 
 
-#= TODO:
-- scaling
-- show function call
-- better trace arrangement
-- lbgfs
-- krylov
+#=
 
 https://github.com/JuliaNLSolvers/Optim.jl/blob/master/src/multivariate/solvers/second_order/krylov_trust_region.jl
 
@@ -144,7 +141,7 @@ include("poisson_lsqlm.jl")
 # include("poisson_mads.jl")
 include("poisson_minpack.jl")
 include("poisson_newttrust.jl")
-include("poisson_krylov.jl")
+# include("poisson_krylov.jl")
 
 # functions underlying all calculations
 
