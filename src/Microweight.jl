@@ -109,9 +109,10 @@ include("types.jl")
 include("api.jl") # function to route things
 
 # helpers
+include("functions_display.jl")
 include("functions_utilities.jl")
-include("make_test_problems.jl")
 include("get_taxdata_problems.jl")
+include("make_test_problems.jl")
 include("scaling.jl")
 
 # direct functions and solvers

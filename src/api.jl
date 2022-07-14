@@ -53,6 +53,7 @@ function geosolve(prob;
         elseif method == :lm_lsoptim   # objective function returns a vector
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_lsqfit   # objective function returns a vector
+            # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks
             poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :lm_minpack
             poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
