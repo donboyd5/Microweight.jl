@@ -92,8 +92,6 @@ function objfn_poisson(beta, wh, xmat, geotargets, pow, targstop, whstop, objsca
     objval = sum(pdiffs.^pow) / length(pdiffs)
     objval = objval^(1. / pow) * objscale
 
-    # println("poisson objval :", objval)
-
     objval, pdiffs, whs, wh, targstop, whstop
 end
 

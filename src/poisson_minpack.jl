@@ -62,7 +62,7 @@ function poisson_minpack(prob, result; maxiter=1000, objscale, kwargs...)
     # maxfev, epsfcn, diag, mode, factor, nprint, lr
     # opt = MINPACK.fsolve(f!, g!, result.beta0, show_trace=false, save_trace=true, method=algorithm, iterations=maxiter, kwargs...)
     # note the semicolon below!!
-    opt = MINPACK.fsolve(f!, g!, result.beta0, method=:hybr, iterations=maxiter; kwargs_keep...)
+    opt = MINPACK.fsolve(f!, g!, result.beta0, method=algorithm, iterations=maxiter; kwargs_keep...)
 
     result.success = true
     result.iterations = opt.trace.f_calls
