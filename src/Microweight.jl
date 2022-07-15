@@ -16,12 +16,21 @@ documentation online at link .
 """
 
 #= TODO
-- figure out krylov
-  why do callback results look good but final results do not???
 - kwargs
 - show function call
-- beta scaling
 
+- explore https://github.com/emmt/OptimPackNextGen.jl -- vmlmb
+  https://github.com/emmt/OptimPackNextGen.jl/blob/master/doc/quasinewton.md
+  seems to be like LBFGS
+  see https://github.com/emmt/OptimPackNextGen.jl/blob/master/test/rosenbrock.jl lines 81+
+  consider for both poisson and direct
+  note that it does scaling
+  https://github.com/emmt/OptimPackNextGen.jl/issues/8
+
+- acs example data
+- call from R, call from python
+- beta scaling BAD
+- figure out krylov why do callback results look good but final results do not???  DONE
 
 =#
 

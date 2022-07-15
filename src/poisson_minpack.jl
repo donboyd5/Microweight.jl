@@ -6,6 +6,13 @@
 
 lm and hybr are available when passing f and g
 
+# hybr_minpack may not make progress if system doesn't have a zero
+# alternative starting points can make a difference, too
+# mode=1 seems essential
+# factor is crucial, but hard to predict what is the best value
+#  factor 100. works for stub 9 but factor 1000. works for stub 4
+# https://www.math.utah.edu/software/minpack/minpack/hybrj.html
+
 Options for :lm (based on lmder):
 https://github.com/devernay/cminpack/blob/d1f5f5a273862ca1bbcf58394e4ac060d9e22c76/lmder.c
     ftol is a nonnegative input variable. termination
@@ -32,10 +39,11 @@ https://github.com/devernay/cminpack/blob/d1f5f5a273862ca1bbcf58394e4ac060d9e22c
 
 =#
 
-function poisson_minpack(prob, result; maxiter=1000, objscale, kwargs...)
+function poisson_minpack(prob, result; maxiter=5000, objscale, kwargs...)
     # for allowable arguments:
     # lm: https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
     # hybr: # maxfev, epsfcn, diag, mode, factor, nprint, lr
+    # mode=1 seems crucial -- mode=2 gets stuck
     kwkeys_allowed = (:factor, :xtol, :mode)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
     # println("kwargs: X", kwargs)

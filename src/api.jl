@@ -30,6 +30,8 @@ function geosolve(prob;
     else
         return "ERROR: approach must be :poisson or :direct"
     end
+    println("approach: ", approach)
+    println("method: ", method)
 
     # initialize result
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
