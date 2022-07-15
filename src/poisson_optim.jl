@@ -25,7 +25,7 @@ function poisson_optim(prob, result; maxiter=100, objscale, pow, targstop, whsto
       method = result.method
       if method==:cg algorithm=:(ConjugateGradient())
       elseif method==:gd algorithm=:(GradientDescent())
-      elseif method==:lbfgs_optim algorithm=:(LBFGS())
+      elseif method==:lbfgs_optim algorithm=:(LBFGS(; m=100))
       elseif method==:krylov algorithm=:(KrylovTrustRegion())
       else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim, krylov)"
       end
