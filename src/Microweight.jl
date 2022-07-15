@@ -135,13 +135,14 @@ include("direct_nlopt.jl")
 include("functions_poisson.jl")
 include("functions_poisson_fg.jl")
 
-include("poisson_optim.jl")
+# include("poisson_krylov.jl")
 include("poisson_lsoptim.jl")
 include("poisson_lsqlm.jl")
 # include("poisson_mads.jl")
 include("poisson_minpack.jl")
 include("poisson_newttrust.jl")
-# include("poisson_krylov.jl")
+include("poisson_nlopt.jl")
+include("poisson_optim.jl")
 
 # functions underlying all calculations
 

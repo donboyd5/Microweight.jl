@@ -44,26 +44,37 @@ function geosolve(prob;
     global plevel = .99
     global interval = print_interval
 
+    # NOTES:
+    #   poisson method, we need lm or rootfinding -- scalar optimizers don't work well
+    #   direct method: ccsaq works best
+
     if approach == :poisson
-        optim_methods = (:cg, :gd, :lbfgs_optim, :krylov)
         minpack_methods = (:hybr_minpack, :lm_minpack)
-        if method in optim_methods # objective function returns a scalar, thus I can modify with powers
-            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
-        elseif method == :lm_lsoptim   # objective function returns a vector
-            poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :lm_lsqfit   # objective function returns a vector
+        nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
+        optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
+
+        if method == :lm_lsqfit   # objective function returns a vector
             # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks
             poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lm_lsoptim   # objective function returns a vector
+            poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method in minpack_methods # objective function returns a vector
             poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method == :newttr_nlsolve # objective function returns a vector
             poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         # elseif method == :krylov # objective function returns a vector
         #     poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+
+        elseif method in nlopt_methods # objective function returns a scalar
+            poisson_nlopt(prob, result; maxiter=maxiter, pow=pow, targstop=targstop, whstop=whstop, objscale=objscale, kwargs...)
+        elseif method in optim_methods # objective function returns a scalar, thus I can modify with powers
+            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
+
         else
             error("Unknown poisson method!")
             return;
         end
+
     elseif approach == :direct
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
         optim_methods = (:cg, :gd, :lbfgs_optim)
