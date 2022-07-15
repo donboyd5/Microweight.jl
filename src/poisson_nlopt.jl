@@ -2,7 +2,7 @@
 
 # :ccsaq NLopt.LD_CCSAQ: CCSA (Conservative Convex Separable Approximations) with simple quadratic approximations (local, derivative)
 
-function direct_nlopt(prob, result;
+function poisson_nlopt(prob, result;
     maxiter,
     whweight,
     pow,
@@ -25,7 +25,7 @@ function direct_nlopt(prob, result;
     p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
     p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-    fp = (shares, p) -> objfn_direct(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
+    fp = (shares, p) -> objfn_poisson(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
         p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, whweight, pow, targstop, whstop)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
