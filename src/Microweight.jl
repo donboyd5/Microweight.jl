@@ -101,10 +101,8 @@ include("scaling.jl")
 # direct functions and solvers
 include("functions_direct.jl")
 
-include("direct_optz_optim.jl")
-include("direct_krylov.jl")
-# include("direct_krylov_bounds.jl")
 include("direct_optz_nlopt.jl")
+include("direct_optz_optim.jl")
 
 # poisson functions and solvers
 include("functions_poisson.jl")
