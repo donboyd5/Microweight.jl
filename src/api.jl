@@ -69,9 +69,9 @@ function geosolve(prob;
         #     poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
 
         elseif method in nlopt_methods # objective function returns a scalar
-            poisson_nlopt(prob, result; maxiter=maxiter, pow=pow, targstop=targstop, whstop=whstop, objscale=objscale, kwargs...)
+            poisson_optz_nlopt(prob, result; maxiter=maxiter, pow=pow, targstop=targstop, whstop=whstop, objscale=objscale, kwargs...)
         elseif method in optim_methods # objective function returns a scalar, thus I can modify with powers
-            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
+            poisson_optz_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
 
         else
             error("Unknown poisson method!")
