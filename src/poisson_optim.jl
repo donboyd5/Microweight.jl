@@ -17,6 +17,7 @@ function poisson_optim(prob, result; maxiter=100, objscale, pow, targstop, whsto
 
       kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
       kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+      println("kwargs: $kwargs_keep")
 
       fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop, objscale)
       fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
@@ -32,7 +33,7 @@ function poisson_optim(prob, result; maxiter=100, objscale, pow, targstop, whsto
 
       println("Optim algorithm: ", algorithm)
       opt = Optimization.solve(fprob,
-            Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson) # , callback=cb_poisson
+            Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson; kwargs_keep...) # , callback=cb_poisson
 
       result.solver_result = opt
       result.success = true

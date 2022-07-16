@@ -27,53 +27,19 @@ documentation online at link .
   note that it does scaling
   https://github.com/emmt/OptimPackNextGen.jl/issues/8
 
+- explore https://optimization.sciml.ai/stable/optimization_packages/optimisers/
+- explore nlboxsolve??
+
 - acs example data
 - call from R, call from python
-- beta scaling BAD
+
+DONE:
+- beta scaling BAD, don't do it
 - figure out krylov why do callback results look good but final results do not???  DONE
 
 =#
 
-
 module Microweight
-
-
-#=
-
-https://github.com/JuliaNLSolvers/Optim.jl/blob/master/src/multivariate/solvers/second_order/krylov_trust_region.jl
-
-res5 = Optim.optimize(f, lsres.param, ConjugateGradient(),
-Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
- autodiff = :forward)
-
-res6 = Optim.optimize(f, ibeta, GradientDescent(),
-  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
-  autodiff = :forward) # seems to become very slow as problem size increases
-
-res7 = Optim.optimize(f, ibeta, MomentumGradientDescent(),
-  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
-  autodiff = :forward)
-# 1602.8 3.078448e-11
-
-# really good after 3 iterations 562 secs
-res8 = Optim.optimize(f, ibeta, AcceleratedGradientDescent(),
-  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
-  autodiff = :forward)
-
-res12 = Optim.optimize(f, g!, ibeta, ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
-  Optim.Options(g_tol = 1e-6, iterations = 1_000, store_trace = true, show_trace = true))
-# 4.669833e+03 after 10k
-# 2.030909e+03 after 20k
-# 1.173882e+03 after 30k
-#  after 40k
-#  after 50k
-res12a = Optim.optimize(f, g!, minimizer(res12a), ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
-  Optim.Options(g_tol = 1e-6, iterations = 10_000, store_trace = true, show_trace = true))
-
-nlboxsolve??
-
-
-=#
 
 ##############################################################################
 ##
@@ -87,7 +53,7 @@ using LinearAlgebra, ChainRules
 using ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
 # using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
-using Optimization, OptimizationOptimJL, OptimizationNLopt
+using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptimJL
 # using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()
@@ -135,10 +101,10 @@ include("scaling.jl")
 # direct functions and solvers
 include("functions_direct.jl")
 
-include("direct_optim.jl")
+include("direct_optz_optim.jl")
 include("direct_krylov.jl")
 # include("direct_krylov_bounds.jl")
-include("direct_nlopt.jl")
+include("direct_optz_nlopt.jl")
 
 # poisson functions and solvers
 include("functions_poisson.jl")

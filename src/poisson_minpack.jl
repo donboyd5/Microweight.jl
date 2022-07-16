@@ -37,18 +37,14 @@ https://github.com/devernay/cminpack/blob/d1f5f5a273862ca1bbcf58394e4ac060d9e22c
         occurs when the number of calls to fcn with iflag = 1
         has reached maxfev.
 
+    for allowable arguments:
+    lm: https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
+    hybr: # maxfev, epsfcn, diag, mode, factor, nprint, lr
+    mode=1 seems crucial -- mode=2 gets stuc
+
 =#
 
 function poisson_minpack(prob, result; maxiter=5000, objscale, kwargs...)
-    # for allowable arguments:
-    # lm: https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
-    # hybr: # maxfev, epsfcn, diag, mode, factor, nprint, lr
-    # mode=1 seems crucial -- mode=2 gets stuck
-    kwkeys_allowed = (:factor, :xtol, :mode)
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    # println("kwargs: X", kwargs)
-    # println("kwargs_keep: X", kwargs_keep)
-    # return
 
     # MUST have in-place functions with arguments (out, beta) [or other names with same meanings]
     # f! = (out, beta) -> objvec!(out, beta, prob.wh, prob.xmat, prob.geotargets)
@@ -67,9 +63,18 @@ function poisson_minpack(prob, result; maxiter=5000, objscale, kwargs...)
     end
     println("algorithm: ", algorithm)
 
+    kwkeys_allowed = (:factor, :xtol, :mode)
+    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+    println("kwargs: $kwargs_keep")
+
     # maxfev, epsfcn, diag, mode, factor, nprint, lr
     # opt = MINPACK.fsolve(f!, g!, result.beta0, show_trace=false, save_trace=true, method=algorithm, iterations=maxiter, kwargs...)
     # note the semicolon below!!
+
+    kwkeys_allowed = (:factor, :xtol, :mode)
+    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+    println("kwargs: $kwargs_keep")
+
     opt = MINPACK.fsolve(f!, g!, result.beta0, method=algorithm, iterations=maxiter; kwargs_keep...)
 
     result.success = true

@@ -16,7 +16,7 @@ function geosolve(prob;
             kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
-    println("Solving problem...")
+    println("Solving problem...\n")
 
     # define defaults
     if isnothing(approach) approach=:poisson end
@@ -82,11 +82,11 @@ function geosolve(prob;
         optim_methods = (:cg, :gd, :lbfgs_optim)
 
         if method in optim_methods
-            direct_optim(prob, result, pow=pow, maxiter=maxiter,
+            direct_optz_optim(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
-            direct_nlopt(prob, result, pow=pow, maxiter=maxiter,
+            direct_optz_nlopt(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         else
             error("Unknown direct method!")

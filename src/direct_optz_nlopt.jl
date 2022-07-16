@@ -1,21 +1,50 @@
-# https://github.com/SciML/Optimization.jl
+
+#=
+https://github.com/SciML/Optimization.jl
+https://optimization.sciml.ai/stable/
+https://optimization.sciml.ai/dev/
+
+The arguments to solve are common across all of the optimizers. These common arguments are:
+    maxiters (the maximum number of iterations)
+    maxtime (the maximum of time the optimization runs for)
+    abstol (absolute tolerance in changes of the objective value)
+    reltol (relative tolerance in changes of the objective value)
+    callback (a callback function)
+
+If the chosen global optimzer employs a local optimization method a similiar set of common local
+optimizer arguments exists. The common local optimizer arguments are:
+    local_method (optimiser used for local optimization in global method)
+    local_maxiters (the maximum number of iterations)
+    local_maxtime (the maximum of time the optimization runs for)
+    local_abstol (absolute tolerance in changes of the objective value)
+    local_reltol (relative tolerance in changes of the objective value)
+    local_options (NamedTuple of keyword arguments for local optimizer)
+
+Some optimizer algorithms have special keyword arguments documented in the solver portion of
+the documentation and their respective documentation. These arguments can be passed as kwargs... to solve.
+Similiarly, the special kewyword arguments for the local_method of a global optimizer are passed as a NamedTuple to local_options.
+
+For NLopt:
+https://optimization.sciml.ai/stable/optimization_packages/nlopt/
+https://nlopt.readthedocs.io/en/latest/NLopt_Reference
+Beyond the common arguments the following optimizer parameters can be set as kwargs: [djb: these are not available for all algorithms]
+    stopval  ...this is useful...
+    xtol_rel
+    xtol_abs
+    constrtol_abs
+    initial_step  ? https://nlopt.readthedocs.io/en/latest/NLopt_Reference/#initial-step-size
+    population  ? for stochastic
+    vector_storage ? https://nlopt.readthedocs.io/en/latest/NLopt_Guile_Reference/#vector-storage-for-limited-memory-quasi-newton-algorithms
 
 # :ccsaq NLopt.LD_CCSAQ: CCSA (Conservative Convex Separable Approximations) with simple quadratic approximations (local, derivative)
+=#
 
-function direct_nlopt(prob, result;
+function direct_optz_nlopt(prob, result;
     maxiter,
     whweight,
     pow,
     targstop, whstop,
     kwargs...)
-
-    # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
-    kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs: $kwargs_keep")
-    println("Household weights component weight: ", whweight)
-
-    shares0 = result.shares0
 
     # %% setup preallocations
     p = 1.0
@@ -29,7 +58,7 @@ function direct_nlopt(prob, result;
         p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, whweight, pow, targstop, whstop)
 
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
-    fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))  # MAIN ONE
+    fprob = OptimizationProblem(fpof, result.shares0, lb=zeros(length(result.shares0)), ub=ones(length(result.shares0)))
 
     # NLOPT gradient-based local algorithms that can handle bounds and that do NOT use dense matrix methods
     #   I exclude slsqp because it uses dense methods
@@ -47,7 +76,18 @@ function direct_nlopt(prob, result;
     end
     println("NLopt algorithm: ", algorithm)
 
-    # opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_keep...)
+    # kwargs must be common options or allowable options for NLopt that Optimization will pass through to NLopt
+    kwkeys_method = (:maxtime, :abstol, :reltol)
+    kwkeys_algo = (:stopval, )
+    # merge the allowable sets of keys
+    kwkeys_allowed = (kwkeys_method..., kwkeys_algo...)
+    println("kwargs allowed: ", kwkeys_allowed)
+    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+    println("kwargs passed on: $kwargs_keep")
+
+    println("Household weights component weight: ", whweight)
+    println("\n")
+
     opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_keep...)
 
     # ERROR: AutoZygote does not currently support constraints
