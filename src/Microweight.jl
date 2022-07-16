@@ -113,8 +113,8 @@ include("poisson_lsoptim.jl")
 include("poisson_lsqlm.jl")
 # include("poisson_mads.jl")
 include("poisson_minpack.jl")
-include("poisson_newttrust.jl")
 include("poisson_nlopt.jl")
+include("poisson_nlsolve.jl")
 include("poisson_optim.jl")
 
 # functions underlying all calculations

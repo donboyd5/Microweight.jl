@@ -44,7 +44,7 @@ https://github.com/devernay/cminpack/blob/d1f5f5a273862ca1bbcf58394e4ac060d9e22c
 
 =#
 
-function poisson_minpack(prob, result; maxiter=5000, objscale, kwargs...)
+function poisson_minpack_fsolve(prob, result; maxiter=5000, objscale, kwargs...)
 
     # MUST have in-place functions with arguments (out, beta) [or other names with same meanings]
     # f! = (out, beta) -> objvec!(out, beta, prob.wh, prob.xmat, prob.geotargets)
@@ -63,17 +63,15 @@ function poisson_minpack(prob, result; maxiter=5000, objscale, kwargs...)
     end
     println("algorithm: ", algorithm)
 
-    kwkeys_allowed = (:factor, :xtol, :mode)
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs: $kwargs_keep")
-
     # maxfev, epsfcn, diag, mode, factor, nprint, lr
     # opt = MINPACK.fsolve(f!, g!, result.beta0, show_trace=false, save_trace=true, method=algorithm, iterations=maxiter, kwargs...)
     # note the semicolon below!!
 
-    kwkeys_allowed = (:factor, :xtol, :mode)
+    println("kwargs requested: ", keys(kwargs))
+    kwkeys_allowed = (:ftol, :xtol, :gtol, :maxfev)
+    println("kwargs allowed: ", kwkeys_allowed)
     kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs: $kwargs_keep")
+    println("kwargs passed on: $kwargs_keep")
 
     opt = MINPACK.fsolve(f!, g!, result.beta0, method=algorithm, iterations=maxiter; kwargs_keep...)
 

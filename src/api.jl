@@ -53,6 +53,7 @@ function geosolve(prob;
     if approach == :poisson
         minpack_methods = (:hybr_minpack, :lm_minpack)
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
+        nlsolve_methods = (:newttr_nlsolve, )
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
 
         if method == :lm_lsqfit   # objective function returns a vector
@@ -61,9 +62,9 @@ function geosolve(prob;
         elseif method == :lm_lsoptim   # objective function returns a vector
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method in minpack_methods # objective function returns a vector
-            poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :newttr_nlsolve # objective function returns a vector
-            poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            poisson_minpack_fsolve(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method in nlsolve_methods # objective function returns a vector
+            poisson_nlsolve(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         # elseif method == :krylov # objective function returns a vector
         #     poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
 
