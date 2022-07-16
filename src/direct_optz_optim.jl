@@ -1,5 +1,5 @@
 
-#=
+#= DOCUMENTATION
 https://github.com/SciML/Optimization.jl
 https://optimization.sciml.ai/stable/
 https://optimization.sciml.ai/dev/
