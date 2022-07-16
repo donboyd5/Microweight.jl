@@ -2,7 +2,7 @@
 
 # :ccsaq NLopt.LD_CCSAQ: CCSA (Conservative Convex Separable Approximations) with simple quadratic approximations (local, derivative)
 
-function poisson_nlopt(prob, result;
+function poisson_optz_nlopt(prob, result;
     maxiter,
     pow,
     targstop,
