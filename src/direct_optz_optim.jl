@@ -75,6 +75,7 @@ function direct_optz_optim(prob, result;
     end
     println("Optim algorithm: ", algorithm)
 
+    println("kwargs requested: ", keys(kwargs))
     kwkeys_method = (:maxtime, :abstol, :reltol)
     kwkeys_algo = (:x_tol, :g_tol, :f_calls_limit, :g_calls_limit, :h_calls_limit, :allow_f_increases, :store_trace, :show_trace, :extended_trace, :show_every)
     # merge the allowable sets of keys

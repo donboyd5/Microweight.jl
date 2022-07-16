@@ -77,6 +77,7 @@ function direct_optz_nlopt(prob, result;
     println("NLopt algorithm: ", algorithm)
 
     # kwargs must be common options or allowable options for NLopt that Optimization will pass through to NLopt
+    println("kwargs requested: ", keys(kwargs))
     kwkeys_method = (:maxtime, :abstol, :reltol)
     kwkeys_algo = (:stopval, )
     # merge the allowable sets of keys
