@@ -25,16 +25,15 @@ function poisson_lsqlm(prob, result; maxiter=100, objscale=1, kwargs...)
     # for allowable arguments:
     # https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
 
-    println("kwargs requested: ", keys(kwargs))
-    kwkeys_allowed = (:x_tol, :g_tol, :min_step_quality, :good_step_quality, :lambda, :tau, :lambda_increase, :lambda_decrease, :show_trace, :lower, :upper)
-    println("kwargs allowed: ", kwkeys_allowed)
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs passed on: $kwargs_keep")
+    kwkeys_method = (:x_tol, :g_tol, :min_step_quality, :good_step_quality, :lambda, :tau, :lambda_increase, :lambda_decrease, :show_trace, :lower, :upper)
+    kwkeys_algo = NamedTuple()
+    kwargs_defaults = Dict() # :stopval => 1e-4
+    kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
     f = beta -> objvec_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
     f_init = f(result.beta0)
     od = NLSolversBase.OnceDifferentiable(f, result.beta0, copy(f_init); inplace = false, autodiff = :forward)
-    opt = LsqFit.levenberg_marquardt(od, result.beta0; maxIter=maxiter, kwargs_keep...)
+    opt = LsqFit.levenberg_marquardt(od, result.beta0; maxIter=maxiter, kwargs_use...)
 
     result.solver_result = opt
     result.success = opt.iteration_converged || opt.x_converged || opt.f_converged || opt.g_converged # include f_converged??

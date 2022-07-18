@@ -23,14 +23,6 @@ https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.
 =#
 
 function poisson_lsoptim(prob, result; maxiter=100, objscale, interval=1, kwargs...)
-    # for allowable arguments:
-    # https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
-    # println("kwargs requested: ", keys(kwargs))
-    # kwkeys_allowed = (:x_tol, :g_tol, :min_step_quality, :good_step_quality, :lambda, :tau, :lambda_increase, :lambda_decrease, :show_trace, :lower, :upper)
-    # println("kwargs allowed: ", kwkeys_allowed)
-    # kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    # println("kwargs passed on: $kwargs_keep")
-
     kwkeys_method = (:x_tol, :g_tol, :min_step_quality, :good_step_quality, :lambda, :tau, :lambda_increase, :lambda_decrease, :show_trace, :lower, :upper)
     kwkeys_algo = NamedTuple()
     kwargs_defaults = Dict() # :stopval => 1e-4
