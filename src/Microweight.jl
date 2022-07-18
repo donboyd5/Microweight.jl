@@ -28,10 +28,24 @@ documentation online at link .
   https://github.com/emmt/OptimPackNextGen.jl/issues/8
 
 - explore https://optimization.sciml.ai/stable/optimization_packages/optimisers/
-- explore nlboxsolve??
+- explore nlboxsolve jfnk
+  https://juliahub.com/ui/Packages/NLboxsolve/bk0LI/0.4.2
+  https://github.com/RJDennis/NLboxsolve.jl
+  The key elements to a problem are
+    a vector-function containing the system of equations to be solved F(x)
+    an initial guess at the solution, x (1d-array)
+    the lower, lb (1d-array with default enteries equaling -Inf), and upper, ub (1d-array with default enteries equaling Inf)
+    bounds that form the box-constraint.
+    plus...
+  soln = nlboxsolve(F,x,l,u,xtol=1e-10,ftol=1e-10,maxiters=200,method=:jfnk,sparsejac=:yes,krylovdim=20)
+  see https://github.com/RJDennis/NLboxsolve.jl/blob/main/src/boxsolvers.jl line 4561
+  if method == :jfnk
+        return constrained_jacobian_free_newton_krylov(f,x,lb,ub,xtol=xtol,ftol=ftol,maxiters=maxiters)
+
 
 - acs example data
 - call from R, call from python
+- tests
 
 DONE:
 - beta scaling BAD, don't do it
@@ -112,7 +126,7 @@ include("functions_poisson_fg.jl")
 include("poisson_lsoptim.jl")
 include("poisson_lsqlm.jl")
 # include("poisson_mads.jl")
-include("poisson_minpack.jl")
+include("poisson_minpack_fsolve.jl")
 include("poisson_nlsolve.jl")
 include("poisson_optz_nlopt.jl")
 include("poisson_optz_optim.jl")

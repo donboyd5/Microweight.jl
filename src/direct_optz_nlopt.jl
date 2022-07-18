@@ -77,19 +77,23 @@ function direct_optz_nlopt(prob, result;
     println("NLopt algorithm: ", algorithm)
 
     # kwargs must be common options or allowable options for NLopt that Optimization will pass through to NLopt
-    println("kwargs requested: ", keys(kwargs))
+    # println("kwargs requested: ", keys(kwargs))
     kwkeys_method = (:maxtime, :abstol, :reltol)
     kwkeys_algo = (:stopval, )
+    kwargs_defaults = Dict(:stopval => 1e-8)
     # merge the allowable sets of keys
-    kwkeys_allowed = (kwkeys_method..., kwkeys_algo...)
-    println("kwargs allowed: ", kwkeys_allowed)
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs passed on: $kwargs_keep")
+    # kwkeys_allowed = (kwkeys_method..., kwkeys_algo...)
+    # println("kwargs allowed: ", kwkeys_allowed)
+    # kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
+    # println("kwargs passed on: $kwargs_keep")
+    # kwargs_defaults
+
+    kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
     println("Household weights component weight: ", whweight)
     println("\n")
 
-    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_keep...)
+    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_use...)
 
     # ERROR: AutoZygote does not currently support constraints
     # opt = Optimization.solve(fprob, NLopt.LD_AUGLAG(), local_method = NLopt.LD_LBFGS(), local_maxiters=10000, maxiters=maxiter)

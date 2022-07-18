@@ -53,7 +53,8 @@ function geosolve(prob;
     if approach == :poisson
         minpack_methods = (:hybr_minpack, :lm_minpack)
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
-        nlsolve_methods = (:newttr_nlsolve, )
+        nlsolve_methods = (:anderson, :broyden, :newton_nlsolve, :trust_nlsolve)
+        # nlsolve_methods = (:anderson, :newton_nlsolve, :trust_nlsolve) # only allow these
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
 
         if method == :lm_lsqfit   # objective function returns a vector
