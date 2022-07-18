@@ -66,14 +66,12 @@ function poisson_minpack_fsolve(prob, result; maxiter=5000, objscale, kwargs...)
     # maxfev, epsfcn, diag, mode, factor, nprint, lr
     # opt = MINPACK.fsolve(f!, g!, result.beta0, show_trace=false, save_trace=true, method=algorithm, iterations=maxiter, kwargs...)
     # note the semicolon below!!
+    kwkeys_method = (:ftol, :xtol, :gtol, :maxfev)
+    kwkeys_algo = NamedTuple()
+    kwargs_defaults = Dict() # :stopval => 1e-4
+    kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
-    println("kwargs requested: ", keys(kwargs))
-    kwkeys_allowed = (:ftol, :xtol, :gtol, :maxfev)
-    println("kwargs allowed: ", kwkeys_allowed)
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs passed on: $kwargs_keep")
-
-    opt = MINPACK.fsolve(f!, g!, result.beta0, method=algorithm, iterations=maxiter; kwargs_keep...)
+    opt = MINPACK.fsolve(f!, g!, result.beta0, method=algorithm, iterations=maxiter; kwargs_use...)
 
     result.success = true
     result.iterations = opt.trace.f_calls

@@ -57,11 +57,11 @@ function geosolve(prob;
         # nlsolve_methods = (:anderson, :newton_nlsolve, :trust_nlsolve) # only allow these
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
 
-        if method == :lm_lsqfit   # objective function returns a vector
+        if method == :lm_lsoptim   # objective function returns a vector
             # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks
-            poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :lm_lsoptim   # objective function returns a vector
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lm_lsqfit   # objective function returns a vector
+            poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method in minpack_methods # objective function returns a vector
             poisson_minpack_fsolve(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method in nlsolve_methods # objective function returns a vector

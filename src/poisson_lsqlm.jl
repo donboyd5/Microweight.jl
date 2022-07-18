@@ -22,9 +22,6 @@ don't pass maxIter
 =#
 
 function poisson_lsqlm(prob, result; maxiter=100, objscale=1, kwargs...)
-    # for allowable arguments:
-    # https://github.com/JuliaNLSolvers/LsqFit.jl/blob/master/src/levenberg_marquardt.jl
-
     kwkeys_method = (:x_tol, :g_tol, :min_step_quality, :good_step_quality, :lambda, :tau, :lambda_increase, :lambda_decrease, :show_trace, :lower, :upper)
     kwkeys_algo = NamedTuple()
     kwargs_defaults = Dict() # :stopval => 1e-4
