@@ -118,6 +118,7 @@ function geosolve(prob;
         result.targ_pdiffs = targ_pdiffs(result.geotargets_calc, prob.geotargets)
         result.targ_pdqtiles = Statistics.quantile(vec(result.targ_pdiffs), p)
     end
+    println()
 
     return result
 end

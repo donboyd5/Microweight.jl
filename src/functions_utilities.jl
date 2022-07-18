@@ -7,33 +7,22 @@ end
 
 
 
-function kwargs_keep(kwargs; kwkeys_method=nothing, kwkeys_algo=nothing, kwargs_defaults=nothing)
-    if isnothing(kwkeys_method) && isnothing(kwkeys_algo) &&  isnothing(kwargs_defaults) return nothing end
-
-    # merge allowable sets of keys - these are named tuples
-    kwkeys_allowed = kwkeys_method
-    if !isnothing(kwkeys_algo) kwkeys_allowed = (kwkeys_method..., kwkeys_algo...) end
+function kwargs_keep(kwargs; kwkeys_method=NamedTuple(), kwkeys_algo=NamedTuple(), kwargs_defaults=Dict())
+    println()
+    println("default kwargs (if any):\n $kwargs_defaults")
+    kwkeys_allowed = (kwkeys_method..., kwkeys_algo...)
     println("kwargs allowed: ", kwkeys_allowed)
 
     println("kwargs requested: ", kwargs)
 
     # create a Dict from allowable kwargs...
-    if !isnothing(kwkeys_allowed)
-      kwargs_keep = filter(p -> first(p) in kwkeys_allowed, kwargs)
-    else
-      kwargs_keep = nothing
-    end
+    kwargs_keep = filter(p -> first(p) in kwkeys_allowed, kwargs)
     println("allowable requested kwargs:\n $kwargs_keep")
 
     # merge defaults, if any, with kwargs - second will overwrite first
-    if !isnothing(kwargs_defaults)
-      println("kwargs defaults: ", kwargs_defaults)
-      kwargs_keep = merge(kwargs_defaults, kwargs_keep) # overwrite any defaults with requested values
-    else
-      println("no kwargs defaults")
-    end
-    println("kwargs passed, (conflicting requested values will override defaults):\n $kwargs_keep")
+    kwargs_keep = merge(kwargs_defaults, kwargs_keep) # overwrite any defaults with requested values
+    println("kwargs passed (requested values override defaults when conflicts arise):\n $kwargs_keep")
+    println()
 
     return kwargs_keep
   end
-

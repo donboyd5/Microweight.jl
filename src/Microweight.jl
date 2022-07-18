@@ -47,6 +47,11 @@ documentation online at link .
 - call from R, call from python
 - tests
 
+https://juliasmoothoptimizers.github.io/DCISolver.jl/stable/example/
+https://github.com/JuliaSmoothOptimizers/NLPModels.jl
+https://github.com/JuliaSmoothOptimizers/NLPModelsIpopt.jl
+
+
 DONE:
 - beta scaling BAD, don't do it
 - figure out krylov why do callback results look good but final results do not???  DONE
