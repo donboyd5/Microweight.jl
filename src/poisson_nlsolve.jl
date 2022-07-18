@@ -93,17 +93,13 @@ function poisson_nlsolve(prob, result; maxiter=100, objscale, kwargs...)
     end
     println("NLsolve algorithm: ", algorithm)
 
-    println("kwargs requested: ", keys(kwargs))
     kwkeys_method = (:xtol, :ftol, :store_trace, :show_trace, :extended_trace)
-    # merge the allowable sets of keys
-    kwkeys_allowed = (kwkeys_method..., kwkeys_algo...)
-    println("kwargs allowed: ", kwkeys_allowed)
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs passed on:\n $kwargs_keep")
-    # return
+    # kwkeys_algo = NamedTuple()  use kwkeys_algo from above
+    kwargs_defaults = Dict() # :stopval => 1e-4
+    kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
     opt = NLsolve.nlsolve(f!, result.beta0, autodiff=:forward, method = algorithm,
-            iterations=maxiter; kwargs_keep...)
+            iterations=maxiter; kwargs_use...)
     # opt = NLsolve.nlsolve(f!, beta0, autodiff=:forward, method = :anderson, m=100, iterations=maxiter, show_trace = false)
 
     result.solver_result = opt

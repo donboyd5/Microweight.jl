@@ -57,8 +57,12 @@ function poisson_minpack_fsolve(prob, result; maxiter=5000, objscale, kwargs...)
 
     # println("NOTE: MINPACK's trace shows f(x) inf-norm, which is max(abs(% diff from target))")
     # opt = MINPACK.fsolve(f!, g!, result.beta0, show_trace=false, method=:lm, ftol=1e-6, xtol=1e-6, iterations=maxiter)
-    if result.method==:lm_minpack algorithm=:lm
-    elseif result.method==:hybr_minpack algorithm=:hybr
+    if result.method==:lm_minpack
+        algorithm=:lm
+        kwkeys_algo=(:linesearch,)
+    elseif result.method==:hybr_minpack
+        algorithm=:hybr
+        kwkeys_algo=(:factor, :mode)
     else return "ERROR: method must be one of (hybr_minpack, :lm_minpack)"
     end
     println("algorithm: ", algorithm)
@@ -67,8 +71,8 @@ function poisson_minpack_fsolve(prob, result; maxiter=5000, objscale, kwargs...)
     # opt = MINPACK.fsolve(f!, g!, result.beta0, show_trace=false, save_trace=true, method=algorithm, iterations=maxiter, kwargs...)
     # note the semicolon below!!
     kwkeys_method = (:ftol, :xtol, :gtol, :maxfev)
-    kwkeys_algo = NamedTuple()
-    kwargs_defaults = Dict() # :stopval => 1e-4
+    # kwkeys_algo = NamedTuple() # use kwkeys_algo from above # no algorithm-specific keywords at present
+    kwargs_defaults = Dict()
     kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
     opt = MINPACK.fsolve(f!, g!, result.beta0, method=algorithm, iterations=maxiter; kwargs_use...)
