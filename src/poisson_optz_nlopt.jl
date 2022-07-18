@@ -10,13 +10,7 @@ function poisson_optz_nlopt(prob, result;
     objscale,
     kwargs...)
 
-    # kwargs must be allowable options for NLopt that Optimization will pass through to NLopt
-    kwkeys_allowed = (:stopval, ) # :show_trace, :x_tol, :g_tol,
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs: $kwargs_keep")
-
     fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop, objscale)
-
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
 
     beta0 = result.beta0
@@ -39,7 +33,12 @@ function poisson_optz_nlopt(prob, result;
     end
     println("NLopt algorithm: ", algorithm)
 
-    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_poisson; kwargs_keep...)
+    kwkeys_method = (:maxtime, :abstol, :reltol)
+    kwkeys_algo = (:stopval, )
+    kwargs_defaults = Dict(:stopval => 1e-4) # :stopval => 1e-4
+    kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
+
+    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_poisson; kwargs_use...)
     # opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter; kwargs_keep...)
 
     result.solver_result = opt

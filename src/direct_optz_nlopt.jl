@@ -80,7 +80,6 @@ function direct_optz_nlopt(prob, result;
     kwkeys_method = (:maxtime, :abstol, :reltol)
     kwkeys_algo = (:stopval, )
     kwargs_defaults = Dict(:stopval => 1e-4)
-
     kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
     println("Household weights component weight: ", whweight)
