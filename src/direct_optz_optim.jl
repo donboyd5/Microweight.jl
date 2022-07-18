@@ -75,20 +75,17 @@ function direct_optz_optim(prob, result;
     end
     println("Optim algorithm: ", algorithm)
 
-    println("kwargs requested: ", keys(kwargs))
+    # println("kwargs requested: ", keys(kwargs))
     kwkeys_method = (:maxtime, :abstol, :reltol)
     kwkeys_algo = (:x_tol, :g_tol, :f_calls_limit, :g_calls_limit, :h_calls_limit, :allow_f_increases, :store_trace, :show_trace, :extended_trace, :show_every)
-    # merge the allowable sets of keys
-    kwkeys_allowed = (kwkeys_method..., kwkeys_algo...)
-    println("kwargs allowed: ", kwkeys_allowed)
-    kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
-    println("kwargs passed on: $kwargs_keep")
+    kwargs_defaults = Dict() # :stopval => 1e-4
+    kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
     println("Household weights component weight: ", whweight)
     println("\n")
 
     opt = Optimization.solve(fprob,
-        Optim.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_keep...)
+        Optim.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_use...)
 
     result.solver_result = opt
     # result.success = opt.retcode == Symbol("true")
