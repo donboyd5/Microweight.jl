@@ -135,6 +135,7 @@ include("poisson_minpack_fsolve.jl")
 include("poisson_nlsolve.jl")
 include("poisson_optz_nlopt.jl")
 include("poisson_optz_optim.jl")
+include("poisson_optz_optimisers.jl")
 
 # functions underlying all calculations
 
