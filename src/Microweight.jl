@@ -16,55 +16,49 @@ documentation online at link .
 """
 
 #= TODO
-- figure out krylov
-  why do callback results look good but final results do not???
 - kwargs
 - show function call
-- beta scaling
 
+- explore https://github.com/emmt/OptimPackNextGen.jl -- vmlmb
+  https://github.com/emmt/OptimPackNextGen.jl/blob/master/doc/quasinewton.md
+  seems to be like LBFGS
+  see https://github.com/emmt/OptimPackNextGen.jl/blob/master/test/rosenbrock.jl lines 81+
+  consider for both poisson and direct
+  note that it does scaling
+  https://github.com/emmt/OptimPackNextGen.jl/issues/8
+
+- explore https://optimization.sciml.ai/stable/optimization_packages/optimisers/
+- explore nlboxsolve jfnk
+  https://juliahub.com/ui/Packages/NLboxsolve/bk0LI/0.4.2
+  https://github.com/RJDennis/NLboxsolve.jl
+  The key elements to a problem are
+    a vector-function containing the system of equations to be solved F(x)
+    an initial guess at the solution, x (1d-array)
+    the lower, lb (1d-array with default enteries equaling -Inf), and upper, ub (1d-array with default enteries equaling Inf)
+    bounds that form the box-constraint.
+    plus...
+  soln = nlboxsolve(F,x,l,u,xtol=1e-10,ftol=1e-10,maxiters=200,method=:jfnk,sparsejac=:yes,krylovdim=20)
+  see https://github.com/RJDennis/NLboxsolve.jl/blob/main/src/boxsolvers.jl line 4561
+  if method == :jfnk
+        return constrained_jacobian_free_newton_krylov(f,x,lb,ub,xtol=xtol,ftol=ftol,maxiters=maxiters)
+
+
+- acs example data
+- call from R, call from python
+- tests
+
+https://juliasmoothoptimizers.github.io/DCISolver.jl/stable/example/
+https://github.com/JuliaSmoothOptimizers/NLPModels.jl
+https://github.com/JuliaSmoothOptimizers/NLPModelsIpopt.jl
+
+
+DONE:
+- beta scaling BAD, don't do it
+- figure out krylov why do callback results look good but final results do not???  DONE
 
 =#
-
 
 module Microweight
-
-
-#=
-
-https://github.com/JuliaNLSolvers/Optim.jl/blob/master/src/multivariate/solvers/second_order/krylov_trust_region.jl
-
-res5 = Optim.optimize(f, lsres.param, ConjugateGradient(),
-Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
- autodiff = :forward)
-
-res6 = Optim.optimize(f, ibeta, GradientDescent(),
-  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
-  autodiff = :forward) # seems to become very slow as problem size increases
-
-res7 = Optim.optimize(f, ibeta, MomentumGradientDescent(),
-  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
-  autodiff = :forward)
-# 1602.8 3.078448e-11
-
-# really good after 3 iterations 562 secs
-res8 = Optim.optimize(f, ibeta, AcceleratedGradientDescent(),
-  Optim.Options(g_tol = 1e-6, iterations = 10, store_trace = true, show_trace = true);
-  autodiff = :forward)
-
-res12 = Optim.optimize(f, g!, ibeta, ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
-  Optim.Options(g_tol = 1e-6, iterations = 1_000, store_trace = true, show_trace = true))
-# 4.669833e+03 after 10k
-# 2.030909e+03 after 20k
-# 1.173882e+03 after 30k
-#  after 40k
-#  after 50k
-res12a = Optim.optimize(f, g!, minimizer(res12a), ConjugateGradient(eta=0.01; alphaguess = LineSearches.InitialConstantChange(), linesearch = LineSearches.HagerZhang()),
-  Optim.Options(g_tol = 1e-6, iterations = 10_000, store_trace = true, show_trace = true))
-
-nlboxsolve??
-
-
-=#
 
 ##############################################################################
 ##
@@ -78,7 +72,7 @@ using LinearAlgebra, ChainRules
 using ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
 # using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
-using Optimization, OptimizationOptimJL, OptimizationNLopt
+using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptimJL
 # using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()
@@ -126,10 +120,8 @@ include("scaling.jl")
 # direct functions and solvers
 include("functions_direct.jl")
 
-include("direct_optim.jl")
-include("direct_krylov.jl")
-# include("direct_krylov_bounds.jl")
-include("direct_nlopt.jl")
+include("direct_optz_nlopt.jl")
+include("direct_optz_optim.jl")
 
 # poisson functions and solvers
 include("functions_poisson.jl")
@@ -139,10 +131,10 @@ include("functions_poisson_fg.jl")
 include("poisson_lsoptim.jl")
 include("poisson_lsqlm.jl")
 # include("poisson_mads.jl")
-include("poisson_minpack.jl")
-include("poisson_newttrust.jl")
-include("poisson_nlopt.jl")
-include("poisson_optim.jl")
+include("poisson_minpack_fsolve.jl")
+include("poisson_nlsolve.jl")
+include("poisson_optz_nlopt.jl")
+include("poisson_optz_optim.jl")
 
 # functions underlying all calculations
 

@@ -11,12 +11,8 @@ Options
 
 =#
 
-function poisson_optim(prob, result; maxiter=100, objscale, pow, targstop, whstop,
+function poisson_optz_optim(prob, result; maxiter=100, objscale, pow, targstop, whstop,
       kwargs...)
-      # for allowable arguments:
-
-      kwkeys_allowed = (:show_trace, :x_tol, :g_tol)
-      kwargs_keep = clean_kwargs(kwargs, kwkeys_allowed)
 
       fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop, objscale)
       fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
@@ -30,9 +26,14 @@ function poisson_optim(prob, result; maxiter=100, objscale, pow, targstop, whsto
       else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim, krylov)"
       end
 
+      kwkeys_method = (:maxtime, :abstol, :reltol)
+      kwkeys_algo = (:x_tol, :g_tol, :f_calls_limit, :g_calls_limit, :h_calls_limit, :allow_f_increases, :store_trace, :show_trace, :extended_trace, :show_every)
+      kwargs_defaults = Dict() # :stopval => 1e-4
+      kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
+
       println("Optim algorithm: ", algorithm)
       opt = Optimization.solve(fprob,
-            Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson) # , callback=cb_poisson
+            Optim.eval(algorithm), maxiters=maxiter, callback=cb_poisson; kwargs_use...) # , callback=cb_poisson
 
       result.solver_result = opt
       result.success = true

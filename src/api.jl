@@ -16,7 +16,7 @@ function geosolve(prob;
             kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
-    println("Solving problem...")
+    println("Solving problem...\n")
 
     # define defaults
     if isnothing(approach) approach=:poisson end
@@ -30,6 +30,8 @@ function geosolve(prob;
     else
         return "ERROR: approach must be :poisson or :direct"
     end
+    println("approach: ", approach)
+    println("method: ", method)
 
     # initialize result
     prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
@@ -51,24 +53,26 @@ function geosolve(prob;
     if approach == :poisson
         minpack_methods = (:hybr_minpack, :lm_minpack)
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
+        nlsolve_methods = (:anderson, :broyden, :newton_nlsolve, :trust_nlsolve)
+        # nlsolve_methods = (:anderson, :newton_nlsolve, :trust_nlsolve) # only allow these
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
 
-        if method == :lm_lsqfit   # objective function returns a vector
+        if method == :lm_lsoptim   # objective function returns a vector
             # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks
-            poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :lm_lsoptim   # objective function returns a vector
             poisson_lsoptim(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method == :lm_lsqfit   # objective function returns a vector
+            poisson_lsqlm(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         elseif method in minpack_methods # objective function returns a vector
-            poisson_minpack(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
-        elseif method == :newttr_nlsolve # objective function returns a vector
-            poisson_newttrust(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+            poisson_minpack_fsolve(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
+        elseif method in nlsolve_methods # objective function returns a vector
+            poisson_nlsolve(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
         # elseif method == :krylov # objective function returns a vector
         #     poisson_krylov(prob, result; maxiter=maxiter, objscale=objscale, kwargs...)
 
         elseif method in nlopt_methods # objective function returns a scalar
-            poisson_nlopt(prob, result; maxiter=maxiter, pow=pow, targstop=targstop, whstop=whstop, objscale=objscale, kwargs...)
+            poisson_optz_nlopt(prob, result; maxiter=maxiter, pow=pow, targstop=targstop, whstop=whstop, objscale=objscale, kwargs...)
         elseif method in optim_methods # objective function returns a scalar, thus I can modify with powers
-            poisson_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
+            poisson_optz_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
 
         else
             error("Unknown poisson method!")
@@ -80,11 +84,11 @@ function geosolve(prob;
         optim_methods = (:cg, :gd, :lbfgs_optim)
 
         if method in optim_methods
-            direct_optim(prob, result, pow=pow, maxiter=maxiter,
+            direct_optz_optim(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
-            direct_nlopt(prob, result, pow=pow, maxiter=maxiter,
+            direct_optz_nlopt(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         else
             error("Unknown direct method!")
@@ -114,6 +118,7 @@ function geosolve(prob;
         result.targ_pdiffs = targ_pdiffs(result.geotargets_calc, prob.geotargets)
         result.targ_pdqtiles = Statistics.quantile(vec(result.targ_pdiffs), p)
     end
+    println()
 
     return result
 end

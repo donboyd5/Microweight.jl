@@ -88,7 +88,7 @@ function cb_poisson(beta, objval, p_pdiffs, p_whs, wh, targstop, whstop)
     end
 
     halt = false
-    # halt = targ_max < targstop && wtsum_max < whstop
+    halt = targ_max < targstop && wtsum_max < whstop
     return halt
 end
 
