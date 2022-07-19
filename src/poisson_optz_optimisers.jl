@@ -19,11 +19,12 @@ function poisson_optz_optimisers(prob, result; maxiter=1000, objscale, pow, targ
       fprob = OptimizationProblem(fpof, result.beta0)
 
       method = result.method
-      if method==:nesterov algorithm=:(Nesterov())
+      if method==:nesterov algorithm=:(Nesterov(0.00001, 0.9))
     #   elseif method==:lbfgs_optim algorithm=:(LBFGS(; m=100))
       elseif method==:descent algorithm=:(Descent())
       elseif method==:momentum algorithm=:(Momentum())
-      elseif method==:adam algorithm=:(Adam(0.5))
+      # elseif method==:adam algorithm=:(Adam(0.5))
+      elseif method==:adam algorithm=:(Adam(0.0001, (.9, .999)))
       else return "ERROR: method must be one of (:nesterov, )"
       end
 

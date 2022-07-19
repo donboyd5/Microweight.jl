@@ -71,6 +71,7 @@ function direct_optz_optim(prob, result;
     elseif method==:lbfgs_optim algorithm=:(LBFGS())
     # I do not allow krylov because it cannot use box constraints - Fminbox does not allow it
     # but consider penalty
+    elseif method==:krylov algorithm=:(KrylovTrustRegion())
     else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim)"
     end
     println("Optim algorithm: ", algorithm)
@@ -93,6 +94,59 @@ function direct_optz_optim(prob, result;
     result.shares = opt.minimizer
     return result
 end
+
+
+function direct_optz_optim_krylov(prob, result;
+    maxiter,
+    whweight,
+    pow,
+    targstop, whstop,
+    kwargs...)
+
+    # %% setup preallocations
+    p = 1.0
+    p_mshares = Array{Float64,2}(undef, prob.h, prob.s)
+    p_whs = Array{Float64,2}(undef, prob.h, prob.s)
+    p_calctargets = Array{Float64,2}(undef, prob.s, prob.k)
+    p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
+    p_whpdiffs = Array{Float64,1}(undef, prob.h)
+
+    fp = (shares, p) -> objfn_direct_negpen(shares, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled,
+        p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs, whweight, pow, targstop, whstop)
+
+    fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
+    fprob = OptimizationProblem(fpof, result.shares0)
+
+    method = result.method
+    if method==:cg algorithm=:(ConjugateGradient())
+    elseif method==:gd algorithm=:(GradientDescent())
+    elseif method==:lbfgs_optim algorithm=:(LBFGS())
+    # I do not allow krylov because it cannot use box constraints - Fminbox does not allow it
+    # but consider penalty
+    elseif method==:krylov algorithm=:(KrylovTrustRegion())
+    else return "ERROR: method must be one of (:cg, gd, :lbfgs_optim)"
+    end
+    println("Optim algorithm: ", algorithm)
+
+    kwkeys_method = (:maxtime, :abstol, :reltol)
+    kwkeys_algo = (:x_tol, :g_tol, :f_calls_limit, :g_calls_limit, :h_calls_limit, :allow_f_increases, :store_trace, :show_trace, :extended_trace, :show_every)
+    kwargs_defaults = Dict() # :stopval => 1e-4
+    kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
+
+    println("Household weights component weight: ", whweight)
+    println("\n")
+
+    opt = Optimization.solve(fprob,
+        Optim.eval(algorithm), maxiters=maxiter, callback=cb_direct; kwargs_use...)
+
+    result.solver_result = opt
+    # result.success = opt.retcode == Symbol("true")
+    result.success = true
+    result.iterations = opt.original.iterations
+    result.shares = opt.minimizer
+    return result
+end
+
 
 # function direct_cg_good(prob, result; shares0=fill(1. / prob.s, prob.h * prob.s), maxiter=100, objscale=1.0, interval=1, whweight, kwargs...)
 #     # caller(tp; ishares=fill(1. / tp.s, tp.h * tp.s), maxiters=10, interval=1, targweight=0.1)

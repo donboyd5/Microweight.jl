@@ -85,13 +85,21 @@ function geosolve(prob;
     elseif approach == :direct
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
         optim_methods = (:cg, :gd, :lbfgs_optim)
+        optimisers_methods = (:adam, :nesterov, :descent, :momentum)
 
         if method in optim_methods
             direct_optz_optim(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+        elseif method == :krylov
+            # kwargs are those that should be passed through to NLopt from Optimization
+            direct_optz_optim_krylov(prob, result, pow=pow, maxiter=maxiter,
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
             direct_optz_nlopt(prob, result, pow=pow, maxiter=maxiter,
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+        elseif method in optimisers_methods # objective function returns a scalar, thus I can modify with powers
+            direct_optz_optimisers(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         else
             error("Unknown direct method!")

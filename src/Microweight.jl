@@ -122,6 +122,7 @@ include("functions_direct.jl")
 
 include("direct_optz_nlopt.jl")
 include("direct_optz_optim.jl")
+include("direct_optz_optimisers.jl")
 
 # poisson functions and solvers
 include("functions_poisson.jl")
