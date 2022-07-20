@@ -56,6 +56,7 @@ function geosolve(prob;
         nlsolve_methods = (:anderson, :broyden, :newton_nlsolve, :trust_nlsolve)
         # nlsolve_methods = (:anderson, :newton_nlsolve, :trust_nlsolve) # only allow these
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
+        optimisers_methods = (:adam, :nesterov, :descent, :momentum)
 
         if method == :lm_lsoptim   # objective function returns a vector
             # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks
@@ -73,6 +74,8 @@ function geosolve(prob;
             poisson_optz_nlopt(prob, result; maxiter=maxiter, pow=pow, targstop=targstop, whstop=whstop, objscale=objscale, kwargs...)
         elseif method in optim_methods # objective function returns a scalar, thus I can modify with powers
             poisson_optz_optim(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
+        elseif method in optimisers_methods # objective function returns a scalar, thus I can modify with powers
+            poisson_optz_optimisers(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
 
         else
             error("Unknown poisson method!")
@@ -82,13 +85,21 @@ function geosolve(prob;
     elseif approach == :direct
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
         optim_methods = (:cg, :gd, :lbfgs_optim)
+        optimisers_methods = (:adam, :nesterov, :descent, :momentum)
 
         if method in optim_methods
             direct_optz_optim(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+        elseif method == :krylov
+            # kwargs are those that should be passed through to NLopt from Optimization
+            direct_optz_optim_krylov(prob, result, pow=pow, maxiter=maxiter,
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         elseif method in nlopt_methods
             # kwargs are those that should be passed through to NLopt from Optimization
             direct_optz_nlopt(prob, result, pow=pow, maxiter=maxiter,
+                whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+        elseif method in optimisers_methods # objective function returns a scalar, thus I can modify with powers
+            direct_optz_optimisers(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         else
             error("Unknown direct method!")

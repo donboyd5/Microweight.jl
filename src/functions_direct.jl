@@ -60,6 +60,56 @@ function objfn_direct(shares, wh, xmat, geotargets,
   return objval, p_pdiffs, p_whpdiffs, targstop, whstop
 end
 
+
+function objfn_direct_negpen(shares, wh, xmat, geotargets,
+  p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
+  whweight,
+  pow,
+  targstop, whstop,
+  display_progress=true)
+
+  # part 1
+  p_mshares = reshape(shares, length(wh), :) # matrix of shares will be h x s
+  p_whs = wh .* p_mshares # this allocates memory
+  p_calctargets = p_whs' * xmat
+  p_pdiffs = (p_calctargets .- geotargets) ./ geotargets * 100.  # allocates a tiny bit
+  ss_pdiffs = sum(p_pdiffs.^pow)
+  # ss_pdiffs = sum((p_pdiffs.^pow)^(1.0/pow))
+
+  # part 2 - get sum of squared diffs from zero for wh diffs
+  p_whpdiffs = (sum(p_whs, dims=2) .- wh) ./ wh * 100.
+  ss_whpdiffs = sum(p_whpdiffs.^pow)
+  # ss_whpdiffs = sum((p_whpdiffs.^pow)^(1.0/pow))
+
+  # combine and take a root
+  objval1 = (ss_pdiffs / length(p_pdiffs))*(1. - whweight) +
+           (ss_whpdiffs / length(p_whpdiffs))*whweight
+
+  objval1 = objval1^(1. / pow)
+
+  # part 3 penalty for negative weights
+  # penalty = sum(p_whs .< 0.) * 100.0
+  # penalty = sum(p_whs.^2 .- p_whs) * 1000.
+  # penalty = maximum(p_whs.^2)
+  penalty = sum((min.(p_whs .- 0.0, 0.0).*-100.0)).^2
+
+  objval = objval1 + penalty
+
+  ChainRules.ignore_derivatives() do
+    if penalty < 0.0 # && fcalls < 10
+      println("penalty: ", penalty)
+      # println(Statistics.quantile!(vec(p_whs), [0.0, 0.10, 0.25, 0.50, 0.75, 0.90, 1.0]))
+      # println("objval before penalty: ", objval1)
+      # println("objval after penalty", objval)
+      # return
+     end
+    end
+
+  # list extra variables on the return so that they are available to the callback function
+  return objval, p_pdiffs, p_whpdiffs, targstop, whstop
+end
+
+
 # function objfn_direct_scaled(shares, wh, xmat, geotargets,
 #     p_mshares, p_whs, p_calctargets, p_pdiffs, p_whpdiffs,
 #     interval,
