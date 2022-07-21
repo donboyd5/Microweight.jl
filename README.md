@@ -25,6 +25,6 @@ The package LineSearches is needed for some algorithmic options. (Change this.)
 See the examples/geoweighting directory. The file names should be self-explanatory. There are examples that:
 
 +   Solve a simple problem multiple ways
-+
++   Create a problem using ACS data, and then solve it
 
 
