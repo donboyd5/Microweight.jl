@@ -21,45 +21,10 @@ The package LineSearches is needed for some algorithmic options. (Change this.)
 
 ## Geoweighting
 
-### Geoweighting Examples
 
-```julia
-import Microweight as mw
-using Statistics
+See the examples/geoweighting directory. The file names should be self-explanatory. There are examples that:
 
-# Create a test problem that has the following characteristics:
-#   h households
-#   s states (areas, or regions, etc.)
-#   k characteristics
-#   xmat: an x-matrix of household characteristics, with h rows and k columns
-#   wh: national weights of households - a vector with h rows and 1 column
-#   geotargets: an s x k matrix of targets, one for each target, for each state
-
-# the above is the minimum set of information needed to solve for:
-#   whs: an h x s matrix that has one weight per household (h) per state (s),
-#     with the characteristics that:
-#        for each household the weights sum to national weights (wh), or as close to that as possible
-#        weighed sums of the characteristics for each state, calculated using these weights, equal or are as close as possible
-#          to the geotargets
-
-# create a small test problem using built-in information
-h = 100  # number of households
-s = 8  # number of states, regions, etc.
-k = 4 # number of characteristics each household has
-# the function mtp (make test problem) will create a random problems with these characteristics
-tp = mw.mtp(h, s, k)
-
-# explore what's in tp
-fieldnames(typeof(tp))
-tp.wh
-tp.xmat
-tp.geotargets
-
-
-```
-
-
-## Reweighting
-
++   Solve a simple problem multiple ways
++
 
 
