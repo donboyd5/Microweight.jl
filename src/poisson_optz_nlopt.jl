@@ -3,19 +3,17 @@
 # :ccsaq NLopt.LD_CCSAQ: CCSA (Conservative Convex Separable Approximations) with simple quadratic approximations (local, derivative)
 
 function poisson_optz_nlopt(prob, result;
-    maxiter,
+    maxiter=1000,
     pow,
     targstop,
     whstop,
     objscale,
     kwargs...)
 
-    fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop, objscale)
+    fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop) .* objscale
     fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
 
-    beta0 = result.beta0
-    fprob = OptimizationProblem(fpof, beta0)
-    # fprob = OptimizationProblem(fpof, shares0, lb=zeros(length(shares0)), ub=ones(length(shares0)))  # MAIN ONE
+    fprob = OptimizationProblem(fpof, result.beta0)
 
     # NLOPT gradient-based local algorithms that can handle bounds and that do NOT use dense matrix methods
     #   I exclude slsqp because it uses dense methods
@@ -39,7 +37,6 @@ function poisson_optz_nlopt(prob, result;
     kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)
 
     opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter, callback=cb_poisson; kwargs_use...)
-    # opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiter; kwargs_keep...)
 
     result.solver_result = opt
     # result.success = (opt.retcode == Symbol("true")) || (opt.minimum <= kwargs_keep[:stopval])

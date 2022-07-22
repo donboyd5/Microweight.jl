@@ -14,7 +14,7 @@ Options
 function poisson_optz_optim(prob, result; maxiter=100, objscale, pow, targstop, whstop,
       kwargs...)
 
-      fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop, objscale)
+      fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop) .* objscale
       fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
       fprob = OptimizationProblem(fpof, result.beta0)
 
