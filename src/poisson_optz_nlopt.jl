@@ -31,7 +31,7 @@ function poisson_optz_nlopt(prob, result;
     end
     println("NLopt algorithm: ", algorithm)
 
-    kwkeys_method = (:maxtime, :abstol, :reltol)
+    kwkeys_method = (:maxtime, :abstol, :reltol, :m)
     kwkeys_algo = (:stopval, )
     kwargs_defaults = Dict(:stopval => 1e-4) # :stopval => 1e-4
     kwargs_use = kwargs_keep(kwargs; kwkeys_method=kwkeys_method, kwkeys_algo=kwkeys_algo, kwargs_defaults=kwargs_defaults)

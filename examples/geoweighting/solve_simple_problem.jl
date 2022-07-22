@@ -24,6 +24,7 @@ k = 4 # number of characteristics each household has
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtp(h, s, k)
 
+
 ## explore what's in tp
 fieldnames(typeof(tp))
 # (:wh, :xmat, :geotargets, :h, :k, :s, :target_sums, :target_calcs, :target_diffs, :wh_scaled, :xmat_scaled, :geotargets_scaled)
@@ -84,14 +85,17 @@ resp_newton_nlsolve = mw.geosolve(tp, approach=:poisson, method=:newton_nlsolve)
 resp_trust_nlsolve = mw.geosolve(tp, approach=:poisson, method=:trust_nlsolve)
 
 # methods from the Optim package
-optim_methods = (:cg, :gd, :lbfgs_optim, :krylov)
-resp = mw.geosolve(tp, approach=:poisson, method=:krylov)
-
+# optim_methods = (:cg, :gd, :lbfgs_optim, :krylov)
+# resp = mw.geosolve(tp, approach=:poisson, method=:krylov)
 resp_cg = mw.geosolve(tp, approach=:poisson, method=:cg)
 resp_gd = mw.geosolve(tp, approach=:poisson, method=:gd)
 resp_krylov = mw.geosolve(tp, approach=:poisson, method=:krylov)
 resp_lbfgs_optim = mw.geosolve(tp, approach=:poisson, method=:lbfgs_optim)
 
+# methods from the optimisers package
+# optimisers_methods = (:adam, :nesterov, :descent, :momentum)
+
+# tp = mw.get_taxprob(9)
 
 ## compare results
 # did all three methods have very low sums of squared percentage differences from targets?
