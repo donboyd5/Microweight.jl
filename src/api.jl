@@ -9,8 +9,8 @@ function geosolve(prob;
             scaling=false,
             scaling_target_goal=1000.0,
             print_interval=1,
-            whweight=nothing,
-            pow=nothing,
+            whweight=0.5,
+            pow=8,
             targstop=.01,
             whstop=.01,
             kwargs...)
@@ -53,8 +53,12 @@ function geosolve(prob;
     if approach == :poisson
         minpack_methods = (:hybr_minpack, :lm_minpack)
         nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
-        nlsolve_methods = (:anderson, :broyden, :newton_nlsolve, :trust_nlsolve)
-        # nlsolve_methods = (:anderson, :newton_nlsolve, :trust_nlsolve) # only allow these
+        # only ccsaq and mma work well, others do not progress (why??)
+        # nlsolve_methods = (:anderson, :broyden, :newton_nlsolve, :trust_nlsolve)
+        # do not use:
+        #   anderson - generates LAPACK exception
+        #   broyden - does not reach good results
+        nlsolve_methods = (:newton_nlsolve, :trust_nlsolve) # only allow these
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
         optimisers_methods = (:adam, :nesterov, :descent, :momentum)
 

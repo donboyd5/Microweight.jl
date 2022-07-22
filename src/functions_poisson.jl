@@ -83,14 +83,14 @@ end
 ##
 ##############################################################################
 
-function objfn_poisson(beta, wh, xmat, geotargets, pow, targstop, whstop, objscale)
+function objfn_poisson(beta, wh, xmat, geotargets, pow, targstop, whstop)
     targshape = size(geotargets)
     whs = geo_weights(beta, wh, xmat, targshape)
     calctargets = geo_targets(whs, xmat)
 
     pdiffs = targ_pdiffs(calctargets, geotargets)
     objval = sum(pdiffs.^pow) / length(pdiffs)
-    objval = objval^(1. / pow) * objscale
+    objval = objval^(1. / pow)
 
     objval, pdiffs, whs, wh, targstop, whstop
 end

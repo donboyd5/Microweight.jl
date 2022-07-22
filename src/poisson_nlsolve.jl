@@ -60,7 +60,7 @@ Defaults
 
 =#
 
-function poisson_nlsolve(prob, result; maxiter=100, objscale, kwargs...)
+function poisson_nlsolve(prob, result; maxiter=1000, objscale, kwargs...)
     f! = (out, beta) -> out .= objvec_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) .* objscale
     # function f!(out, beta)
     #     out = objvec_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled) # .* objscale
