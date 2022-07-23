@@ -60,7 +60,7 @@ function geosolve(prob;
         #   broyden - does not reach good results
         nlsolve_methods = (:newton_nlsolve, :trust_nlsolve) # only allow these
         optim_methods = (:cg, :gd, :lbfgs_optim, :krylov) # , :newton_optim
-        optimisers_methods = (:adam, :nesterov, :descent, :momentum)
+        optimisers_methods = (:adam,  :descent, :momentum, :nesterov)
 
         if method == :lm_lsoptim   # objective function returns a vector
             # LsqFit.levenberg_marquardt does not have stopping criteria or allow callbacks

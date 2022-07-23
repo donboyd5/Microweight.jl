@@ -14,18 +14,17 @@ Options
 function poisson_optz_optimisers(prob, result; maxiter=1000, objscale, pow, targstop, whstop,
       kwargs...)
 
-      fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop, objscale)
+      fp = (beta, p) -> objfn_poisson(beta, prob.wh_scaled, prob.xmat_scaled, prob.geotargets_scaled, pow, targstop, whstop) .* objscale
       fpof = OptimizationFunction{true}(fp, Optimization.AutoZygote())
       fprob = OptimizationProblem(fpof, result.beta0)
 
       method = result.method
-      if method==:nesterov algorithm=:(Nesterov(0.00001, 0.9))
+      if method==:adam algorithm=:(Adam(0.0001, (.9, .999)))  # :(Adam(0.5))
     #   elseif method==:lbfgs_optim algorithm=:(LBFGS(; m=100))
       elseif method==:descent algorithm=:(Descent())
       elseif method==:momentum algorithm=:(Momentum())
-      # elseif method==:adam algorithm=:(Adam(0.5))
-      elseif method==:adam algorithm=:(Adam(0.0001, (.9, .999)))
-      else return "ERROR: method must be one of (:nesterov, )"
+      elseif method==:nesterov algorithm=:(Nesterov(0.00001, 0.9))
+      else return "ERROR: method must be one of (:adam,  :descent, :momentum, :nesterov)"
       end
 
       kwkeys_method = (:maxtime, :abstol, :reltol)

@@ -93,7 +93,11 @@ resp_krylov = mw.geosolve(tp, approach=:poisson, method=:krylov)
 resp_lbfgs_optim = mw.geosolve(tp, approach=:poisson, method=:lbfgs_optim)
 
 # methods from the optimisers package
-# optimisers_methods = (:adam, :nesterov, :descent, :momentum)
+# optimisers_methods = (:adam,  :descent, :momentum, :nesterov)
+resp_adam = mw.geosolve(tp, approach=:poisson, method=:adam, pow=2, maxiter=3000)
+resp_descent = mw.geosolve(tp, approach=:poisson, method=:descent) # can't improve on starting point
+resp_momentum = mw.geosolve(tp, approach=:poisson, method=:momentum) # can't improve on starting point
+resp_nesterov = mw.geosolve(tp, approach=:poisson, method=:nesterov) # can't improve on starting point
 
 # tp = mw.get_taxprob(9)
 
@@ -113,8 +117,6 @@ resp_lsoptim.sspd
 # but , but are the state weight-sums close enough to national weights, and are
 # calculated targets close enough to intended targets?
 
-
-
 resp_lm_minpack.sspd
 resp_hybr_minpack.sspd
 xx.sspd
@@ -127,7 +129,7 @@ xx.sspd
 
 
 resp2.wh_pdqtiles # state-weight sums for each household are close to the household's national weight (all % diffs are near 0)
-resp2.targ_pdqtiles # worst % difference from a target is 0.00056% which should be good enough for most purposes
+resp_adam.targ_pdqtiles # worst % difference from a target is 0.00056% which should be good enough for most purposes
 
 
 # details of what's in tp
