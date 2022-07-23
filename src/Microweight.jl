@@ -16,8 +16,14 @@ documentation online at link .
 """
 
 #= TODO
-- kwargs
+- memory
+- kwargs for inner methods
+- improve Optimization.Optimizers https://optimization.sciml.ai/stable/optimization_packages/optimisers/
 - show function call
+- ACS data
+- examples
+- call from R, call from python
+- documentation
 
 - explore https://github.com/emmt/OptimPackNextGen.jl -- vmlmb
   https://github.com/emmt/OptimPackNextGen.jl/blob/master/doc/quasinewton.md
@@ -27,7 +33,6 @@ documentation online at link .
   note that it does scaling
   https://github.com/emmt/OptimPackNextGen.jl/issues/8
 
-- explore https://optimization.sciml.ai/stable/optimization_packages/optimisers/
 - explore nlboxsolve jfnk
   https://juliahub.com/ui/Packages/NLboxsolve/bk0LI/0.4.2
   https://github.com/RJDennis/NLboxsolve.jl
@@ -42,9 +47,6 @@ documentation online at link .
   if method == :jfnk
         return constrained_jacobian_free_newton_krylov(f,x,lb,ub,xtol=xtol,ftol=ftol,maxiters=maxiters)
 
-
-- acs example data
-- call from R, call from python
 - tests
 
 https://juliasmoothoptimizers.github.io/DCISolver.jl/stable/example/
@@ -111,7 +113,7 @@ include("types.jl")
 include("api.jl") # function to route things
 
 # helpers
-include("functions_display.jl")
+include("functions_display_and_callbacks.jl")
 include("functions_utilities.jl")
 include("get_taxdata_problems.jl")
 include("make_test_problems.jl")
