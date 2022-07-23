@@ -104,10 +104,14 @@ resp_nesterov = mw.geosolve(tp, approach=:poisson, method=:nesterov) # can't imp
 # optim_methods = (:cg, :gd, :lbfgs_optim)
 # optimisers_methods = (:adam, :nesterov, :descent, :momentum)
 # nlopt
-resd_ccsaq = mw.geosolve(tp, approach=:direct)
+resd_ccsaq = mw.geosolve(tp, approach=:direct, maxiter=10_000)
 resd_lbfgs_nlopt = mw.geosolve(tp, approach=:direct, method=:lbfgs_nlopt)
 resd_newton = mw.geosolve(tp, approach=:direct, method=:newton)
 resd_var2 = mw.geosolve(tp, approach=:direct, method=:var2)
+Statistics.quantile(vec(resd_ccsaq.whs))
+resd_ccsaq.wh_pdqtiles
+resd_ccsaq.targ_pdqtiles
+resd_ccsaq.eseconds
 
 # optim
 resd_cg = mw.geosolve(tp, approach=:direct, method=:cg)
@@ -131,7 +135,9 @@ Statistics.quantile(vec(resd_krylov.whs))
 # resd_xxx = mw.geosolve(tp, approach=:direct, method=:xxx)
 
 
-# tp = mw.get_taxprob(9)
+cor(vec(resp_lm_lsqfit.whs), vec(resd_ccsaq.whs))
+
+# tp = mw.get_taxprob(8)
 
 ## compare results
 # did all three methods have very low sums of squared percentage differences from targets?
