@@ -19,6 +19,8 @@ documentation online at link .
 - memory
 - kwargs for inner methods
 - improve Optimization.Optimizers https://optimization.sciml.ai/stable/optimization_packages/optimisers/
+    bound constraints or penalty for direct method?
+    how adjust learning rates?
 - show function call
 - ACS data
 - examples
