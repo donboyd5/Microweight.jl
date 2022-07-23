@@ -99,6 +99,38 @@ resp_descent = mw.geosolve(tp, approach=:poisson, method=:descent) # can't impro
 resp_momentum = mw.geosolve(tp, approach=:poisson, method=:momentum) # can't improve on starting point
 resp_nesterov = mw.geosolve(tp, approach=:poisson, method=:nesterov) # can't improve on starting point
 
+## direct approach
+# nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
+# optim_methods = (:cg, :gd, :lbfgs_optim)
+# optimisers_methods = (:adam, :nesterov, :descent, :momentum)
+# nlopt
+resd_ccsaq = mw.geosolve(tp, approach=:direct)
+resd_lbfgs_nlopt = mw.geosolve(tp, approach=:direct, method=:lbfgs_nlopt)
+resd_newton = mw.geosolve(tp, approach=:direct, method=:newton)
+resd_var2 = mw.geosolve(tp, approach=:direct, method=:var2)
+
+# optim
+resd_cg = mw.geosolve(tp, approach=:direct, method=:cg)
+resd_gd = mw.geosolve(tp, approach=:direct, method=:gd)
+resd_lbfgs_optim = mw.geosolve(tp, approach=:direct, method=:lbfgs_optim)
+
+# optimisers -- look for negative whs!
+# (:adam,  :descent, :momentum, :nesterov)
+resd_adam = mw.geosolve(tp, approach=:direct, method=:adam, pow=2, maxiter=20000)
+resd_descent = mw.geosolve(tp, approach=:direct, method=:descent) # can't improve on start
+resd_momentum = mw.geosolve(tp, approach=:direct, method=:momentum) # can't improve on start
+resd_nesterov = mw.geosolve(tp, approach=:direct, method=:nesterov)
+Statistics.quantile(vec(resd_adam.whs))
+
+resd_krylov = mw.geosolve(tp, approach=:direct, method=:krylov, pow=2) # not much progress on real problems
+Statistics.quantile(vec(resd_krylov.whs))
+
+# resd_xxx = mw.geosolve(tp, approach=:direct, method=:xxx)
+# resd_xxx = mw.geosolve(tp, approach=:direct, method=:xxx)
+# resd_xxx = mw.geosolve(tp, approach=:direct, method=:xxx)
+# resd_xxx = mw.geosolve(tp, approach=:direct, method=:xxx)
+
+
 # tp = mw.get_taxprob(9)
 
 ## compare results
