@@ -1,4 +1,4 @@
-using CSV, DataFrames, Parquet
+using CSV, DataFrames, Parquet, Statistics
 import Microweight as mw
 
 # The ACS is the American Community Survey, a widely used survey of households in the United States,
@@ -85,6 +85,10 @@ resp = mw.geosolve(prob, approach=:poisson)
 resd = mw.geosolve(prob, approach=:direct, stopval=1e-8, print_interval=10, maxiter=10_000)
 
 ## examine results
+# elapsed seconds
+resp.eseconds
+resd.eseconds
+
 # sum of squared percentage differences of calculated targets vs. desired target values
 resp.sspd
 resd.sspd
