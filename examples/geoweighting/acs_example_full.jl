@@ -1,3 +1,6 @@
+
+# CAUTION: I have not finished this example, and may not do so!
+
 using CSV, DataFrames, Parquet, Statistics
 import Microweight as mw
 
@@ -19,9 +22,10 @@ import Microweight as mw
 #    age_lt40 -- boolean (1=age < 40), constructed from the ACS age variable, agep
 #    age_ge60 -- boolean (1=age >= 60), constructed from the ACS age variable, agep
 
-# In this example, we solve a very easy problem
-#   we have 5 states
-#   and 4 targets per state:
+# In this example, we solve a more challenging problem. We use observations from 10 states and
+# try try to construct weights that will hit targets as follows
+#   we have 4 states
+#   and 3 targets per state
 
 ## locations
 # path = raw"C:\Users\donbo\Documents\R_projects\acs_for_microweight\\"
@@ -35,9 +39,10 @@ describe(data_all)
 names(data_all)
 propertynames(data_all)
 # f = x -> !(x in (:stabbr, :pwgtp))
-data_cols = filter(x -> !(x in (:stabbr, :pwgtp)), propertynames(data_all))
+data_cols = filter(x -> !(x in (:stabbr, :st, :serialno)), propertynames(data_all))
 data_all[!, data_cols] = data_all[:, data_cols] .* 1.0
 # now we have a data frame with floats in the right places
+# we want the data columns to be float - define these columns so we can convert as needed
 
 ## get weighted sums by state
 sumspathfn = path * "teachers_state_sums.csv"
@@ -46,6 +51,11 @@ stsums = DataFrame(CSV.File(sumspathfn))
 # we construct and solve a very easy problem below, where:
 #   we use 4 states (s=4)
 #   we subset the ACS file to
+
+# geotargets_df -- data frame that will be used to construct matrix of geographic targets
+geotargets_df = stsums[stsums_rows, cols]
+# convert data_cols to float, as needed
+geotargets_df[!, data_cols] = geotargets_df[:, data_cols] .* 1.0
 
 # define info for rows and columns we want to get from data
 state_rows = ["CA", "NY", "OR", "TX", "WI"]
@@ -57,24 +67,24 @@ stsums_rows = in.(stsums.stabbr, Ref(state_rows))
 cols_all = [:pwgtp, :stabbr, :totnum, :married, :pincp, :intp]
 # cols_all = vcat(:pwgtp, cols)
 cols = filter(x -> x!=:pwgtp, cols_all)
-# we want the data columns to be float - define these columns so we can convert as needed
-data_cols = filter(x -> x!=:stabbr, cols_all) # remove stabbr, which will not be part of our data
+# data_cols = filter(x -> x!=:stabbr, cols_all) # remove stabbr, which will not be part of our data
 
 # adjust the data so that
 data = data_all[data_rows, cols_all]
-data[!, data_cols] = data[:, data_cols] .* 1.0
-# scale pwgtp
-sum(data.pwgtp)
-sum(stsums.totnum)
-ratio = sum(data.pwgtp) / sum(stsums.totnum)
-ratio = sum(stsums.totnum) / sum(data.pwgtp)
-data[!, "pwgtp"] = data.pwgtp * ratio
-sum(data.pwgtp)
+# data[!, data_cols] = data[:, data_cols] .* 1.0
 data
 
 # weights for households (wh), h x 1
 # pwgtp is the person weight in the ACS, which will be our "wh" variable (national weight for household)
-wh = data[!, :pwgtp] * 1.0 # multiply by 1.0 to convert to float
+# scale pwgtp
+sum(data.pwgtp)
+sum(geotargets_df.totnum)
+# ratio = sum(data.pwgtp) / sum(stsums.totnum)
+ratio = sum(geotargets_df.totnum) / sum(data.pwgtp)
+data[!, "pwgtp"] = data.pwgtp * ratio
+sum(data.pwgtp)
+
+wh = data[!, :pwgtp]
 wh = reshape(wh, length(wh), 1) # we need wh as an array (i.e., matrix, in this case)
 # wh = convert(Array{Float64}, data.pwgtp)
 
@@ -82,13 +92,9 @@ wh = reshape(wh, length(wh), 1) # we need wh as an array (i.e., matrix, in this 
 data_cols = filter(x -> x!=:stabbr, cols)
 xmat_df = data[!, cols]
 # convert data_cols to float, as needed
-xmat_df[!, data_cols] = xmat_df[:, data_cols] .* 1.0
 xmat_df
 
-# geotargets_df -- data frame that will be used to construct matrix of geographic targets
-geotargets_df = stsums[stsums_rows, cols]
-# convert data_cols to float, as needed
-geotargets_df[!, data_cols] = geotargets_df[:, data_cols] .* 1.0
+
 
 sum(wh)
 sum(geotargets_df.totnum)
@@ -105,7 +111,7 @@ prob = mw.GeoweightProblem(wh, xmat, geotargets)
 
 
 ## solve for state weights two ways - using poisson approach and direct approach
-resp = mw.geosolve(prob, approach=:poisson)
+resp = mw.geosolve(prob, approach=:poisson, maxiter=1000)
 resd = mw.geosolve(prob, approach=:direct, stopval=1e-8, print_interval=10, maxiter=10_000)
 
 ## examine results
