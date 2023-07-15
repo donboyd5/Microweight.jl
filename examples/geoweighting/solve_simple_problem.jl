@@ -18,9 +18,23 @@ using LineSearches
 #          to the geotargets
 
 ## create a small test problem using built-in information
-h = 100  # number of households
-s = 8  # number of states, regions, etc.
-k = 4 # number of characteristics each household has
+
+# small for initial compilation
+h = 100  # number of households 100
+s = 8  # number of states, regions, etc.  8
+k = 4 # number of characteristics each household has 4
+
+# medium
+h = 300_000  # number of households 100
+s = 3  # number of states, regions, etc.  8
+k = 200 # number of characteristics each household has 4
+
+
+# large
+h = 500_000  # number of households 100
+s = 50  # number of states, regions, etc.  8
+k = 200 # number of characteristics each household has 4
+
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtp(h, s, k)
 
@@ -96,7 +110,7 @@ resp_lbfgs_optim = mw.geosolve(tp, approach=:poisson, method=:lbfgs_optim)
 # optimisers_methods = (:adam,  :descent, :momentum, :nesterov)
 resp_adam = mw.geosolve(tp, approach=:poisson, method=:adam, pow=2, maxiter=3000)
 resp_descent = mw.geosolve(tp, approach=:poisson, method=:descent) # can't improve on starting point
-resp_momentum = mw.geosolve(tp, approach=:poisson, method=:momentum) # can't improve on starting point
+resp_momentum = mw.geosolve(tp, approach=:poisson, method=:momentum) # can't improe on starting point
 resp_nesterov = mw.geosolve(tp, approach=:poisson, method=:nesterov) # can't improve on starting point
 
 ## direct approach
@@ -104,7 +118,7 @@ resp_nesterov = mw.geosolve(tp, approach=:poisson, method=:nesterov) # can't imp
 # optim_methods = (:cg, :gd, :lbfgs_optim)
 # optimisers_methods = (:adam, :nesterov, :descent, :momentum)
 # nlopt
-resd_ccsaq = mw.geosolve(tp, approach=:direct, maxiter=10_000)
+resd_ccsaq = mw.geosolve(tp, approach=:direct, maxiter=100)
 resd_lbfgs_nlopt = mw.geosolve(tp, approach=:direct, method=:lbfgs_nlopt)
 resd_newton = mw.geosolve(tp, approach=:direct, method=:newton)
 resd_var2 = mw.geosolve(tp, approach=:direct, method=:var2)
@@ -112,6 +126,7 @@ Statistics.quantile(vec(resd_ccsaq.whs))
 resd_ccsaq.wh_pdqtiles
 resd_ccsaq.targ_pdqtiles
 resd_ccsaq.eseconds
+
 
 # optim
 resd_cg = mw.geosolve(tp, approach=:direct, method=:cg)
@@ -135,6 +150,15 @@ Statistics.quantile(vec(resd_krylov.whs))
 # resd_xxx = mw.geosolve(tp, approach=:direct, method=:xxx)
 
 
+# look at results for any approach
+temp = resd_ccsaq # resd_ccsaq resd_krylov
+Statistics.quantile(vec(temp.whs))
+temp.wh_pdqtiles
+temp.targ_pdqtiles
+temp.sspd
+temp.eseconds
+
+
 cor(vec(resp_lm_lsqfit.whs), vec(resd_ccsaq.whs))
 
 # tp = mw.get_taxprob(8)
@@ -146,9 +170,9 @@ cor(vec(resp_lm_lsqfit.whs), vec(resd_ccsaq.whs))
 # that one was better than the other
 
 # the real question is whether results are "good enough"
-# for example resp_lsoptim has a much higher sspd than resp_lsqfit:
-resp_lsqfit.sspd
-resp_lsoptim.sspd
+# for example resp_lm_lsoptim has a much higher sspd than resp_lm_lsqfit:
+resp_lm_lsqfit.sspd
+resp_lm_lsoptim.sspd
 # but the sum of squared percentage differences from targets was about 3 millionths of a percentage point
 # that may be good enough for most purposes
 
