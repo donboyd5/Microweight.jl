@@ -40,6 +40,43 @@ end
 
 ##############################################################################
 ##
+## Reweight Problem
+##
+##############################################################################
+
+mutable struct ReweightProblem
+  wh::Vector{Float64}
+  xmat::Matrix{Float64}
+  rwtargets::Vector{Float64}
+  h::Int  # number of households
+  k::Int # number of characteristics per household
+  rwtargets_calc::Vector{Float64}
+  rwtargets_diff::Vector{Float64}
+
+  # placeholders in case we create scaled versions of the data
+  wh_scaled::Vector{Float64}
+  xmat_scaled::Matrix{Float64}
+  rwtargets_scaled::Vector{Float64}
+
+  function ReweightProblem(wh, xmat, rwtargets)
+      # check dimensions
+      length(wh) == size(xmat, 1) || throw(DimensionMismatch("wh and xmat must have same # of rows"))
+      size(xmat, 2) == length(rwtargets) || throw(DimensionMismatch("xmat # of columns must equal length of reweight_targets"))
+
+      rwtargets_calc = xmat' * wh
+      rwtargets_diff = rwtargets_calc - rwtargets
+
+      h = length(wh)
+      k = size(xmat)[2]
+      new(wh, xmat, rwtargets, h, k, rwtargets_calc, rwtargets_diff)
+  end
+end
+
+
+
+
+##############################################################################
+##
 ## Results struct
 ##
 ##############################################################################

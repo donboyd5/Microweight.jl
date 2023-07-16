@@ -89,7 +89,7 @@ using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptim
 ##
 ##############################################################################
 # order these alphabetically by file
-export mtp, geosolve, get_taxprob
+export mtp, geosolve, get_taxprob, objfn_reweight
   # # src\api.jl
   # geosolve,
   # # src\functions_poisson_typestable.jl
@@ -121,8 +121,9 @@ include("get_taxdata_problems.jl")
 include("make_test_problems.jl")
 include("scaling.jl")
 
-# direct functions and solvers
-include("functions_direct.jl")
+# geoweight direct functions and solvers 
+include("functions_geoweight_direct.jl")
+include("functions_reweight.jl")
 
 include("direct_optz_nlopt.jl")
 include("direct_optz_optim.jl")
@@ -141,6 +142,12 @@ include("poisson_nlsolve.jl")
 include("poisson_optz_nlopt.jl")
 include("poisson_optz_optim.jl")
 include("poisson_optz_optimisers.jl")
+
+# reoweight direct functions and solvers 
+# include("functions_reweight_direct.jl")
+
+# include("reweight_optz_nlopt.jl")
+include("reweight_optz_optim.jl")
 
 # functions underlying all calculations
 

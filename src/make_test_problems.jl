@@ -26,6 +26,31 @@ function mtp(h, s, k)
     return GeoweightProblem(wh, xmat, geotargets)
 end
 
+function mtprw(h, k)
+    Random.seed!(123)
+    xsd=.02
+    wsd=.02
+    # h = 8
+    # k = 2
+
+    # create xmat
+    d = Normal(0., xsd)
+    r = rand(d, (h, k)) # xmat dimensions
+    xmat = 100 .+ 20 .* r
+
+    # create wh
+    d = Normal(0., wsd)
+    r = rand(d, h) # wh dimensions
+    wh = 10 .+ 10 .* (1 .+ r)
+
+    # calc  sums and add noise to get targets
+    rwtargets = xmat' * wh
+    r = rand(Normal(0., xsd), k)
+    rwtargets = rwtargets .* (1 .+ r)
+
+    return ReweightProblem(wh, xmat, rwtargets)
+end
+
 
 function get_rproblem()
     h = 10 # households

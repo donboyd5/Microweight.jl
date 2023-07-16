@@ -82,7 +82,7 @@ function geosolve(prob;
             poisson_optz_optimisers(prob, result, maxiter=maxiter, objscale=objscale, pow=pow, targstop=targstop, whstop=whstop; kwargs...)
 
         else
-            error("Unknown poisson method!")
+            error("Unknown poisson geoweighting method!")
             return;
         end
 
@@ -106,11 +106,11 @@ function geosolve(prob;
             direct_optz_optimisers(prob, result, pow=pow, maxiter=maxiter,
                 whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
         else
-            error("Unknown direct method!")
+            error("Unknown direct geoweighting method!")
             return;
         end
     else
-        error("Unknown approach!")
+        error("Unknown geoweighting approach!")
     end
 
     tend = time()
@@ -137,3 +137,64 @@ function geosolve(prob;
 
     return result
 end
+
+
+function reweight(prob;
+    method=nothing,
+    maxiter=1000,
+    objscale=1.0,
+    scaling=false,
+    scaling_target_goal=1000.0,
+    print_interval=1,
+    whweight=0.5,
+    pow=8,
+    targstop=.01,
+    whstop=.01,
+    kwargs...)
+
+    # DJB have not yet updated this function
+    # initialize result
+    prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
+    result = Result(approach=approach, method=method, problem=prob, beta0=beta0, shares0=shares0)
+
+    # globals accessed within the display_reweight_progress function (TO BE WRITTEN)
+    global tstart = time()
+    global fcalls = 0  # global within this module
+    global bestobjval = Inf
+    global nshown = 0
+    global iter_calc = 0
+    global plevel = .99
+    global interval = print_interval
+
+
+    nlopt_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
+    optim_methods = (:cg, :gd, :lbfgs_optim)
+    optimisers_methods = (:adam, :nesterov, :descent, :momentum)
+
+    if method in optim_methods
+        error("Not yet implemented!")
+        reweight_optz_optim(prob, result, pow=pow, maxiter=maxiter,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+    elseif method == :krylov
+        error("Not yet implemented!")
+        # kwargs are those that should be passed through to NLopt from Optimization
+        reweight_optz_optim_krylov(prob, result, pow=pow, maxiter=maxiter,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+    elseif method in nlopt_methods
+        error("Not yet implemented!")
+        # kwargs are those that should be passed through to NLopt from Optimization
+        reweight_optz_nlopt(prob, result, pow=pow, maxiter=maxiter,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+    elseif method in optimisers_methods # objective function returns a scalar, thus I can modify with powers
+        error("Not yet implemented!")
+        reweight_optz_optimisers(prob, result, pow=pow, maxiter=maxiter,
+            whweight=whweight, targstop=targstop, whstop=whstop; kwargs...)
+    else
+        error("Unknown reweighting method!")
+        return;
+    end
+
+    return result
+end
+
+
