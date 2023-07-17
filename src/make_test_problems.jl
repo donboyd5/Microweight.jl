@@ -28,8 +28,8 @@ end
 
 function mtprw(h, k)
     Random.seed!(123)
-    xsd=.02
-    wsd=.02
+    xsd=.005
+    wsd=.005
     # h = 8
     # k = 2
 
@@ -45,7 +45,7 @@ function mtprw(h, k)
 
     # calc  sums and add noise to get targets
     rwtargets = xmat' * wh
-    r = rand(Normal(0., xsd), k)
+    r = rand(Normal(0., 0.1), k)
     rwtargets = rwtargets .* (1 .+ r)
 
     return ReweightProblem(wh, xmat, rwtargets)
