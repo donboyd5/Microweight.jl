@@ -26,10 +26,11 @@ function mtp(h, s, k)
     return GeoweightProblem(wh, xmat, geotargets)
 end
 
-function mtprw(h, k)
+function mtprw(h, k; pctzero=0.0)
     Random.seed!(123)
     xsd=.005
     wsd=.005
+    # pctzero=0.10
     # h = 8
     # k = 2
 
@@ -37,6 +38,13 @@ function mtprw(h, k)
     d = Normal(0., xsd)
     r = rand(d, (h, k)) # xmat dimensions
     xmat = 100 .+ 20 .* r
+
+    # set random indexes to zero
+    nzeros = round(Int, pctzero * length(xmat))
+    # Generate a random set of indices to set to zero
+    zindices = randperm(length(xmat))[1:nzeros]
+    # Set the elements at the selected indices to zero
+    xmat[zindices] .= 0.0 # this works even when pctzero is 0.0
 
     # create wh
     d = Normal(0., wsd)
