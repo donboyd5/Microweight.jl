@@ -109,6 +109,7 @@ fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
 # lower = 0.1*ones(length(ratio0))
 # upper = 10.0*ones(length(ratio0))
 fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=0.1, ub=10.0)
+# fprob = Optimization.OptimizationProblem(fpof, res.x, lb=0.1, ub=10.0)
 
 
 fp(ratio0, p)
@@ -152,10 +153,13 @@ opt = Optimization.solve(fprob, Optim.eval(algorithm), maxiters=100) # , show_tr
 using SPGBox
 using ReverseDiff
 f2 = (ratio) -> f(ratio, wh, xmat, rwtargets)
-lower = 0.1*ones(length(ratio0))
-upper = 10*ones(length(ratio0))
+# lower = 0.1*ones(length(ratio0))
+# upper = 10*ones(length(ratio0))
+lower = fill(0.1, length(ratio0))
+upper = fill(10., length(ratio0))
+
 x = ratio0
-@time res = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), x, lower=lower, upper=upper, eps=1e-10, nitmax=500, nfevalmax=2000, m=10, iprint=1)
+@time res = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), res.x, lower=lower, upper=upper, eps=1e-10, nitmax=500, nfevalmax=2000, m=10, iprint=1)
 #  65.271938 seconds (285.43 k allocations: 220.238 GiB, 8.65% gc time, 0.28% compilation time)
 # fieldnames(typeof(res))
 res.f
@@ -175,6 +179,7 @@ opt.retcode
 
 xyz = opt.u
 xyz = res.x
+
 tp.rwtargets
 rwtargets_calc = tp.xmat' * (xyz .* tp.wh)
 # targdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets  * 100. # allocates a tiny bit
@@ -194,6 +199,8 @@ quantile!(abs.(pdiffs0), q)
 f(ratio0, wh, xmat, rwtargets)
 
 ss_targdiffs = sum(targdiffs.^2.0)
+
+cor(res.x, opt.u)
 
 
 algo=:(ConjugateGradient()) # also best but can hang
