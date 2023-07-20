@@ -10,6 +10,8 @@ using OptimizationMOI, Ipopt
 using ModelingToolkit
 using Optimisers
 
+# https://julianlsolvers.github.io/Optim.jl/latest/#
+
 # Create a test problem that has the following characteristics:
 #   h households
 #   s states (areas, or regions, etc.)
@@ -46,6 +48,11 @@ k = 100 # number of characteristics each household has 4
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtprw(h, k, pctzero=0.2)
 fieldnames(typeof(tp))
+
+opt1 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo="LD_LBFGS")
+opt1.objective
+opt1.solve_time
+
 
 tp.h
 tp.k
@@ -84,18 +91,22 @@ end
 # scale = (h / 1000.) ./ sum(abs.(xmat), dims=1)
 
 # prep and scaling  
-ratio0 = ones(length(tp.wh))
+ratio0 = ones(tp.h)
 p = 1.0
 wh = tp.wh
 # scale = 1e3
 scale = vec(sum(abs.(tp.xmat), dims=1)) ./ size(tp.xmat)[1] 
-# scale = [1.0, 1.0]'  # unscaled
+scale = fill(1., k) # unscaled
 xmat = tp.xmat ./ scale'
 sum(abs.(xmat), dims=1)
 mean(abs.(xmat), dims=1)
 
 rwtargets = tp.rwtargets ./ scale
 xmat' * wh
+
+
+mw.objfn_reweight(ratio0, wh, xmat, rwtargets)
+mw.objfn_reweight(ratio0, wh, xmat, rwtargets, scaling=false)
 
 
 # set up optimization functions
@@ -108,13 +119,15 @@ fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
 # fprob = Optimization.OptimizationProblem(fpof, wh0, lb=zeros(length(wh0)), ub=ones(length(wh0)))
 # lower = 0.1*ones(length(ratio0))
 # upper = 10.0*ones(length(ratio0))
-fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=0.1, ub=10.0)
+fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=0.1, ub=10.0) # rerun this line when ratio0 changes
 # fprob = Optimization.OptimizationProblem(fpof, res.x, lb=0.1, ub=10.0)
 
 
 fp(ratio0, p)
 f(ratio0, wh, xmat, rwtargets)
 
+a = "LD_CCSAQ()"
+a = :LD_CCSAQ()
 
 # NLOPT optimizers
 algorithm=:(LD_CCSAQ()) # best on real-world problems
@@ -127,7 +140,10 @@ algorithm=:(NLopt.LD_TNEWTON()) # fast, not so accurate
 algorithm=:(NLopt.NLopt.LD_TNEWTON_RESTART()) #  accurate
 algorithm=:(NLopt.NLopt.LD_TNEWTON_PRECOND_RESTART())  # fast, not so accurate
 algorithm=:(NLopt.LD_TNEWTON_PRECOND()) # failure
+
 opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=1000, reltol=1e-16)
+
+
 
 # Optim optimizers
 # ConjugateGradient() GradientDescent() LBFGS()
@@ -153,13 +169,18 @@ opt = Optimization.solve(fprob, Optim.eval(algorithm), maxiters=100) # , show_tr
 using SPGBox
 using ReverseDiff
 f2 = (ratio) -> f(ratio, wh, xmat, rwtargets)
+g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
+g2(g2, ratio) -> ReverseDiff.gradient!(g2, f2, ratio)
+f2(ratio0)
+g2(ratio0)
 # lower = 0.1*ones(length(ratio0))
 # upper = 10*ones(length(ratio0))
 lower = fill(0.1, length(ratio0))
 upper = fill(10., length(ratio0))
 
 x = ratio0
-@time res = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), res.x, lower=lower, upper=upper, eps=1e-10, nitmax=500, nfevalmax=2000, m=10, iprint=1)
+@time res = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), x, lower=lower, upper=upper, eps=1e-10, nitmax=400, nfevalmax=2000, m=10, iprint=0)
+res2 = spgbox(f2, g2, x, lower=lower, upper=upper, eps=1e-10, nitmax=400, nfevalmax=2000, m=10, iprint=0)
 #  65.271938 seconds (285.43 k allocations: 220.238 GiB, 8.65% gc time, 0.28% compilation time)
 # fieldnames(typeof(res))
 res.f
@@ -169,11 +190,11 @@ res.x
 
 
 # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
-opt.objective # 0.26740274997483204
+opt.objective # 2.974735500954226e-6
 fp(ratio0, p)
 fp(opt.u, p)
 
-opt.solve_time
+opt.solve_time # 12.152999877929688
 opt.retcode
 
 
