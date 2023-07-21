@@ -1,3 +1,5 @@
+__precompile__()
+
 """
 # Microweight.jl
 Welcome to Microweight.jl!

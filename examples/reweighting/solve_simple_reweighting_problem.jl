@@ -1,5 +1,6 @@
 using Revise
 import Microweight as mw  # Revise doesn't work for changes to type definitions
+
 using Statistics
 using LineSearches
 
@@ -9,6 +10,11 @@ using Optim
 using OptimizationMOI, Ipopt
 using ModelingToolkit
 using Optimisers
+
+# for Ipopt
+# import LinearAlgebra, OpenBLAS32_jll
+# LinearAlgebra.BLAS.lbt_forward(OpenBLAS32_jll.libopenblas_path)
+# also https://docs.juliahub.com/StandaloneIpopt/QHju1/0.4.1/
 
 # https://julianlsolvers.github.io/Optim.jl/latest/#
 
@@ -49,9 +55,56 @@ k = 100 # number of characteristics each household has 4
 tp = mw.mtprw(h, k, pctzero=0.2)
 fieldnames(typeof(tp))
 
-opt1 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo="LD_LBFGS")
-opt1.objective
-opt1.solve_time
+mw.objfn_reweight(ones(tp.h), tp.wh, tp.xmat, tp.rwtargets, rweight=0.5)
+
+algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
+# LD_LBFGS about 0.5 seconds with rweight=0.5
+
+iters = 10_000
+rwt = 1e-4
+rwt = 0.0
+scaleit = false
+opt1 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[1], rweight=rwt, scaling=scaleit, maxit=iters)
+
+lb = .25
+ub = 1.75
+
+lb = .25
+ub = 4.
+
+opt1a = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[1], lb=lb, ub=ub, rweight=rwt, scaling=scaleit, maxit=iters)
+
+opt2 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[2], rweight=rwt, scaling=scaleit, maxit=iters)
+opt3 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[3], rweight=rwt, scaling=scaleit, maxit=iters)
+opt4 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[4], rweight=rwt, scaling=scaleit, maxit=iters)
+opt5 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[5], rweight=rwt, scaling=scaleit, maxit=iters)
+opt6 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[6], rweight=rwt, scaling=scaleit, maxit=iters)
+opt7 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[7], rweight=rwt, scaling=scaleit, maxit=iters)
+opt8 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[8], rweight=rwt, scaling=scaleit, maxit=iters)
+opt9 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[9], rweight=rwt, scaling=scaleit, maxit=iters)
+
+opt = opt1
+opt = opt1a
+opt = opt2
+opt = opt3
+opt = opt4
+opt = opt5
+opt = opt6
+opt = opt7
+opt = opt8
+opt = opt9
+
+# 6 LD_TNEWTON super fast, also 9 LD_TNEWTON_PRECOND, then 2, 8, 4, 7, 5
+opt.objective
+opt.solve_time
+opt.u
+opt.retcode
+
+quantile(opt.u)
+
+rwtargets_calc = tp.xmat' * (opt.u .* tp.wh)
+targpdiffs = (rwtargets_calc .- tp.rwtargets) ./ tp.rwtargets 
+quantile(targpdiffs)
 
 
 tp.h
@@ -68,6 +121,216 @@ tp.rwtargets
 tp.rwtargets_calc
 tp.rwtargets_diff
 tp.rwtargets_calc ./ tp.rwtargets .- 1.
+
+
+## Ipopt section ----
+# ???
+import LinearAlgebra, OpenBLAS32_jll
+LinearAlgebra.BLAS.lbt_forward(OpenBLAS32_jll.libopenblas_path)
+
+function f(ratio)
+    # part 1 get measure of difference from targets
+    ratiodiffs = ratio .- 1.0
+    objval = sum(ratiodiffs.^2.) / length(ratio)
+
+  # list extra variables on the return so that they are available to the callback function
+  return objval # , targdiffs, whdiffs, targstop, whstop
+end
+
+f(fill(1.2, 10))
+
+ratio0 = fill(1., tp.h)
+lower = fill(.1, tp.h)
+upper = fill(10., tp.h)
+lcons = tp.rwtargets * .99
+ucons = tp.rwtargets * 1.01
+p = 1.0
+
+fp = (ratio, p) -> f(ratio)
+fp(ratio0, p)
+
+# cons = (res, u, p) -> res .= w'u
+# function fcons(ratio, xmat, wh)
+#     cons = xmat' * (ratio .* wh)
+#     return cons
+# end
+# fcons(ratio0, tp.xmat, tp.wh)
+# fcp = (ratio, p) -> fcons(ratio, xmat, wh)
+# xmat = tp.xmat
+# wh = tp.wh
+# fcp(ratio0, p)
+
+
+# cons2 = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+xmat = tp.xmat
+wh = tp.wh
+fcons = (res, ratio, p) -> res .= xmat' * (ratio .* wh)
+
+fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoForwardDiff(); cons=fcons)
+fprob = Optimization.OptimizationProblem(fpof, ratio0, p, lb=lower, ub=upper, lcons=lcons, ucons=ucons) # rerun this line when ratio0 changes
+res = Optimization.solve(fprob, Ipopt.Optimizer())
+# res2 = Optimization.solve(fprob, Optim.IPNewton()) # warning if not an interior point
+
+lcons
+xmat' * (res.u .* wh)
+ucons
+quantile(res.u)
+
+## standalone ipopt
+# https://chrisgeoga.com/
+# https://docs.juliahub.com/StandaloneIpopt/QHju1/0.4.1/
+# https://git.sr.ht/~cgeoga/StandaloneIpopt.jl
+# https://git.sr.ht/~cgeoga/StandaloneIpopt.jl/tree
+# https://juliahub.com/ui/Packages/StandaloneIpopt/QHju1/0.4.1
+# https://discourse.julialang.org/t/ann-standaloneipopt-jl-another-option-for-using-ipopt-in-julia/86014
+# https://git.sr.ht/~cgeoga/StandaloneIpopt.jl/tree/master/item/example/hs071.jl
+# Sparse constraint Jacobian support via SparseDiffTools.jl. Simply pass in a sparse matrix of Bools as the jac_sparsity kwarg
+
+using StandaloneIpopt
+wh = tp.wh
+xmat = tp.xmat
+sparse(xmat)
+!(xmat==0)
+bjac = xmat .!= 0
+# Bool(bjac)
+
+bjac = sparse(xmat .!= 0)
+# bjac = iszero.(xmat)
+
+sparse(xmat )
+ratio0 = ones(length(wh))
+lcons = tp.rwtargets * .99999
+ucons = tp.rwtargets * 1.00001
+
+obj(ratio) = sum((ratio .- 1.0).^2.) / length(ratio)
+# obj(ratio0)
+
+fcons(store, ratio) = store .= xmat' * (ratio .* wh)
+
+# store = zeros(tp.k)
+# fcons(store, ratio0)
+# A = [1 0; 2 -1]  # your numeric matrix
+# B = sparse(A .> 0)
+
+(lb, ub) = (0.1, 10.0)
+
+constraints = Constraints(tp.k, fcons, lcons, ucons)
+res = ipopt_optimize(obj, ratio0, constraints,
+                    box_lower=lb, box_upper=ub)
+
+res2 = ipopt_optimize(obj, ratio0, constraints, box_lower=lb, box_upper=ub, jac_nz=bjac)
+
+
+# jac_sparsity
+
+fieldnames(typeof(res))
+res.minval
+res.minimizer
+opt1a.u
+
+lcons
+xmat' * (res.minimizer .* wh)
+ucons
+
+rwtargets_calc = tp.xmat' * (res.minimizer .* tp.wh)
+# targdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets  * 100. # allocates a tiny bit
+targdiffs = (rwtargets_calc .- tp.rwtargets) # ./ 1e6 # allocates a tiny bit
+pdiffs = targdiffs ./ tp.rwtargets
+
+rwtargets_calc = tp.xmat' * (opt1a.u .* tp.wh)
+# targdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets  * 100. # allocates a tiny bit
+targdiffs = (rwtargets_calc .- tp.rwtargets) # ./ 1e6 # allocates a tiny bit
+pdiffs = targdiffs ./ tp.rwtargets
+
+
+using Symbolics
+
+fcalls = 0
+function f(y,x) # in-place
+  global fcalls += 1
+  for i in 2:length(x)-1
+    y[i] = x[i-1] - 2x[i] + x[i+1]
+  end
+  y[1] = -2x[1] + x[2]
+  y[end] = x[end-1] - 2x[end]
+  nothing
+end
+
+input = rand(30)
+output = similar(input)
+sparsity_pattern = Symbolics.jacobian_sparsity(f,output,input)
+jac = Float64.(sparsity_pattern)
+
+using SparseArrays
+A = sparse([1, 1, 2, 3], [1, 3, 2, 3], [0, 1, 2, 0])
+
+
+# function fcons(store, ratio)
+#     store[1] = prod(x)
+#     store[2] = sum(abs2, x)
+#     store
+#     end
+
+using StandaloneIpopt
+
+# hs071
+#
+# min  x1*x4*(x1+x2+x3)+x3
+# s.t. x1*x2*x3*x4 >= 25
+#      x1^2 + x2^2 + x3^2 + x4^2 == 40
+#      1 <= x1, x2, x3, x4 <= 5
+
+# Objective:
+obj(x) = x[1]*x[4] * (x[1]+x[2]+x[3]) + x[3]
+
+# constraints:
+function eval_constraints(store, x)
+store[1] = prod(x)
+store[2] = sum(abs2, x)
+store
+end
+
+# box values, the same for all parameters. If they weren't, you could instead
+# pass in box_lower = [l_1, l_2, ..., l_n].
+(b_l, b_u) = (1.0, 5.0)
+
+# init value:
+ini = [1.0, 5.0, 5.0, 1.0]
+
+# result:
+constraints = Constraints(2, eval_constraints, [25.0, 40.0], [1e22, 40.0])
+res = ipopt_optimize(obj, ini, constraints,
+                    box_lower=b_l, box_upper=b_u)
+
+
+# cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
+res = [0.0, 0.0]
+cons(res, ratio, p) = (res .= xmat' * (ratio .* wh))
+cons(res, ratio0, p)
+
+cons(res, x, p) = (res .= [x[1]^2 + x[2]^2, x[1] * x[2]])
+x1 = [1.0, 2.0]
+x = x1
+res = [0.0, 0.0]
+res = 1.0
+cons(res, x1, p)
+
+tp.rwtargets
+
+
+using Optimization, OptimizationOptimJL
+rosenbrock(x, p) = (p[1] - x[1])^2 + p[2] * (x[2] - x[1]^2)^2
+cons2 = (res, x, p) -> res .= [x[1]^2 + x[2]^2]
+x0 = zeros(2)
+p = [1.0, 100.0]
+fpof = OptimizationFunction(rosenbrock, Optimization.AutoForwardDiff(); cons = cons2)
+prob = Optimization.OptimizationProblem(fpof, x0, p, lcons = [-5.0], ucons = [10.0])
+sol = solve(prob, IPNewton())
+sol2 = solve(prob, Ipopt.Optimizer())
+rosenbrock(sol.u, p)
+rosenbrock(sol2.u, p)
+
+# END Ipopt section ----
 
 
 
@@ -168,25 +431,65 @@ opt = Optimization.solve(fprob, Optim.eval(algorithm), maxiters=100) # , show_tr
 # https://m3g.github.io/SPGBox.jl/stable
 using SPGBox
 using ReverseDiff
-f2 = (ratio) -> f(ratio, wh, xmat, rwtargets)
+
+function f(ratio, wh, xmat, rwtargets)
+
+  # part 1 get measure of difference from targets
+  wh2 = ratio .* wh
+  rwtargets_calc = xmat' * wh2  
+  # targdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets  * 100. # allocates a tiny bit
+  targdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets # ./ 1e6 # allocates a tiny bit
+  ss_targdiffs = mean(targdiffs.^2.0)
+  objval = ss_targdiffs
+
+# list extra variables on the return so that they are available to the callback function
+return objval # , targdiffs, whdiffs, targstop, whstop
+end
+
+# f <- mw.objfn_reweight(ratio, wh, xmat, rwtargets;
+# rweight=0.5,
+# pow=2.0,
+# targstop=true, whstop=true,
+# display_progress=true)
+
+ratio0 = ones(tp.h)
+p = 1.0
+wh = tp.wh
+# scale = 1e3
+# scale = vec(sum(abs.(tp.xmat), dims=1)) ./ size(tp.xmat)[1] 
+scale = fill(1., k) # unscaled
+xmat = tp.xmat ./ scale'
+sum(abs.(xmat), dims=1)
+mean(abs.(xmat), dims=1)
+
+rwtargets = tp.rwtargets ./ scale
+xmat' * wh
+
+
+# f2 = (ratio) -> f(ratio, wh, xmat, rwtargets)
+f2 = (ratio) -> mw.objfn_reweight(ratio, wh, xmat, rwtargets, rweight=0.0)
 g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
-g2(g2, ratio) -> ReverseDiff.gradient!(g2, f2, ratio)
+# g2(g2, ratio) -> ReverseDiff.gradient!(g2, f2, ratio)
+
 f2(ratio0)
 g2(ratio0)
 # lower = 0.1*ones(length(ratio0))
 # upper = 10*ones(length(ratio0))
-lower = fill(0.1, length(ratio0))
-upper = fill(10., length(ratio0))
+lower = fill(0.2, length(ratio0)) # can't use scalar
+upper = fill(5., length(ratio0))
 
 x = ratio0
-@time res = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), x, lower=lower, upper=upper, eps=1e-10, nitmax=400, nfevalmax=2000, m=10, iprint=0)
-res2 = spgbox(f2, g2, x, lower=lower, upper=upper, eps=1e-10, nitmax=400, nfevalmax=2000, m=10, iprint=0)
+@time res = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0)
+# @time res2 = spgbox(f2, g2, x, lower=lower, upper=upper, eps=1e-10, nitmax=400, nfevalmax=2000, m=10, iprint=0)
 #  65.271938 seconds (285.43 k allocations: 220.238 GiB, 8.65% gc time, 0.28% compilation time)
 # fieldnames(typeof(res))
 res.f
 res.nit
 res.x
+quantile(res.x)
 
+opt1a.objective
+opt1a.u
 
 
 # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
@@ -198,7 +501,7 @@ opt.solve_time # 12.152999877929688
 opt.retcode
 
 
-xyz = opt.u
+xyz = opt1a.u
 xyz = res.x
 
 tp.rwtargets
