@@ -479,10 +479,19 @@ lower = fill(0.2, length(ratio0)) # can't use scalar
 upper = fill(5., length(ratio0))
 
 x = ratio0
-@time res = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0)
+@time res1 = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0)
+
+lower = fill(0.1, length(ratio0)) # can't use scalar
+upper = fill(10., length(ratio0))
+f2 = (ratio) -> mw.objfn_reweight(ratio, wh, xmat, rwtargets, rweight=1e-6)
+g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
+@time res2 = spgbox(f2, (g,x) -> ReverseDiff.gradient!(g,f2,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=5000, nfevalmax=10000, m=20, iprint=0)
+# m	Integer	Number of non-monotone search steps.	10
 # @time res2 = spgbox(f2, g2, x, lower=lower, upper=upper, eps=1e-10, nitmax=400, nfevalmax=2000, m=10, iprint=0)
 #  65.271938 seconds (285.43 k allocations: 220.238 GiB, 8.65% gc time, 0.28% compilation time)
 # fieldnames(typeof(res))
+
+res = res2
 res.f
 res.nit
 res.x
