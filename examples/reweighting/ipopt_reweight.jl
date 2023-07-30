@@ -82,7 +82,7 @@ fieldnames(typeof(res2))
 res2 = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", hsllib=hsllib, linear_solver="ma86")
 
 # safe way to run ma77
-# more safe
+# tempdir will store the temp files that ma77 creates; we'll delete it after the run because ma77 does not always clean up
 tempdir_path = Base.mktempdir()
 cd(tempdir_path)
 res2 = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", hsllib=hsllib, linear_solver="ma77")
