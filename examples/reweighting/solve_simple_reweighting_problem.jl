@@ -52,7 +52,7 @@ h = 300_000  # number of households 100
 k = 100 # number of characteristics each household has 4
 
 # the function mtp (make test problem) will create a random problem with these characteristics
-tp = mw.mtprw(h, k, pctzero=0.2)
+tp = mw.mtprw(h, k, pctzero=0.3)
 fieldnames(typeof(tp))
 
 mw.objfn_reweight(ones(tp.h), tp.wh, tp.xmat, tp.rwtargets, rweight=0.5)
@@ -120,8 +120,8 @@ tp.rwtargets
 
 tp.rwtargets_calc
 tp.rwtargets_diff
-tp.rwtargets_calc ./ tp.rwtargets .- 1.
-
+pdiffs0 = tp.rwtargets_calc ./ tp.rwtargets .- 1.
+quantile(pdiffs0)
 
 ## Ipopt section ----
 # ???
@@ -473,8 +473,10 @@ g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
 
 f2(ratio0)
 g2(ratio0)
-# lower = 0.1*ones(length(ratio0))
-# upper = 10*ones(length(ratio0))
+
+lower = fill(0.1, length(ratio0)) # can't use scalar
+upper = fill(10., length(ratio0))
+
 lower = fill(0.2, length(ratio0)) # can't use scalar
 upper = fill(5., length(ratio0))
 
@@ -491,7 +493,7 @@ g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
 #  65.271938 seconds (285.43 k allocations: 220.238 GiB, 8.65% gc time, 0.28% compilation time)
 # fieldnames(typeof(res))
 
-res = res2
+res = res1
 res.f
 res.nit
 res.x
