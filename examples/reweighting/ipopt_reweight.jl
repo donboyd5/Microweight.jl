@@ -81,6 +81,7 @@ fieldnames(typeof(res2))
 # if ma77, remember to delete an ma77 files in the working directory if not arlready done, before using it a 2nd (or later) time
 res2 = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", hsllib=hsllib, linear_solver="ma86")
 
+# safe way to run ma77
 tempdir_path = Base.mktempdir()
 cd(tempdir_path)
 res2 = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", hsllib=hsllib, linear_solver="ma77")
