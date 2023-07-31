@@ -11,9 +11,6 @@ using OptimizationMOI, Ipopt
 using ModelingToolkit
 using Optimisers
 
-mw.rwsolve("abc", approach=:minerr, method=:ccsaq)
-mw.rwsolve("abc", approach=:minerr)
-mw.rwsolve("abc", approach=:abc, method=:ccsaq)
 
 # for Ipopt
 # import LinearAlgebra, OpenBLAS32_jll
@@ -58,6 +55,11 @@ k = 100 # number of characteristics each household has 4
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtprw(h, k, pctzero=0.3)
 fieldnames(typeof(tp))
+
+mw.rwsolve(tp, approach=:minerr, method=:ccsaq)
+mw.rwsolve(tp, approach=:minerr)
+mw.rwsolve(tp, approach=:abc, method=:ccsaq)
+
 
 mw.objfn_reweight(ones(tp.h), tp.wh, tp.xmat, tp.rwtargets, rweight=0.5)
 

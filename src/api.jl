@@ -158,7 +158,10 @@ function rwsolve(prob;
 
     println("Solving reweighting problem...\n")
 
+    # check inputs, add defaults as needed
+
     if approach==:minerr
+        minerr_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
         if isnothing(method) method=:lbfgs end
         # if isnothing(beta0) beta0 = zeros(length(prob.geotargets)) end
     elseif approach==:constrain
@@ -167,6 +170,9 @@ function rwsolve(prob;
     else
         return "ERROR: approach must be :minerr or :constrain"
     end
+
+    println("households: ", prob.h)
+    println("targets: ", prob.k)
     println("approach: ", approach)
     println("method: ", method)
     println("scaling: ", scaling)
