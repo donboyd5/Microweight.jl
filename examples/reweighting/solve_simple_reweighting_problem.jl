@@ -11,6 +11,10 @@ using OptimizationMOI, Ipopt
 using ModelingToolkit
 using Optimisers
 
+mw.rwsolve("abc", approach=:minerr, method=:ccsaq)
+mw.rwsolve("abc", approach=:minerr)
+mw.rwsolve("abc", approach=:abc, method=:ccsaq)
+
 # for Ipopt
 # import LinearAlgebra, OpenBLAS32_jll
 # LinearAlgebra.BLAS.lbt_forward(OpenBLAS32_jll.libopenblas_path)

@@ -16,7 +16,7 @@ function geosolve(prob;
             kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
-    println("Solving problem...\n")
+    println("Solving geoweighting problem...\n")
 
     # define defaults
     if isnothing(approach) approach=:poisson end
@@ -139,8 +139,8 @@ function geosolve(prob;
 end
 
 
-function reweight(prob;
-    approach=nothing,
+function rwsolve(prob;
+    approach=nothing, # :minerr, :constrain
     method=nothing,
     lb=0.1,
     ub=10.0,
@@ -155,6 +155,22 @@ function reweight(prob;
     targstop=.01,
     whstop=.01,
     kwargs...)
+
+    println("Solving reweighting problem...\n")
+
+    if approach==:minerr
+        if isnothing(method) method=:lbfgs end
+        # if isnothing(beta0) beta0 = zeros(length(prob.geotargets)) end
+    elseif approach==:constrain
+        if isnothing(method) method=:constrain end
+        # if isnothing(shares0) shares0=fill(1. / prob.s, prob.h * prob.s) end
+    else
+        return "ERROR: approach must be :minerr or :constrain"
+    end
+    println("approach: ", approach)
+    println("method: ", method)
+    println("scaling: ", scaling)
+    return "success"
 
     # DJB have not yet updated this function
     # initialize result
