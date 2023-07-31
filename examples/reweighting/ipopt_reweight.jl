@@ -70,6 +70,7 @@ tcalcs = mod.A' * mod.meta.x0
 pdiffs = tcalcs ./ b .- 1.
 quantile(pdiffs)
 
+# here are some changes on the new reweight branch
 
 res1 = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", linear_solver="mumps", mumps_mem_percent=50)
 res1a = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", hsllib=hsllib, linear_solver="ma86")
