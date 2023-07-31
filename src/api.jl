@@ -140,7 +140,11 @@ end
 
 
 function reweight(prob;
+    approach=nothing,
     method=nothing,
+    lb=0.1,
+    ub=10.0,
+    constol=.01,
     maxiter=1000,
     objscale=1.0,
     scaling=false,
