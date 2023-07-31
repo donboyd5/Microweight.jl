@@ -79,7 +79,7 @@ fieldnames(typeof(res2))
 
 # do not use ma57 on large problems, will abort (why???)
 # use mumps ma86, ma97, or possibly ma77 -- compare to mumps
-# if ma77, remember to delete an ma77 files in the working directory if not arlready done, before using it a 2nd (or later) time
+# if ma77, remember to delete any ma77 files in the working directory if not already done, before using it a 2nd (or later) time
 res2 = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", hsllib=hsllib, linear_solver="ma86")
 
 # safe way to run ma77 - avoids crash -- this is important
