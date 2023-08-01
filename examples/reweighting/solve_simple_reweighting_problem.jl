@@ -56,6 +56,11 @@ k = 100 # number of characteristics each household has 4
 tp = mw.mtprw(h, k, pctzero=0.3)
 fieldnames(typeof(tp))
 
+tp.xlb = 0.1
+tp.xub = 10.0
+
+# next steps here ....
+
 mw.rwsolve(tp, approach=:minerr, method=:ccsaq)
 mw.rwsolve(tp, approach=:minerr)
 mw.rwsolve(tp, approach=:abc, method=:ccsaq)
