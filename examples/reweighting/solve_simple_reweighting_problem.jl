@@ -63,18 +63,20 @@ function qpdiffs(ratio)
 end
 
 mw.rwsolve(tp, approach=:minerr)
+# LBFGS seems to be best when ratio error is most important, CCSAQ when target error is most important
 algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS");
 res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ");
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, maxiters=2000);
-res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, rweight=0.01, maxiters=2000);
-res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.2, ub=2.0, rweight=0.01, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=0.01, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=0.01, maxiters=2000);
 res= mw.rwsolve(tp, approach=:minerr, method=algs[8]);
 
 quantile(res.u)
-qpdiffs(res.u)
 
+qpdiffs(res.u)
+qpdiffs(ones(tp.h))
 
 
 mw.rwsolve(tp, approach=:minerr, method="spg")

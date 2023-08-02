@@ -17,8 +17,7 @@ end
 
 function objfn_reweight(
   ratio, wh, xmat, rwtargets;
-  rweight=0.5,
-  pow=2.0,
+  rweight=0.1, # relative importance of minimizing ratio error rather than target error
   targstop=true, whstop=true,
   display_progress=true)
 
@@ -30,7 +29,7 @@ function objfn_reweight(
 
   # part 2 - measure of change in ratio
   ratiodiffs = ratio .- 1.0
-  ss_ratiodiffs = sum(ratiodiffs.^6.)
+  ss_ratiodiffs = sum(ratiodiffs.^2.)
   avg_rdiff = ss_ratiodiffs / length(ratiodiffs)
 
   # combine the two measures and (maybe later) take a root

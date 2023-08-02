@@ -176,7 +176,7 @@ function rwsolve(prob;
     if approach==:minerr
         # do something
         if isnothing(method) 
-            method="LD_LBFGS" 
+            method="LD_CCSAQ" # LBFGS seems best when ratio error is most important, CCSAQ when target error is most important
             println("method nothing changed to default: $method")
         end
     elseif approach==:constrain
