@@ -53,20 +53,29 @@ h = 300_000  # number of households 100
 k = 100 # number of characteristics each household has 4
 
 # the function mtp (make test problem) will create a random problem with these characteristics
-tp = mw.mtprw(h, k, pctzero=0.3)
+tp = mw.mtprw(h, k, pctzero=0.3);
 fieldnames(typeof(tp))
-tp.rwtargets_diff
-quantile(tp.rwtargets_diff ./ tp.rwtargets)
-tp.xlb = 0.1
-tp.xub = 10.0
 
+function qpdiffs(ratio)
+  rwtargets_calc = tp.xmat' * (ratio .* tp.wh)
+  targpdiffs = (rwtargets_calc .- tp.rwtargets) ./ tp.rwtargets 
+  quantile(targpdiffs)
+end
 
 mw.rwsolve(tp, approach=:minerr)
 algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
-mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS")
-mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ")
-mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0)
-mw.rwsolve(tp, approach=:minerr, method=algs[8])
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS");
+res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ");
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, rweight=0.01, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.2, ub=2.0, rweight=0.01, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method=algs[8]);
+
+quantile(res.u)
+qpdiffs(res.u)
+
+
 
 mw.rwsolve(tp, approach=:minerr, method="spg")
 mw.rwsolve(tp, approach=:minerr, method="xyz")

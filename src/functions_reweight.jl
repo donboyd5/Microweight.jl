@@ -54,7 +54,7 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   ub=10.0,
   rweight=0.5,
   scaling=false,
-  maxit=1000)
+  maxiters=1000)
 
   # convert the string nloptfname into a proper symbol
   # NLOPT algorithms that (1) find local optima (L), (2) use derivatives (D) -- i.e., LD -- and
@@ -87,7 +87,7 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
   fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
-  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxit, reltol=1e-16)
+  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16)
 
   return opt
 end

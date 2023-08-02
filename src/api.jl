@@ -144,8 +144,9 @@ function rwsolve(prob;
     method=nothing, # depends on approach
     lb=nothing,
     ub=nothing,
+    rweight=0.5,
     constol=.01,
-    maxiter=1000,
+    maxiters=1000,
     objscale=1.0,
     scaling=false,
     scaling_target_goal=1000.0,
@@ -156,7 +157,7 @@ function rwsolve(prob;
     whstop=.01,
     kwargs...)
 
-    println("Solving reweighting problem...\n")
+    println("\nSolving reweighting problem...\n")
 
     # check inputs, add defaults as needed
     function print_prob()
@@ -167,6 +168,8 @@ function rwsolve(prob;
         println("scaling: ", scaling)
         println("lb: $lb")
         println("lb: $ub")
+        println("rweight $rweight")
+        println("maxiters: $maxiters")
     end
 
     # check method and decide on solver
@@ -180,14 +183,12 @@ function rwsolve(prob;
         # do something else
     end
 
-    if approach==:minerr
-        println("Beginning solve...")
+    if approach==:minerr        
         nlopt_algorithms = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
         if method in nlopt_algorithms
-            if isnothing(lb) lb=prob.xlb end
-            if isnothing(ub) ub=prob.xub end
             print_prob()
-            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, algo=method)
+            println("\nBeginning solve...")
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, algo=method, lb=lb, ub=ub, maxiters=maxiters, rweight=rweight)
         elseif method=="spg"
             println("spg method not yet implemented...")
             return "not attempted"
@@ -197,9 +198,9 @@ function rwsolve(prob;
         end
         println("Objective: $(opt.objective)")
         println("Solve time: $(opt.solve_time)")
+        println("Return code: $(opt.retcode)")
     elseif approach==:constrain
         if isnothing(method) method=:constrain end
-        # if isnothing(shares0) shares0=fill(1. / prob.s, prob.h * prob.s) end
         println(":constrain approach not yet implemented")
         return "not attempted"
     else
