@@ -142,8 +142,8 @@ end
 function rwsolve(prob;
     approach=nothing, # :minerr, :constrain
     method=nothing, # depends on approach
-    lb=nothing,
-    ub=nothing,
+    lb=.01,
+    ub=10.,
     rweight=0.5,
     constol=.01,
     maxiters=1000,
@@ -189,16 +189,22 @@ function rwsolve(prob;
             print_prob()
             println("\nBeginning solve...")
             opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, algo=method, lb=lb, ub=ub, maxiters=maxiters, rweight=rweight)
+            println("Objective: $(opt.objective)")
+            println("Solve time: $(opt.solve_time)")
+            println("Return code: $(opt.retcode)")
         elseif method=="spg"
-            println("spg method not yet implemented...")
-            return "not attempted"
+            print_prob()
+            tstart = time()
+            opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)
+            tend = time()
+            eseconds = tend - tstart
+            println("eseconds: $eseconds")
+            #   rwminerr_spg(::Vector{Float64}, ::Matrix{Float64}, ::Vector{Float64}; lb::Nothing, ub::Nothing, rweight::Float64, maxiters::Int64) none match this
         else
             println("unknown method $method")
             return "not attempted"
         end
-        println("Objective: $(opt.objective)")
-        println("Solve time: $(opt.solve_time)")
-        println("Return code: $(opt.retcode)")
+        
     elseif approach==:constrain
         if isnothing(method) method=:constrain end
         println(":constrain approach not yet implemented")

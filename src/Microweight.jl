@@ -79,6 +79,8 @@ using ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
 # using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptimJL
+using SPGBox
+using ReverseDiff
 # using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()
