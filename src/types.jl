@@ -59,8 +59,8 @@ Base.@kwdef mutable struct ReweightProblem
   rwtargets_diff::Vector{Float64} = []
 
   # bounds and constraints
-  xlb::Float64 = -Inf
-  xub::Float64 = Inf
+  # xlb::Float64 = 0.
+  # xub::Float64 = 100.
 
   # placeholders in case we create scaled versions of the data
   wh_scaled::Vector{Float64} = []

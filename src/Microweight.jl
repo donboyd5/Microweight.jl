@@ -91,7 +91,7 @@ using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptim
 ##
 ##############################################################################
 # order these alphabetically by file
-export mtp, geosolve, get_taxprob, objfn_reweight, rwsolve
+export mtp, geosolve, get_taxprob, objfn_reweight, rwsolve, reweight_minerr
   # # src\api.jl
   # geosolve,
   # # src\functions_poisson_typestable.jl

@@ -45,11 +45,11 @@ function objfn_reweight(
 end
 
 
-# %% solve function
+# %% minimum error solve function
 
-function rwsolve(wh, xmat, rwtargets;
+function rwminerr_nlopt(wh, xmat, rwtargets;
   ratio0=ones(length(wh)),
-  algo="LD_TNEWTON",
+  algo="LD_LBFGS",
   lb=0.1,
   ub=10.0,
   rweight=0.5,
@@ -72,7 +72,7 @@ function rwsolve(wh, xmat, rwtargets;
   #   algorithm=:(LD_LBFGS(M=20))  
 
   if !(algo in allowable_algorithms)
-        throw(ArgumentError("ERROR: The value of algo must be in: $allowable_algorithms"))
+        throw(ArgumentError("ERROR: algo was $algo -- its value must be in: $allowable_algorithms"))
   end
 
   fsym = Symbol(algo)

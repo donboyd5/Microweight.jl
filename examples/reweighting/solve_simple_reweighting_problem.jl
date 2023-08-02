@@ -55,17 +55,29 @@ k = 100 # number of characteristics each household has 4
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtprw(h, k, pctzero=0.3)
 fieldnames(typeof(tp))
-
+tp.rwtargets_diff
+quantile(tp.rwtargets_diff ./ tp.rwtargets)
 tp.xlb = 0.1
 tp.xub = 10.0
 
-# next steps here ....
 
-mw.rwsolve(tp, approach=:minerr, method=:ccsaq)
 mw.rwsolve(tp, approach=:minerr)
-mw.rwsolve(tp, approach=:abc, method=:ccsaq)
+algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
+mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS")
+mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ")
+mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0)
+mw.rwsolve(tp, approach=:minerr, method=algs[8])
+
+mw.rwsolve(tp, approach=:minerr, method="spg")
+mw.rwsolve(tp, approach=:minerr, method="xyz")
+
+mw.rwsolve(tp, approach=:constrain)
+mw.rwsolve(tp, approach=:something)
 
 
+# only good to here ....
+
+mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[1], rweight=rwt, scaling=scaleit, maxit=iters)
 mw.objfn_reweight(ones(tp.h), tp.wh, tp.xmat, tp.rwtargets, rweight=0.5)
 
 algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
@@ -76,6 +88,7 @@ rwt = 1e-4
 rwt = 0.0
 scaleit = false
 opt1 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[1], rweight=rwt, scaling=scaleit, maxit=iters)
+
 
 lb = .25
 ub = 1.75

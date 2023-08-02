@@ -141,9 +141,9 @@ end
 
 function rwsolve(prob;
     approach=nothing, # :minerr, :constrain
-    method=nothing,
-    lb=0.1,
-    ub=10.0,
+    method=nothing, # depends on approach
+    lb=nothing,
+    ub=nothing,
     constol=.01,
     maxiter=1000,
     objscale=1.0,
@@ -159,24 +159,54 @@ function rwsolve(prob;
     println("Solving reweighting problem...\n")
 
     # check inputs, add defaults as needed
+    function print_prob()
+        println("households: ", prob.h)
+        println("targets: ", prob.k)
+        println("approach: ", approach)
+        println("method used: ", method)
+        println("scaling: ", scaling)
+        println("lb: $lb")
+        println("lb: $ub")
+    end
+
+    # check method and decide on solver
+    if approach==:minerr
+        # do something
+        if isnothing(method) 
+            method="LD_LBFGS" 
+            println("method nothing changed to default: $method")
+        end
+    elseif approach==:constrain
+        # do something else
+    end
 
     if approach==:minerr
-        minerr_methods = (:ccsaq, :lbfgs_nlopt, :mma, :newton, :newtonrs, :var1, :var2)
-        if isnothing(method) method=:lbfgs end
-        # if isnothing(beta0) beta0 = zeros(length(prob.geotargets)) end
+        println("Beginning solve...")
+        nlopt_algorithms = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
+        if method in nlopt_algorithms
+            if isnothing(lb) lb=prob.xlb end
+            if isnothing(ub) ub=prob.xub end
+            print_prob()
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, algo=method)
+        elseif method=="spg"
+            println("spg method not yet implemented...")
+            return "not attempted"
+        else
+            println("unknown method $method")
+            return "not attempted"
+        end
+        println("Objective: $(opt.objective)")
+        println("Solve time: $(opt.solve_time)")
     elseif approach==:constrain
         if isnothing(method) method=:constrain end
         # if isnothing(shares0) shares0=fill(1. / prob.s, prob.h * prob.s) end
+        println(":constrain approach not yet implemented")
+        return "not attempted"
     else
         return "ERROR: approach must be :minerr or :constrain"
     end
 
-    println("households: ", prob.h)
-    println("targets: ", prob.k)
-    println("approach: ", approach)
-    println("method: ", method)
-    println("scaling: ", scaling)
-    return "success"
+    return opt
 
     # DJB have not yet updated this function
     # initialize result
