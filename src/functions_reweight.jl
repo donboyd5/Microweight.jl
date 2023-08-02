@@ -17,8 +17,7 @@ end
 
 function objfn_reweight(
   ratio, wh, xmat, rwtargets;
-  rweight=0.5,
-  pow=2.0,
+  rweight=0.1, # relative importance of minimizing ratio error rather than target error
   targstop=true, whstop=true,
   display_progress=true)
 
@@ -30,7 +29,7 @@ function objfn_reweight(
 
   # part 2 - measure of change in ratio
   ratiodiffs = ratio .- 1.0
-  ss_ratiodiffs = sum(ratiodiffs.^6.)
+  ss_ratiodiffs = sum(ratiodiffs.^2.)
   avg_rdiff = ss_ratiodiffs / length(ratiodiffs)
 
   # combine the two measures and (maybe later) take a root
@@ -45,16 +44,49 @@ function objfn_reweight(
 end
 
 
-# %% solve function
+# %% minimum error solve functions
 
-function rwsolve(wh, xmat, rwtargets;
+function rwminerr_spg(wh, xmat, rwtargets;
   ratio0=ones(length(wh)),
-  algo="LD_TNEWTON",
+  lb=0.1,
+  ub=10.0,
+  rweight=0.5,
+  maxiters=1000)
+
+  # f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=0.0)
+  # g = (ratio) -> ReverseDiff.gradient(f, ratio)
+  # g2(g2, ratio) -> ReverseDiff.gradient!(g2, f2, ratio)
+
+
+  # opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x=x, lower=lower, upper=upper, eps=1e-16, nitmax=maxiters, nfevalmax=20000, m=10, iprint=0)
+
+  wh2 = wh
+  f = (ratio) -> objfn_reweight(ratio, wh2, xmat, rwtargets, rweight=rweight)
+  # g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
+
+  lower = fill(lb, length(ratio0)) # can't use scalar
+  upper = fill(ub, length(ratio0))
+
+  x = ratio0
+  # println("x: $x")
+  # println("wh: $wh")
+  # println("xmat: $xmat")
+  # println("rwtargets: $rwtargets")
+  # println("rweight: $rweight")
+  # println("f(ratio0): ", f(ratio0))
+
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0)
+  return opt
+end
+
+function rwminerr_nlopt(wh, xmat, rwtargets;
+  ratio0=ones(length(wh)),
+  algo="LD_LBFGS",
   lb=0.1,
   ub=10.0,
   rweight=0.5,
   scaling=false,
-  maxit=1000)
+  maxiters=1000)
 
   # convert the string nloptfname into a proper symbol
   # NLOPT algorithms that (1) find local optima (L), (2) use derivatives (D) -- i.e., LD -- and
@@ -71,23 +103,23 @@ function rwsolve(wh, xmat, rwtargets;
   # for future use, here is how to pass NLOPT options:
   #   algorithm=:(LD_LBFGS(M=20))  
 
-  if !(algo in allowable_algorithms)
-        throw(ArgumentError("ERROR: The value of algo must be in: $allowable_algorithms"))
-  end
+   if !(algo in allowable_algorithms)
+      throw(ArgumentError("ERROR: algo was $algo -- its value must be in: $allowable_algorithms"))
+   end
 
-  fsym = Symbol(algo)
-  algorithm = Expr(:call, fsym) # a proper symbol for the function name
+   fsym = Symbol(algo)
+   algorithm = Expr(:call, fsym) # a proper symbol for the function name
 
-  if scaling 
-    xmat, rwtargets = rwscale(xmat, rwtargets)
-  end
+   if scaling 
+     xmat, rwtargets = rwscale(xmat, rwtargets)
+   end
 
-  p = 1.0
-  fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight)
-  fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
-  fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
+   p = 1.0
+   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight)
+   fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
+   fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
-  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxit, reltol=1e-16)
+   opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16)
 
   return opt
 end

@@ -2,14 +2,15 @@ using Revise
 import Microweight as mw  # Revise doesn't work for changes to type definitions
 
 using Statistics
-using LineSearches
+# using LineSearches
 
-using Optimization
-using NLopt
-using Optim
-using OptimizationMOI, Ipopt
-using ModelingToolkit
-using Optimisers
+# using Optimization
+# using NLopt
+# using Optim
+# using OptimizationMOI, Ipopt
+# using ModelingToolkit
+# using Optimisers
+
 
 # for Ipopt
 # import LinearAlgebra, OpenBLAS32_jll
@@ -52,9 +53,53 @@ h = 300_000  # number of households 100
 k = 100 # number of characteristics each household has 4
 
 # the function mtp (make test problem) will create a random problem with these characteristics
-tp = mw.mtprw(h, k, pctzero=0.3)
+tp = mw.mtprw(h, k, pctzero=0.3);
 fieldnames(typeof(tp))
 
+function qpdiffs(ratio)
+  rwtargets_calc = tp.xmat' * (ratio .* tp.wh)
+  targpdiffs = (rwtargets_calc .- tp.rwtargets) ./ tp.rwtargets 
+  quantile(targpdiffs)
+end
+
+# LBFGS seems to be best when ratio error is most important, CCSAQ when target error is most important
+algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
+
+res= mw.rwsolve(tp, approach=:minerr);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS");
+res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ");
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=0.01, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000);
+res= mw.rwsolve(tp, approach=:minerr, method=algs[8]);
+
+res.solve_time
+res.objective
+quantile(res.u)
+
+qpdiffs(ones(tp.h))
+qpdiffs(res.u)
+
+
+
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-5)
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.5, ub=1.5, rweight=0.0)
+fieldnames(typeof(res2))
+res2.f
+# res2.x
+quantile(res2.x)
+qpdiffs(res2.x)
+
+mw.rwsolve(tp, approach=:minerr, method="xyz")
+
+mw.rwsolve(tp, approach=:constrain)
+mw.rwsolve(tp, approach=:something)
+
+
+# only good to here ....
+
+mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[1], rweight=rwt, scaling=scaleit, maxit=iters)
 mw.objfn_reweight(ones(tp.h), tp.wh, tp.xmat, tp.rwtargets, rweight=0.5)
 
 algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
@@ -65,6 +110,7 @@ rwt = 1e-4
 rwt = 0.0
 scaleit = false
 opt1 = mw.rwsolve(tp.wh, tp.xmat, tp.rwtargets, algo=algs[1], rweight=rwt, scaling=scaleit, maxit=iters)
+
 
 lb = .25
 ub = 1.75

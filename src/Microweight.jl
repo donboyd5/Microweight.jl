@@ -79,6 +79,8 @@ using ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
 # using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptimJL
+using SPGBox
+using ReverseDiff
 # using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()
@@ -91,7 +93,7 @@ using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptim
 ##
 ##############################################################################
 # order these alphabetically by file
-export mtp, geosolve, get_taxprob, objfn_reweight, rwsolve
+export mtp, geosolve, get_taxprob, objfn_reweight, rwsolve, reweight_minerr
   # # src\api.jl
   # geosolve,
   # # src\functions_poisson_typestable.jl

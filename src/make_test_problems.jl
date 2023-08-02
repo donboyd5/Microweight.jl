@@ -56,7 +56,10 @@ function mtprw(h, k; pctzero=0.0)
     r = rand(Normal(0., 0.1), k)
     rwtargets = rwtargets .* (1 .+ r)
 
-    return ReweightProblem(wh, xmat, rwtargets)
+    tp = ReweightProblem(wh, xmat)
+    tp.rwtargets = rwtargets
+    tp.rwtargets_diff = tp.rwtargets_calc .- tp.rwtargets
+    return tp
 end
 
 

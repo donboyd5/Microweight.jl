@@ -16,7 +16,7 @@ function geosolve(prob;
             kwargs...)
     # allowable methods:
     #   lm_lsqfit, lm_minpack
-    println("Solving problem...\n")
+    println("Solving geoweighting problem...\n")
 
     # define defaults
     if isnothing(approach) approach=:poisson end
@@ -139,9 +139,14 @@ function geosolve(prob;
 end
 
 
-function reweight(prob;
-    method=nothing,
-    maxiter=1000,
+function rwsolve(prob;
+    approach=nothing, # :minerr, :constrain
+    method=nothing, # depends on approach
+    lb=.01,
+    ub=10.,
+    rweight=0.5,
+    constol=.01,
+    maxiters=1000,
     objscale=1.0,
     scaling=false,
     scaling_target_goal=1000.0,
@@ -151,6 +156,64 @@ function reweight(prob;
     targstop=.01,
     whstop=.01,
     kwargs...)
+
+    println("\nSolving reweighting problem...\n")
+
+    # check inputs, add defaults as needed
+    function print_prob()
+        println("households: ", prob.h)
+        println("targets: ", prob.k)
+        println("approach: ", approach)
+        println("method used: ", method)
+        println("scaling: ", scaling)
+        println("lb: $lb")
+        println("lb: $ub")
+        println("rweight $rweight")
+        println("maxiters: $maxiters")
+    end
+
+    # check method and decide on solver
+    if approach==:minerr
+        # do something
+        if isnothing(method) 
+            method="LD_CCSAQ" # LBFGS seems best when ratio error is most important, CCSAQ when target error is most important
+            println("method nothing changed to default: $method")
+        end
+    elseif approach==:constrain
+        # do something else
+    end
+
+    if approach==:minerr        
+        nlopt_algorithms = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
+        if method in nlopt_algorithms
+            print_prob()
+            println("\nBeginning solve...")
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, algo=method, lb=lb, ub=ub, maxiters=maxiters, rweight=rweight)
+            println("Objective: $(opt.objective)")
+            println("Solve time: $(opt.solve_time)")
+            println("Return code: $(opt.retcode)")
+        elseif method=="spg"
+            print_prob()
+            tstart = time()
+            opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)
+            tend = time()
+            eseconds = tend - tstart
+            println("eseconds: $eseconds")
+            #   rwminerr_spg(::Vector{Float64}, ::Matrix{Float64}, ::Vector{Float64}; lb::Nothing, ub::Nothing, rweight::Float64, maxiters::Int64) none match this
+        else
+            println("unknown method $method")
+            return "not attempted"
+        end
+        
+    elseif approach==:constrain
+        if isnothing(method) method=:constrain end
+        println(":constrain approach not yet implemented")
+        return "not attempted"
+    else
+        return "ERROR: approach must be :minerr or :constrain"
+    end
+
+    return opt
 
     # DJB have not yet updated this function
     # initialize result
