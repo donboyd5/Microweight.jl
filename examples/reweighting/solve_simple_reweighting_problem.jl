@@ -40,8 +40,11 @@ using Statistics
 h = 10  # number of households 100
 k = 2 # number of characteristics each household has 4
 
-h = 1000  # number of households 100
+h = 100  # number of households 100
 k = 4 # number of characteristics each household has 4
+
+h = 1000  # number of households 100
+k = 6 # number of characteristics each household has 4
 
 h = 10000  # number of households 100
 k = 20 # number of characteristics each household has 4
@@ -93,7 +96,17 @@ qpdiffs(res2.x)
 
 mw.rwsolve(tp, approach=:minerr, method="xyz")
 
-mw.rwsolve(tp, approach=:constrain)
+res3 = mw.rwsolve(tp, approach=:constrain)
+
+res3 = mw.rwsolve(tp, approach=:constrain, lb=.1, ub=10.0, constol=.01)
+
+results = fieldnames(typeof(res3))
+
+res3.objective
+quantile(res3.solution)
+qpdiffs(res3.solution)
+
+
 mw.rwsolve(tp, approach=:something)
 
 

@@ -93,7 +93,7 @@ using SPGBox
 ##
 ##############################################################################
 # order these alphabetically by file
-export mtp, geosolve, get_taxprob, objfn_reweight, rwsolve # , reweight_minerr
+export geosolve, rwsolve, objfn_reweight, mtp, get_taxprob # , reweight_minerr
   # # src\api.jl
   # geosolve,
   # # src\functions_poisson_typestable.jl
@@ -150,6 +150,7 @@ include("poisson_optz_optimisers.jl")
 # include("functions_reweight_direct.jl")
 
 # reweight functions
+include("functions_reweight.jl")
 include("functions_ipopt.jl")
 # include("reweight_optz_nlopt.jl")
 include("reweight_optz_optim.jl") # djb check this - is it used

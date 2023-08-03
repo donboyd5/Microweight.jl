@@ -169,6 +169,7 @@ function rwsolve(prob;
         println("lb: $lb")
         println("lb: $ub")
         println("rweight $rweight")
+        println("constraints tolerance: $constol")
         println("maxiters: $maxiters")
     end
 
@@ -206,9 +207,10 @@ function rwsolve(prob;
         end
         
     elseif approach==:constrain
-        if isnothing(method) method=:constrain end
-        println(":constrain approach not yet implemented")
-        return "not attempted"
+        if isnothing(method) method=:ipopt end
+        print_prob()
+        opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=1000)
+        return opt
     else
         return "ERROR: approach must be :minerr or :constrain"
     end
