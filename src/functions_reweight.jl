@@ -1,6 +1,15 @@
 
 # module BruteForce
 
+# https://docs.sciml.ai/Optimization/stable/API/optimization_function/
+# AutoForwardDiff(): The fastest choice for small optimizations
+# AutoReverseDiff(compile=false): A fast choice for large scalar optimizations
+# AutoTracker(): Like ReverseDiff but GPU-compatible
+# AutoZygote(): The fastest choice for non-mutating array-based (BLAS) functions
+# AutoFiniteDiff(): Finite differencing, not optimal but always applicable
+# AutoModelingToolkit(): The fastest choice for large scalar optimizations
+
+
 # %% utility functions
 
 function rwscale(xmat, rwtargets)
@@ -120,6 +129,38 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
    fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16)
+
+  return opt
+end
+
+
+function rwmconstrain_ipopt(wh, xmat, rwtargets;
+  ratio0=ones(length(wh)),
+  lb=0.1,
+  ub=10.0,
+  constol=0.01,
+  scaling=false,
+  maxiters=1000)
+
+  lvar = fill(lb, length(wh))
+  uvar = fill(ub, length(wh))
+  lcon = rwtargets .- abs.(rwtargets)*constol
+  ucon = rwtargets .+ abs.(rwtargets)*constol
+
+  # A = xmat .* wh
+  mod = modcon(xmat .* wh, rwtargets; lvar=lvar, uvar=uvar, lcon=lcon, ucon=ucon) # fill the specialized structure used by NLPModels
+
+  opt = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", linear_solver="mumps", mumps_mem_percent=50)
+
+
+  # safe way to run ma77 - avoids crash -- this is important
+  # hsllib = "/usr/local/lib/lib/x86_64-linux-gnu/libcoinhsl.so"
+  # tempdir will store the temp files that ma77 creates; we'll delete it after the run because ma77 does not always clean up
+  # tempdir_path = Base.mktempdir()
+  # cd(tempdir_path)
+  # res2 = ipopt(mod, print_level=5, hessian_constant="yes", jac_c_constant="yes", jac_d_constant="yes", hsllib=hsllib, linear_solver="ma77")
+  # cd("..")  # Change back to the parent directory (original directory)
+  # rm(tempdir_path; recursive=true, force=true)
 
   return opt
 end

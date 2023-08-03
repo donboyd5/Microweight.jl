@@ -79,8 +79,8 @@ using ForwardDiff, LineSearches, NLSolversBase, FiniteDiff, ReverseDiff, Zygote
 # using ModelingToolkit
 using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptimJL
+using NLPModels, NLPModelsIpopt, SparseArrays
 using SPGBox
-using ReverseDiff
 # using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()
@@ -93,7 +93,7 @@ using ReverseDiff
 ##
 ##############################################################################
 # order these alphabetically by file
-export mtp, geosolve, get_taxprob, objfn_reweight, rwsolve, reweight_minerr
+export geosolve, rwsolve, objfn_reweight, mtp, get_taxprob # , reweight_minerr
   # # src\api.jl
   # geosolve,
   # # src\functions_poisson_typestable.jl
@@ -127,7 +127,6 @@ include("scaling.jl")
 
 # geoweight direct functions and solvers 
 include("functions_geoweight_direct.jl")
-include("functions_reweight.jl")
 
 include("direct_optz_nlopt.jl")
 include("direct_optz_optim.jl")
@@ -150,8 +149,12 @@ include("poisson_optz_optimisers.jl")
 # reoweight direct functions and solvers 
 # include("functions_reweight_direct.jl")
 
+# reweight functions
+include("functions_reweight.jl")
+include("functions_ipopt.jl")
 # include("reweight_optz_nlopt.jl")
-include("reweight_optz_optim.jl")
+include("reweight_optz_optim.jl") # djb check this - is it used
+
 
 # functions underlying all calculations
 
