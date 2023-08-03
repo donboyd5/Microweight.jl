@@ -1,6 +1,15 @@
 
 # module BruteForce
 
+# https://docs.sciml.ai/Optimization/stable/API/optimization_function/
+# AutoForwardDiff(): The fastest choice for small optimizations
+# AutoReverseDiff(compile=false): A fast choice for large scalar optimizations
+# AutoTracker(): Like ReverseDiff but GPU-compatible
+# AutoZygote(): The fastest choice for non-mutating array-based (BLAS) functions
+# AutoFiniteDiff(): Finite differencing, not optimal but always applicable
+# AutoModelingToolkit(): The fastest choice for large scalar optimizations
+
+
 # %% utility functions
 
 function rwscale(xmat, rwtargets)
