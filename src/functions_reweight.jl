@@ -33,24 +33,24 @@ function objfn_reweight(
   # part 1 get measure of difference from targets
   rwtargets_calc = xmat' * (ratio .* wh)
   targpdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets # ./ 1e6 # allocates a tiny bit
-  ss_targpdiffs = sum(targpdiffs.^2.)
-  avg_tdiff = ss_targpdiffs / length(targpdiffs)
+  targ_sse = sum(targpdiffs.^2.)
+  targ_rmse = targ_sse / length(targpdiffs)
 
   # part 2 - measure of change in ratio
   ratiodiffs = ratio .- 1.0
-  ss_ratiodiffs = sum(ratiodiffs.^2.)
-  avg_rdiff = ss_ratiodiffs / length(ratiodiffs)
+  ratio_sse = sum(ratiodiffs.^2.)
+  ratio_rmse = ratio_sse / length(ratiodiffs)
 
   # combine the two measures and (maybe later) take a root
   # objval = (ss_targdiffs / length(targdiffs))*(1. - whweight) +
   #         (ss_whdiffs / length(whdiffs))*whweight
   # objval = objval^(1. / pow)  
   # objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
-  objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
+  objval = targ_rmse*(1 - rweight) + ratio_rmse*rweight
 
   # list extra variables on the return so that they are available to the callback function
   # all returned variables must be arguments of the callback function
-  return objval, targpdiffs, ratiodiffs # values to be used in callback function must be returned here
+  return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
 end
 
 
@@ -138,7 +138,7 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   # p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
   # p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_test) # callback=cb_rwminerr , callback=cb_test
+  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr)
 
   return opt
 end
