@@ -159,6 +159,9 @@ function rwsolve(prob;
 
     println("\nSolving reweighting problem...\n")
 
+    # globals for use in call back
+    global fcalls = 0  # global within this module
+
     # check inputs, add defaults as needed
     function print_prob()
         println("households: ", prob.h)

@@ -119,7 +119,8 @@ include("types.jl")
 include("api.jl") # function to route things
 
 # helpers
-include("functions_display_and_callbacks.jl")
+include("functions_geoweight_display_and_callbacks.jl")
+include("functions_reweight_display_and_callbacks.jl")
 include("functions_utilities.jl")
 include("get_taxdata_problems.jl")
 include("make_test_problems.jl")
@@ -132,7 +133,7 @@ include("direct_optz_nlopt.jl")
 include("direct_optz_optim.jl")
 include("direct_optz_optimisers.jl")
 
-# poisson functions and solvers
+# geoweight poisson functions and solvers
 include("functions_poisson.jl")
 include("functions_poisson_fg.jl")
 
@@ -146,10 +147,7 @@ include("poisson_optz_nlopt.jl")
 include("poisson_optz_optim.jl")
 include("poisson_optz_optimisers.jl")
 
-# reoweight direct functions and solvers 
-# include("functions_reweight_direct.jl")
-
-# reweight functions
+# reoweight functions and solvers 
 include("functions_reweight.jl")
 include("functions_ipopt.jl")
 # include("reweight_optz_nlopt.jl")

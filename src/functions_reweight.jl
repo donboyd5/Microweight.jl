@@ -49,7 +49,8 @@ function objfn_reweight(
   objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
 
   # list extra variables on the return so that they are available to the callback function
-  return objval # , targdiffs, whdiffs, targstop, whstop
+  # all returned variables must be arguments of the callback function
+  return objval, targpdiffs, ratiodiffs # values to be used in callback function must be returned here
 end
 
 
@@ -69,7 +70,7 @@ function rwminerr_spg(wh, xmat, rwtargets;
 
   # opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x=x, lower=lower, upper=upper, eps=1e-16, nitmax=maxiters, nfevalmax=20000, m=10, iprint=0)
 
-  wh2 = wh
+  wh2 = wh # why did i do this - was it needed in f? check
   f = (ratio) -> objfn_reweight(ratio, wh2, xmat, rwtargets, rweight=rweight)
   # g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
 
@@ -128,7 +129,16 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
    fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
-   opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16)
+  # %% setup preallocations
+   # p = 1.0
+  # p_mshares = Array{Float64,2}(undef, prob.h, prob.s)
+  # A = zeros(prob.h, prob.s)
+  # p_whs = Array{Float64,2}(undef, prob.h, prob.s)
+  # p_calctargets = Array{Float64,2}(undef, prob.s, prob.k)
+  # p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
+  # p_whpdiffs = Array{Float64,1}(undef, prob.h)
+
+  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_test) # callback=cb_rwminerr , callback=cb_test
 
   return opt
 end

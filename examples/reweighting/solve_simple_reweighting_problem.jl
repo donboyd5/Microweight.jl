@@ -77,6 +77,8 @@ res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight
 res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000);
 res= mw.rwsolve(tp, approach=:minerr, method=algs[8]);
 
+fieldnames(typeof(res))
+
 res.solve_time
 res.objective
 quantile(res.u)
