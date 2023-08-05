@@ -153,7 +153,7 @@ function show_iter(; iter_calc, fcalls, totseconds, objval, targ_rmse,  wtsum_rm
     global nshown  # init val 0
     # print headings if needed
     nshown += 1
-    if nshown ==1 || mod(nshown, 20) == 0
+    if nshown == 1 || mod(nshown, 20) == 0
         println()
         hdr1 = "iter_calc   fcalls  totseconds       objval    targ_rmse   wtsum_rmse     tot_rmse     targ_max    wtsum_max"
         hdr2 = "      "

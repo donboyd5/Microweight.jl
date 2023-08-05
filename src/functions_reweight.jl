@@ -27,29 +27,65 @@ end
 function objfn_reweight(
   ratio, wh, xmat, rwtargets;
   rweight=0.1, # relative importance of minimizing ratio error rather than target error
+  method="LD_CCSAQ",
   targstop=true, whstop=true,
   display_progress=true)
 
   # part 1 get measure of difference from targets
   rwtargets_calc = xmat' * (ratio .* wh)
   targpdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets # ./ 1e6 # allocates a tiny bit
-  ss_targpdiffs = sum(targpdiffs.^2.)
-  avg_tdiff = ss_targpdiffs / length(targpdiffs)
+  targ_sse = sum(targpdiffs.^2.)
+  targ_rmse = targ_sse / length(targpdiffs)
 
   # part 2 - measure of change in ratio
   ratiodiffs = ratio .- 1.0
-  ss_ratiodiffs = sum(ratiodiffs.^2.)
-  avg_rdiff = ss_ratiodiffs / length(ratiodiffs)
+  ratio_sse = sum(ratiodiffs.^2.)
+  ratio_rmse = ratio_sse / length(ratiodiffs)
 
   # combine the two measures and (maybe later) take a root
   # objval = (ss_targdiffs / length(targdiffs))*(1. - whweight) +
   #         (ss_whdiffs / length(whdiffs))*whweight
   # objval = objval^(1. / pow)  
   # objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
-  objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
+  objval = targ_rmse*(1 - rweight) + ratio_rmse*rweight
 
   # list extra variables on the return so that they are available to the callback function
-  return objval # , targdiffs, whdiffs, targstop, whstop
+  # all returned variables must be arguments of the callback function
+  if method != "spg"
+    return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
+  elseif method == "spg"
+    return objval
+  end
+end
+
+
+function objfn_reweight_spg(
+  ratio, wh, xmat, rwtargets;
+  rweight=0.1, # relative importance of minimizing ratio error rather than target error
+  targstop=true, whstop=true,
+  display_progress=true)
+
+  # part 1 get measure of difference from targets
+  rwtargets_calc = xmat' * (ratio .* wh)
+  targpdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets # ./ 1e6 # allocates a tiny bit
+  targ_sse = sum(targpdiffs.^2.)
+  targ_rmse = targ_sse / length(targpdiffs)
+
+  # part 2 - measure of change in ratio
+  ratiodiffs = ratio .- 1.0
+  ratio_sse = sum(ratiodiffs.^2.)
+  ratio_rmse = ratio_sse / length(ratiodiffs)
+
+  # combine the two measures and (maybe later) take a root
+  # objval = (ss_targdiffs / length(targdiffs))*(1. - whweight) +
+  #         (ss_whdiffs / length(whdiffs))*whweight
+  # objval = objval^(1. / pow)  
+  # objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
+  objval = targ_rmse*(1 - rweight) + ratio_rmse*rweight
+
+  # list extra variables on the return so that they are available to the callback function
+  # all returned variables must be arguments of the callback function
+  return objval # , targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
 end
 
 
@@ -57,6 +93,7 @@ end
 
 function rwminerr_spg(wh, xmat, rwtargets;
   ratio0=ones(length(wh)),
+  method="spg",
   lb=0.1,
   ub=10.0,
   rweight=0.5,
@@ -69,8 +106,8 @@ function rwminerr_spg(wh, xmat, rwtargets;
 
   # opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x=x, lower=lower, upper=upper, eps=1e-16, nitmax=maxiters, nfevalmax=20000, m=10, iprint=0)
 
-  wh2 = wh
-  f = (ratio) -> objfn_reweight(ratio, wh2, xmat, rwtargets, rweight=rweight)
+  wh2 = wh # why did i do this - was it needed in f? check
+  f = (ratio) -> objfn_reweight(ratio, wh2, xmat, rwtargets, rweight=rweight, method=method)
   # g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
 
   lower = fill(lb, length(ratio0)) # can't use scalar
@@ -84,13 +121,13 @@ function rwminerr_spg(wh, xmat, rwtargets;
   # println("rweight: $rweight")
   # println("f(ratio0): ", f(ratio0))
 
-  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0)
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg)
   return opt
 end
 
 function rwminerr_nlopt(wh, xmat, rwtargets;
+  method="LD_CCSAQ",
   ratio0=ones(length(wh)),
-  algo="LD_LBFGS",
   lb=0.1,
   ub=10.0,
   rweight=0.5,
@@ -112,11 +149,11 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   # for future use, here is how to pass NLOPT options:
   #   algorithm=:(LD_LBFGS(M=20))  
 
-   if !(algo in allowable_algorithms)
-      throw(ArgumentError("ERROR: algo was $algo -- its value must be in: $allowable_algorithms"))
+   if !(method in allowable_algorithms)
+      throw(ArgumentError("ERROR: method was $method -- its value must be in: $allowable_algorithms"))
    end
 
-   fsym = Symbol(algo)
+   fsym = Symbol(method)
    algorithm = Expr(:call, fsym) # a proper symbol for the function name
 
    if scaling 
@@ -124,11 +161,20 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
    end
 
    p = 1.0
-   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight)
+   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method)
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
    fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
-   opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16)
+  # %% setup preallocations
+   # p = 1.0
+  # p_mshares = Array{Float64,2}(undef, prob.h, prob.s)
+  # A = zeros(prob.h, prob.s)
+  # p_whs = Array{Float64,2}(undef, prob.h, prob.s)
+  # p_calctargets = Array{Float64,2}(undef, prob.s, prob.k)
+  # p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
+  # p_whpdiffs = Array{Float64,1}(undef, prob.h)
+
+  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
 
   return opt
 end

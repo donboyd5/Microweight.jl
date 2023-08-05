@@ -159,6 +159,15 @@ function rwsolve(prob;
 
     println("\nSolving reweighting problem...\n")
 
+    # globals accessed within the callback function
+    global tstart = time()
+    global fcalls = 0  # global within this module
+    global bestobjval = Inf
+    global nshown = 0
+    global iter_calc = 0
+    global plevel = .99
+    global interval = print_interval
+
     # check inputs, add defaults as needed
     function print_prob()
         println("households: ", prob.h)
@@ -189,18 +198,12 @@ function rwsolve(prob;
         if method in nlopt_algorithms
             print_prob()
             println("\nBeginning solve...")
-            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, algo=method, lb=lb, ub=ub, maxiters=maxiters, rweight=rweight)
-            println("Objective: $(opt.objective)")
-            println("Solve time: $(opt.solve_time)")
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)
+            println("\nObjective: $(opt.objective)")
             println("Return code: $(opt.retcode)")
         elseif method=="spg"
             print_prob()
-            tstart = time()
             opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)
-            tend = time()
-            eseconds = tend - tstart
-            println("eseconds: $eseconds")
-            #   rwminerr_spg(::Vector{Float64}, ::Matrix{Float64}, ::Vector{Float64}; lb::Nothing, ub::Nothing, rweight::Float64, maxiters::Int64) none match this
         else
             println("unknown method $method")
             return "not attempted"
@@ -210,10 +213,13 @@ function rwsolve(prob;
         if isnothing(method) method=:ipopt end
         print_prob()
         opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=1000)
-        return opt
     else
         return "ERROR: approach must be :minerr or :constrain"
     end
+
+    tend = time()
+    eseconds = tend - tstart
+    println("neseconds: $eseconds")
 
     return opt
 
