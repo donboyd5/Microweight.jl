@@ -93,7 +93,7 @@ function rwshow_iter(; iter_calc, fcalls, totseconds, objval,
 end
 
 
-function cb_spg(R::SPGBoxResult)
+function cb_spg(R::SPGBoxResult, wh)
     # The spg callback function has as input the SPGBoxResult structure.
     # See this: https://m3g.github.io/SPGBox.jl/stable/usage/#Result-data-structure-and-possible-outcomes
     # struct: x vector(Float64), f, gnorm Float64, nit, nfeval, ierr Int64, return_from_callback::Bool
@@ -105,11 +105,14 @@ function cb_spg(R::SPGBoxResult)
     #     return true
     # end
     
-  println("spg callback 6")
+  println("spg callback 8")
+  println(wh[1])
   # global wh
   # println(quantile(wh))
   return false
 end
+
+cb_spg2(R) = cb_spg(R, wh)  # ::SPGBoxResult
 
 
 

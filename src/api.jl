@@ -203,6 +203,12 @@ function rwsolve(prob;
             println("Return code: $(opt.retcode)")
         elseif method=="spg"
             print_prob()
+            # global wh
+            # global xmat
+            # global rwtargets
+            # wh = prob.wh
+            # xmat = prob.xmat
+            # rwtargets = prob.rwtargets
             opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)
         else
             println("unknown method $method")
