@@ -198,7 +198,7 @@ function rwsolve(prob;
         if method in nlopt_algorithms
             print_prob()
             println("\nBeginning solve...")
-            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, algo=method, lb=lb, ub=ub, maxiters=maxiters, rweight=rweight)
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)
             println("\nObjective: $(opt.objective)")
             println("Return code: $(opt.retcode)")
         elseif method=="spg"
