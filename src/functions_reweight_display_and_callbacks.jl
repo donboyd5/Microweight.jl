@@ -92,6 +92,24 @@ function rwshow_iter(; iter_calc, fcalls, totseconds, objval,
     return
 end
 
+
+function cb_spg(R::SPGBoxResult)
+    # The spg callback function has as input the SPGBoxResult structure.
+    # See this: https://m3g.github.io/SPGBox.jl/stable/usage/#Result-data-structure-and-possible-outcomes
+    # It must return true or false. If true, spgbox will return immediately with the current point.
+
+    # if R.nit <= 1
+    #     return false 
+    # else
+    #     return true
+    # end
+    
+  println("spg callback")
+  return false
+end
+
+
+
 ## functions used for testing purposes below here #################################################################################
 
 function cb_test(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs)

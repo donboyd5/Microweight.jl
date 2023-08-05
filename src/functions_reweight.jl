@@ -51,8 +51,6 @@ function objfn_reweight(
 
   # list extra variables on the return so that they are available to the callback function
   # all returned variables must be arguments of the callback function
-#  return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
-
   if method != "spg"
     return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
   elseif method == "spg"
@@ -123,7 +121,7 @@ function rwminerr_spg(wh, xmat, rwtargets;
   # println("rweight: $rweight")
   # println("f(ratio0): ", f(ratio0))
 
-  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0)
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg)
   return opt
 end
 
