@@ -96,7 +96,8 @@ end
 function cb_spg(R::SPGBoxResult)
     # The spg callback function has as input the SPGBoxResult structure.
     # See this: https://m3g.github.io/SPGBox.jl/stable/usage/#Result-data-structure-and-possible-outcomes
-    # It must return true or false. If true, spgbox will return immediately with the current point.
+    # struct: x vector(Float64), f, gnorm Float64, nit, nfeval, ierr Int64, return_from_callback::Bool
+    # The callback must return true or false. If true, spgbox will return immediately with the current point.
 
     # if R.nit <= 1
     #     return false 
