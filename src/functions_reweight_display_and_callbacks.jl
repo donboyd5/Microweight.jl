@@ -105,7 +105,9 @@ function cb_spg(R::SPGBoxResult)
     #     return true
     # end
     
-  println("spg callback")
+  println("spg callback 6")
+  # global wh
+  # println(quantile(wh))
   return false
 end
 

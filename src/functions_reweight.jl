@@ -106,8 +106,8 @@ function rwminerr_spg(wh, xmat, rwtargets;
 
   # opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x=x, lower=lower, upper=upper, eps=1e-16, nitmax=maxiters, nfevalmax=20000, m=10, iprint=0)
 
-  wh2 = wh # why did i do this - was it needed in f? check
-  f = (ratio) -> objfn_reweight(ratio, wh2, xmat, rwtargets, rweight=rweight, method=method)
+  # wh2 = wh # why did i do this - was it needed in f? check
+  f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method)
   # g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
 
   lower = fill(lb, length(ratio0)) # can't use scalar
@@ -120,8 +120,9 @@ function rwminerr_spg(wh, xmat, rwtargets;
   # println("rwtargets: $rwtargets")
   # println("rweight: $rweight")
   # println("f(ratio0): ", f(ratio0))
+  # global wh=wh
 
-  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg)
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0) #  , callback=cb_spg
   return opt
 end
 
