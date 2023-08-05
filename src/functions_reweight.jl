@@ -51,13 +51,13 @@ function objfn_reweight(
 
   # list extra variables on the return so that they are available to the callback function
   # all returned variables must be arguments of the callback function
-  return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
+#  return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
 
-  # if method != "spg"
-  #   return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
-  # elseif method == "spg"
-  #   return objval
-  # end
+  if method != "spg"
+    return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
+  elseif method == "spg"
+    return objval
+  end
 end
 
 
