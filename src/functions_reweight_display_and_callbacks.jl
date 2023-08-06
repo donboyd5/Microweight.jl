@@ -105,14 +105,14 @@ function cb_spg(R::SPGBoxResult, wh)
     #     return true
     # end
     
-  println("spg callback 8")
+  println("spg callback 9")
   println(wh[1])
   # global wh
   # println(quantile(wh))
   return false
 end
 
-cb_spg2(R) = cb_spg(R, wh)  # ::SPGBoxResult
+cb_spg(R) = cb_spg(R, wh)  # ::SPGBoxResult
 
 
 

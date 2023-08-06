@@ -126,7 +126,7 @@ function rwminerr_spg(wh, xmat, rwtargets;
 
   println("check closure")
   # opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0) #  , callback=cb_spg
-  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg2) #  , callback=cb_spg , callback=cb_spg2
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg) #  , callback=cb_spg , callback=cb_spg2
   # opt = spgbox(ratio -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method),
   #              (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg) 
   return opt
