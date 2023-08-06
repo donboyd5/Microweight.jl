@@ -93,7 +93,7 @@ function rwshow_iter(; iter_calc, fcalls, totseconds, objval,
 end
 
 
-function cb_spg(R::SPGBoxResult, wh)
+function cb_spg(R::SPGBoxResult, wh, xmat, rwtargets)
     # The spg callback function has as input the SPGBoxResult structure.
     # See this: https://m3g.github.io/SPGBox.jl/stable/usage/#Result-data-structure-and-possible-outcomes
     # struct: x vector(Float64), f, gnorm Float64, nit, nfeval, ierr Int64, return_from_callback::Bool
@@ -105,14 +105,48 @@ function cb_spg(R::SPGBoxResult, wh)
     #     return true
     # end
     
-  println("spg callback 9")
-  println(wh[1])
-  # global wh
-  # println(quantile(wh))
-  return false
+    # println("spg callback 11")
+    use_iter = true
+
+    targ_rmse, targpdiffs, ratio_rmse, ratiodiffs = getvals(R.x, wh, xmat, rwtargets)
+
+    # get statistics for targets
+    targ_max = maximum(abs.(targpdiffs))
+    targ_ptile = Statistics.quantile!(vec(abs.(targpdiffs)), plevel)
+    #  targ_rmse=targ_rmse,  wtsum_rmse=wtsum_rmse, tot_rmse=tot_rmse,
+
+    # get statistics for ratios
+    ratio_max = maximum(abs.(ratiodiffs))
+    ratio_ptile = Statistics.quantile!(vec(abs.(ratiodiffs)), plevel)  
+
+    totseconds = time() - tstart
+
+    if use_iter 
+        rwshow_iter(iter_calc=R.nit, fcalls=R.nfeval, totseconds=totseconds, objval=R.f,
+                targ_rmse=targ_rmse, targ_max=targ_max, targ_ptile=targ_ptile,
+                ratio_rmse=ratio_rmse, ratio_max=ratio_max, ratio_ptile=ratio_ptile)
+    end
+
+    halt = false
+    return halt
 end
 
-cb_spg(R) = cb_spg(R, wh)  # ::SPGBoxResult
+cb_spg(R) = cb_spg(R, wh, xmat, rwtargets)  # ::SPGBoxResult
+
+function getvals(ratio, wh, xmat, rwtargets)
+  # part 1 get measure of difference from targets
+  rwtargets_calc = xmat' * (ratio .* wh)
+  targpdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets # ./ 1e6 # allocates a tiny bit
+  targ_sse = sum(targpdiffs.^2.)
+  targ_rmse = targ_sse / length(targpdiffs)
+
+  # part 2 - measure of change in ratio
+  ratiodiffs = ratio .- 1.0
+  ratio_sse = sum(ratiodiffs.^2.)
+  ratio_rmse = ratio_sse / length(ratiodiffs)
+
+  return targ_rmse, targpdiffs, ratio_rmse, ratiodiffs
+end
 
 
 

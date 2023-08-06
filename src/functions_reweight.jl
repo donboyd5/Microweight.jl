@@ -25,11 +25,16 @@ end
 # %% opt functions
 
 function objfn_reweight(
-  ratio, wh, xmat, rwtargets;
+  ratio, wh2, xmat2, rwtargets2;
   rweight=0.1, # relative importance of minimizing ratio error rather than target error
   method="LD_CCSAQ",
   targstop=true, whstop=true,
   display_progress=true)
+
+  # define variables needed for the spg callback - these must be available to the closure function cb_spg
+  global wh = wh2
+  global xmat = xmat2
+  global rwtargets = rwtargets2
 
   # part 1 get measure of difference from targets
   rwtargets_calc = xmat' * (ratio .* wh)
@@ -43,10 +48,6 @@ function objfn_reweight(
   ratio_rmse = ratio_sse / length(ratiodiffs)
 
   # combine the two measures and (maybe later) take a root
-  # objval = (ss_targdiffs / length(targdiffs))*(1. - whweight) +
-  #         (ss_whdiffs / length(whdiffs))*whweight
-  # objval = objval^(1. / pow)  
-  # objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
   objval = targ_rmse*(1 - rweight) + ratio_rmse*rweight
 
   # list extra variables on the return so that they are available to the callback function
@@ -59,36 +60,6 @@ function objfn_reweight(
 end
 
 
-# function objfn_reweight_spg(
-#   ratio, wh, xmat, rwtargets;
-#   rweight=0.1, # relative importance of minimizing ratio error rather than target error
-#   targstop=true, whstop=true,
-#   display_progress=true)
-
-#   # part 1 get measure of difference from targets
-#   rwtargets_calc = xmat' * (ratio .* wh)
-#   targpdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets # ./ 1e6 # allocates a tiny bit
-#   targ_sse = sum(targpdiffs.^2.)
-#   targ_rmse = targ_sse / length(targpdiffs)
-
-#   # part 2 - measure of change in ratio
-#   ratiodiffs = ratio .- 1.0
-#   ratio_sse = sum(ratiodiffs.^2.)
-#   ratio_rmse = ratio_sse / length(ratiodiffs)
-
-#   # combine the two measures and (maybe later) take a root
-#   # objval = (ss_targdiffs / length(targdiffs))*(1. - whweight) +
-#   #         (ss_whdiffs / length(whdiffs))*whweight
-#   # objval = objval^(1. / pow)  
-#   # objval = avg_tdiff*(1 - rweight) + avg_rdiff*rweight
-#   objval = targ_rmse*(1 - rweight) + ratio_rmse*rweight
-
-#   # list extra variables on the return so that they are available to the callback function
-#   # all returned variables must be arguments of the callback function
-#   return objval # , targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
-# end
-
-
 # %% minimum error solve functions
 
 function rwminerr_spg(wh, xmat, rwtargets;
@@ -99,38 +70,17 @@ function rwminerr_spg(wh, xmat, rwtargets;
   rweight=0.5,
   maxiters=1000)
 
-  # f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=0.0)
-  # g = (ratio) -> ReverseDiff.gradient(f, ratio)
-  # g2(g2, ratio) -> ReverseDiff.gradient!(g2, f2, ratio)
-
-
-  # opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x=x, lower=lower, upper=upper, eps=1e-16, nitmax=maxiters, nfevalmax=20000, m=10, iprint=0)
-
-  # wh2 = wh # why did i do this - was it needed in f? check
   f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method)
-  # g! = (g,x) -> ReverseDiff.gradient!(g,f,x)
-  # global wh
-  # g2 = (ratio) -> ReverseDiff.gradient(f2, ratio)
 
   lower = fill(lb, length(ratio0)) # can't use scalar
   upper = fill(ub, length(ratio0))
 
-  x = ratio0
-  # println("x: $x")
-  # println("wh: $wh")
-  # println("xmat: $xmat")
-  # println("rwtargets: $rwtargets")
-  # println("rweight: $rweight")
-  # println("f(ratio0): ", f(ratio0))
-  # global wh=wh
+  x = ratio0  
 
-  println("check closure")
-  # opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0) #  , callback=cb_spg
-  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg) #  , callback=cb_spg , callback=cb_spg2
-  # opt = spgbox(ratio -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method),
-  #              (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg) 
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg)
   return opt
 end
+
 
 function rwminerr_nlopt(wh, xmat, rwtargets;
   method="LD_CCSAQ",
