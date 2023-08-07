@@ -70,6 +70,9 @@ algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "L
 
 # import Microweight as mw  
 res= mw.rwsolve(tp, approach=:minerr, print_interval=1);
+res= mw.rwsolve(tp, approach=:minerr, print_interval=1, targstop=.035);
+
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=1, targstop=.035);
 
 res= mw.rwsolve(tp, approach=:minerr);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=10);
@@ -92,6 +95,8 @@ qpdiffs(res.u)
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0001)
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0)
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-5)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.5, ub=1.5, rweight=0.0)
 fieldnames(typeof(res2))
 res2.f
