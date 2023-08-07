@@ -19,11 +19,6 @@
 # fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight)
 # cb_rwminerr(shares, objval, p_pdiffs, p_whpdiffs, targstop, whstop)
 
-#                            objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop
-function cb_rwminerr2(ratio, objval)#, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop)
-    println("objval: $objval")
-    objval < 0.00065
-end
 
 function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop)
     # list extra variables on the return so that they are available to the callback function
@@ -31,12 +26,9 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
     # return objval, targpdiffs, ratiodiffs # values to be used in callback function must be returned here
     # values other than ratio and objval that are to be used in the callback function must be returned from the objective function
 
-   # println("about to stop")
-    return true
-    println("still going")
-
     # declare as global any variables that must persist from one call to the next, and may be changed in the callback
     # initial values are set in rwsolve() in api.jl 
+    
     global fcalls  # init val 0
     global bestobjval  # init val Inf
     global iter_calc  # init val 0
@@ -46,7 +38,7 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
     fcalls += 1
     new_iter = false
   
-    if objval < bestobjval || (fcalls<=5 && objval > bestobjval)
+    if objval < bestobjval || (fcalls<=5) # && objval > bestobjval)
         bestobjval = objval
         iter_calc += 1
         new_iter = true
@@ -72,13 +64,10 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
                 ratio_rmse=ratio_rmse, ratio_max=ratio_max, ratio_ptile=ratio_ptile)
     end
   
-    # halt = targ_max < targstop && wtsum_max < whstop
+    # halt = targ_max <= targstop  # NLOPT does not appear to allow stopping
 
-    println("targ_max: $targ_max and targstop: $targstop")
-    halt = targ_max <= targstop
-    println("halt: $halt")
-    # halt = false
-    return true
+    halt = false
+    return halt
   end
 
 
@@ -119,7 +108,7 @@ function cb_spg(R::SPGBoxResult, wh, xmat, rwtargets)
     #     return true
     # end
     
-    # println("spg callback 11")
+    # println("spg callback 1")
     use_iter = true
 
     targ_rmse, targpdiffs, ratio_rmse, ratiodiffs = getvals(R.x, wh, xmat, rwtargets)
