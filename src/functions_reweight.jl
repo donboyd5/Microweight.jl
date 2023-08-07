@@ -28,7 +28,7 @@ function objfn_reweight(
   ratio, wh2, xmat2, rwtargets2;
   rweight=0.1, # relative importance of minimizing ratio error rather than target error
   method="LD_CCSAQ",
-  targstop=true, whstop=true,
+  targstop=.01,
   display_progress=true)
 
   # define variables needed for the spg callback - these must be available to the closure function cb_spg
@@ -53,7 +53,7 @@ function objfn_reweight(
   # list extra variables on the return so that they are available to the callback function
   # all returned variables must be arguments of the callback function
   if method != "spg"
-    return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs # values to be used in callback function must be returned here
+    return objval#, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop # values to be used in an Optimization.jl callback function must be returned here
   elseif method == "spg"
     return objval
   end
@@ -68,7 +68,8 @@ function rwminerr_spg(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
   rweight=0.5,
-  maxiters=1000)
+  maxiters=1000,
+  targstop=.01)
 
   f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method)
 
@@ -89,7 +90,8 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   ub=10.0,
   rweight=0.5,
   scaling=false,
-  maxiters=1000)
+  maxiters=1000,
+  targstop=.01)
 
   # convert the string nloptfname into a proper symbol
   # NLOPT algorithms that (1) find local optima (L), (2) use derivatives (D) -- i.e., LD -- and
@@ -117,8 +119,8 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
      xmat, rwtargets = rwscale(xmat, rwtargets)
    end
 
-   p = 1.0
-   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method)
+   # p = 1.0
+   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop=targstop)
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
    fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
@@ -131,7 +133,7 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   # p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
   # p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
+  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr2) # , callback=cb_rwminerr cb_test
 
   return opt
 end

@@ -19,18 +19,29 @@
 # fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight)
 # cb_rwminerr(shares, objval, p_pdiffs, p_whpdiffs, targstop, whstop)
 
+#                            objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop
+function cb_rwminerr2(ratio, objval)#, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop)
+    println("objval: $objval")
+    objval < 0.00065
+end
 
-function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs)
+function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop)
     # list extra variables on the return so that they are available to the callback function
     # all returned variables must be arguments of the callback function
     # return objval, targpdiffs, ratiodiffs # values to be used in callback function must be returned here
     # values other than ratio and objval that are to be used in the callback function must be returned from the objective function
+
+   # println("about to stop")
+    return true
+    println("still going")
 
     # declare as global any variables that must persist from one call to the next, and may be changed in the callback
     # initial values are set in rwsolve() in api.jl 
     global fcalls  # init val 0
     global bestobjval  # init val Inf
     global iter_calc  # init val 0
+
+    # println("targstop is $targstop")
 
     fcalls += 1
     new_iter = false
@@ -62,9 +73,12 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
     end
   
     # halt = targ_max < targstop && wtsum_max < whstop
-  
-    halt = false
-    return halt
+
+    println("targ_max: $targ_max and targstop: $targstop")
+    halt = targ_max <= targstop
+    println("halt: $halt")
+    # halt = false
+    return true
   end
 
 

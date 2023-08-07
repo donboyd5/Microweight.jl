@@ -198,7 +198,7 @@ function rwsolve(prob;
         if method in nlopt_algorithms
             print_prob()
             println("\nBeginning solve...")
-            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
             println("\nObjective: $(opt.objective)")
             println("Return code: $(opt.retcode)")
         elseif method=="spg"
@@ -212,7 +212,7 @@ function rwsolve(prob;
     elseif approach==:constrain
         if isnothing(method) method=:ipopt end
         print_prob()
-        opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=1000)
+        opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop)
     else
         return "ERROR: approach must be :minerr or :constrain"
     end
