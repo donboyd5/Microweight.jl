@@ -86,6 +86,15 @@ res= mw.rwsolve(tp, approach=:minerr, method=algs[8]);
 
 fieldnames(typeof(res))
 
+res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1);
+res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1, lb=.1, ub=10.0, rweight=0.);
+
+res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
+
+
+# res= mw.rwsolve(tp, approach=:minerr, method="KrylovTrustRegion", print_interval=10);
+
+
 res.solve_time
 res.objective
 quantile(res.u)
@@ -121,3 +130,48 @@ mw.rwsolve(tp, approach=:something)
 
 
 # only good to here ....
+using Optim
+
+function f(x)
+  return x[1]^2 + x[2]^2
+end
+
+result = Optim.KrylovTrustRegion(f, [1.0, 1.0], 1e-6, bounds = [[0, 10], [0, 10]])
+
+println(result)
+using Optim
+
+# Define your function and its gradient
+function f(x)
+    return (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
+end
+
+function g!(G, x)
+    G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
+    G[2] = 200.0 * (x[2] - x[1]^2)
+end
+
+# Initial guess
+initial_x = [0.0, 0.0]
+
+# Optimize using KrylovTrustRegion
+res = optimize(f, g!, initial_x, KrylovTrustRegion())
+
+# Display the result
+println(res.minimizer)
+println(res.minimum)
+
+# Initial guess
+initial_x = [0.0, 0.0]
+
+# Set bounds
+lower_bounds = [-1.0, -1.0]
+upper_bounds = [2.0, 2.0]
+
+# Set up the Fminbox with KrylovTrustRegion as the inner optimizer
+inner_optimizer = Optim.KrylovTrustRegion()
+res = optimize(f, g!, lower_bounds, upper_bounds, initial_x, Fminbox(inner_optimizer))
+
+res = optimize(f, g!, initial_x, Fminbox(inner_optimizer))
+
+

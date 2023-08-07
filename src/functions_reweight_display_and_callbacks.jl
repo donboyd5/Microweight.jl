@@ -66,7 +66,8 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
   
     # halt = targ_max <= targstop  # NLOPT does not appear to allow stopping
 
-    halt = false
+    # halt = false
+    halt = objval < 0.
     return halt
   end
 
