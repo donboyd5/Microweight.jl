@@ -195,12 +195,19 @@ function rwsolve(prob;
 
     if approach==:minerr        
         nlopt_algorithms = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
+        optim_algorithms = ["LBFGS", "KrylovTrustRegion"]
         if method in nlopt_algorithms
             print_prob()
             println("\nBeginning solve...")
             opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
             println("\nObjective: $(opt.objective)")
             println("Return code: $(opt.retcode)")
+        elseif method in optim_algorithms
+            print_prob()
+            println("\nBeginning solve...")
+            opt = rwminerr_optim(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
+            println("\nObjective: $(opt.objective)")
+            println("Return code: $(opt.retcode)")            
         elseif method=="spg"
             print_prob()
             opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters)

@@ -52,6 +52,11 @@ function objfn_reweight(
 
   # list extra variables on the return so that they are available to the callback function
   # all returned variables must be arguments of the callback function
+  # if method=="LD_LBFGS"
+  #   # https://nlopt.readthedocs.io/en/latest/NLopt_Reference/#forced-termination
+  #   if targ_rmse < .01 nlopt_result nlopt_force_stop(nlopt_opt opt) end
+  # end
+
   if method != "spg"
     return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop # values to be used in an Optimization.jl callback function must be returned here
   elseif method == "spg"
@@ -133,6 +138,46 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   # p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
   opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
+
+  return opt
+end
+
+# optim_algorithms = ["LBFGS", "KrylovTrustRegion"]
+
+function rwminerr_optim(wh, xmat, rwtargets;
+  method="LBFGS",
+  ratio0=ones(length(wh)),
+  lb=0.1,
+  ub=10.0,
+  rweight=0.5,
+  scaling=false,
+  maxiters=1000,
+  targstop=.01)
+
+  # convert the string method into a proper symbol
+  # allowable_algorithms = ["LBFGS", "KrylovTrustRegion"]
+  allowable_algorithms = ["LBFGS"]
+
+  # for future use, here is how to pass NLOPT options:
+  #   algorithm=:(LD_LBFGS(M=20))  
+
+   if !(method in allowable_algorithms)
+      throw(ArgumentError("ERROR: method was $method -- its value must be in: $allowable_algorithms"))
+   end
+
+   fsym = Symbol(method)
+   algorithm = Expr(:call, fsym) # a proper symbol for the function name
+
+   if scaling 
+     xmat, rwtargets = rwscale(xmat, rwtargets)
+   end
+
+   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop=targstop)
+   fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
+   fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
+
+  opt = Optimization.solve(fprob, Optim.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
+  # opt = Optimization.solve(fprob, Fminbox(Optim.KrylovTrustRegion()), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
 
   return opt
 end
