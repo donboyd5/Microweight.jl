@@ -20,7 +20,7 @@
 # cb_rwminerr(shares, objval, p_pdiffs, p_whpdiffs, targstop, whstop)
 
 
-function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs)
+function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop)
     # list extra variables on the return so that they are available to the callback function
     # all returned variables must be arguments of the callback function
     # return objval, targpdiffs, ratiodiffs # values to be used in callback function must be returned here
@@ -28,14 +28,17 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
 
     # declare as global any variables that must persist from one call to the next, and may be changed in the callback
     # initial values are set in rwsolve() in api.jl 
+    
     global fcalls  # init val 0
     global bestobjval  # init val Inf
     global iter_calc  # init val 0
 
+    # println("targstop is $targstop")
+
     fcalls += 1
     new_iter = false
   
-    if objval < bestobjval || (fcalls<=5 && objval > bestobjval)
+    if objval < bestobjval || (fcalls<=5) # && objval > bestobjval)
         bestobjval = objval
         iter_calc += 1
         new_iter = true
@@ -61,8 +64,8 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
                 ratio_rmse=ratio_rmse, ratio_max=ratio_max, ratio_ptile=ratio_ptile)
     end
   
-    # halt = targ_max < targstop && wtsum_max < whstop
-  
+    # halt = targ_max <= targstop  # NLOPT does not appear to allow stopping
+
     halt = false
     return halt
   end
@@ -93,7 +96,7 @@ function rwshow_iter(; iter_calc, fcalls, totseconds, objval,
 end
 
 
-function cb_spg(R::SPGBoxResult)
+function cb_spg(R::SPGBoxResult, wh, xmat, rwtargets)
     # The spg callback function has as input the SPGBoxResult structure.
     # See this: https://m3g.github.io/SPGBox.jl/stable/usage/#Result-data-structure-and-possible-outcomes
     # struct: x vector(Float64), f, gnorm Float64, nit, nfeval, ierr Int64, return_from_callback::Bool
@@ -105,8 +108,47 @@ function cb_spg(R::SPGBoxResult)
     #     return true
     # end
     
-  println("spg callback")
-  return false
+    # println("spg callback 1")
+    use_iter = true
+
+    targ_rmse, targpdiffs, ratio_rmse, ratiodiffs = getvals(R.x, wh, xmat, rwtargets)
+
+    # get statistics for targets
+    targ_max = maximum(abs.(targpdiffs))
+    targ_ptile = Statistics.quantile!(vec(abs.(targpdiffs)), plevel)
+    #  targ_rmse=targ_rmse,  wtsum_rmse=wtsum_rmse, tot_rmse=tot_rmse,
+
+    # get statistics for ratios
+    ratio_max = maximum(abs.(ratiodiffs))
+    ratio_ptile = Statistics.quantile!(vec(abs.(ratiodiffs)), plevel)  
+
+    totseconds = time() - tstart
+
+    if use_iter 
+        rwshow_iter(iter_calc=R.nit, fcalls=R.nfeval, totseconds=totseconds, objval=R.f,
+                targ_rmse=targ_rmse, targ_max=targ_max, targ_ptile=targ_ptile,
+                ratio_rmse=ratio_rmse, ratio_max=ratio_max, ratio_ptile=ratio_ptile)
+    end
+
+    halt = false
+    return halt
+end
+
+cb_spg(R) = cb_spg(R, wh, xmat, rwtargets)  # ::SPGBoxResult
+
+function getvals(ratio, wh, xmat, rwtargets)
+  # part 1 get measure of difference from targets
+  rwtargets_calc = xmat' * (ratio .* wh)
+  targpdiffs = (rwtargets_calc .- rwtargets) ./ rwtargets # ./ 1e6 # allocates a tiny bit
+  targ_sse = sum(targpdiffs.^2.)
+  targ_rmse = targ_sse / length(targpdiffs)
+
+  # part 2 - measure of change in ratio
+  ratiodiffs = ratio .- 1.0
+  ratio_sse = sum(ratiodiffs.^2.)
+  ratio_rmse = ratio_sse / length(ratiodiffs)
+
+  return targ_rmse, targpdiffs, ratio_rmse, ratiodiffs
 end
 
 
