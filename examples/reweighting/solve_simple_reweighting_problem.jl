@@ -56,7 +56,7 @@ h = 300_000  # number of households 100
 k = 100 # number of characteristics each household has 4
 
 # the function mtp (make test problem) will create a random problem with these characteristics
-tp = mw.mtprw(h, k, pctzero=0.3);
+tp = mw.mtprw(h, k, pctzero=0.4);
 fieldnames(typeof(tp))
 
 function qpdiffs(ratio)
@@ -89,6 +89,8 @@ fieldnames(typeof(res))
 res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1);
 res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1, lb=.1, ub=10.0, rweight=0.);
 
+res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1, lb=.1, ub=5.0, rweight=1e-6, targstop=.01);
+
 res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
 
 
@@ -103,7 +105,11 @@ qpdiffs(ones(tp.h))
 qpdiffs(res.u)
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0)
-res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0001)
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, targstop=.3109)
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0001, targstop=.012)
+
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=5.0, rweight=1e-6, targstop=.01)
+
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-5)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.5, ub=1.5, rweight=0.0)
@@ -118,6 +124,7 @@ mw.rwsolve(tp, approach=:minerr, method="xyz")
 res3 = mw.rwsolve(tp, approach=:constrain)
 
 res3 = mw.rwsolve(tp, approach=:constrain, lb=.1, ub=10.0, constol=.01)
+res3 = mw.rwsolve(tp, approach=:constrain, lb=.1, ub=5.0, constol=.01)
 
 results = fieldnames(typeof(res3))
 

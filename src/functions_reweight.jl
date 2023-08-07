@@ -28,13 +28,16 @@ function objfn_reweight(
   ratio, wh2, xmat2, rwtargets2;
   rweight=0.1, # relative importance of minimizing ratio error rather than target error
   method="LD_CCSAQ",
-  targstop=.01,
+  targstop2=.01,
   display_progress=true)
 
   # define variables needed for the spg callback - these must be available to the closure function cb_spg
   global wh = wh2
   global xmat = xmat2
   global rwtargets = rwtargets2
+  global targstop = targstop2
+
+  # println("targstop: $targstop")
 
   # part 1 get measure of difference from targets
   rwtargets_calc = xmat' * (ratio .* wh)
@@ -57,6 +60,8 @@ function objfn_reweight(
   #   if targ_rmse < .01 nlopt_result nlopt_force_stop(nlopt_opt opt) end
   # end
 
+  # cb_spg(R::SPGBox.SPGBoxResult) = cb_spg(R, wh, xmat, rwtargets)
+
   if method != "spg"
     return objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop # values to be used in an Optimization.jl callback function must be returned here
   elseif method == "spg"
@@ -76,12 +81,13 @@ function rwminerr_spg(wh, xmat, rwtargets;
   maxiters=1000,
   targstop=.01)
 
-  f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method)
+  f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop) # note it is targstop2
 
   lower = fill(lb, length(ratio0)) # can't use scalar
   upper = fill(ub, length(ratio0))
 
   x = ratio0  
+  # println("targstop: $targstop")
 
   opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg)
   return opt
@@ -172,7 +178,7 @@ function rwminerr_optim(wh, xmat, rwtargets;
      xmat, rwtargets = rwscale(xmat, rwtargets)
    end
 
-   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop=targstop)
+   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop)
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
    fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
@@ -189,6 +195,7 @@ function rwmconstrain_ipopt(wh, xmat, rwtargets;
   ub=10.0,
   constol=0.01,
   scaling=false,
+  targstop=nothing,
   maxiters=1000)
 
   lvar = fill(lb, length(wh))
