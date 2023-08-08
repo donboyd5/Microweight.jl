@@ -1,6 +1,5 @@
 using Revise
 import Microweight as mw  # Revise doesn't work for changes to type definitions
-
 using Statistics
 # using LineSearches
 
@@ -55,6 +54,9 @@ k = 50 # number of characteristics each household has 4
 h = 300_000  # number of households 100
 k = 100 # number of characteristics each household has 4
 
+h = 500_000  # number of households 100
+k = 200 # number of characteristics each household has 4
+
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtprw(h, k, pctzero=0.4);
 fieldnames(typeof(tp))
@@ -70,9 +72,9 @@ algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "L
 
 # import Microweight as mw  
 res= mw.rwsolve(tp, approach=:minerr, print_interval=1);
-res= mw.rwsolve(tp, approach=:minerr, print_interval=1, targstop=.035);
+res= mw.rwsolve(tp, approach=:minerr, print_interval=1, targstop=.0351);
 
-res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=1, targstop=.035);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=1, targstop=.036);
 
 res= mw.rwsolve(tp, approach=:minerr);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=10);
@@ -80,7 +82,7 @@ res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", print_interval=10);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, print_interval=10);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, maxiters=2000, print_interval=10);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
-res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=10);
 res= mw.rwsolve(tp, approach=:minerr, method=algs[3], lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
 res= mw.rwsolve(tp, approach=:minerr, method=algs[8]);
 
@@ -89,7 +91,7 @@ fieldnames(typeof(res))
 res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1);
 res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1, lb=.1, ub=10.0, rweight=0.);
 
-res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=1, lb=.1, ub=5.0, rweight=1e-6, targstop=.01);
+res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", print_interval=100, lb=.1, ub=5.0, rweight=1e-6, targstop=.01);
 
 res= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
 
@@ -108,7 +110,7 @@ res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, targstop=.3109)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0001, targstop=.012)
 
-res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=5.0, rweight=1e-6, targstop=.01)
+res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-9, targstop=.01)
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-5)

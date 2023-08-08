@@ -130,7 +130,7 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
      xmat, rwtargets = rwscale(xmat, rwtargets)
    end
 
-   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop=targstop)
+   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop)
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
    fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 

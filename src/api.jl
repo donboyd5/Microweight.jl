@@ -193,6 +193,10 @@ function rwsolve(prob;
         # do something else
     end
 
+    # initialize result
+    # prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
+    result = ReweightResult(approach=approach, method=method)
+
     if approach==:minerr        
         nlopt_algorithms = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
         optim_algorithms = ["LBFGS", "KrylovTrustRegion"]
@@ -228,7 +232,9 @@ function rwsolve(prob;
     eseconds = tend - tstart
     println("neseconds: $eseconds")
 
-    return opt
+    result.solver_result = opt
+
+    return result
 
     # DJB have not yet updated this function
     # initialize result
