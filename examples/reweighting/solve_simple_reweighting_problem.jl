@@ -82,7 +82,7 @@ res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", print_interval=10);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, print_interval=10);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.2, ub=2.0, maxiters=2000, print_interval=10);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
-res= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=10, targstop=0.005);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=10, targstop=0.005);
 res= mw.rwsolve(tp, approach=:minerr, method=algs[3], lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=100);
 res= mw.rwsolve(tp, approach=:minerr, method=algs[8]);
 
@@ -110,7 +110,7 @@ res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, targstop=.3109)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0001, targstop=.012)
 
-res2= mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0001, maxiters=2000, print_interval=10, targstop=0.005);
+res2= mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0, maxiters=2000, print_interval=10, targstop=0.01);
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-9, targstop=.01)
 
@@ -120,8 +120,9 @@ res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.5, ub=1.5, rweight=0.0
 fieldnames(typeof(res2))
 res2.f
 # res2.x
-quantile(res2.x)
-qpdiffs(res2.x)
+vals = res2.solver_result
+quantile(vals.x)
+qpdiffs(vals.x)
 
 mw.rwsolve(tp, approach=:minerr, method="xyz")
 
