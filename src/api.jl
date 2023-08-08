@@ -151,10 +151,7 @@ function rwsolve(prob;
     scaling=false,
     scaling_target_goal=1000.0,
     print_interval=1,
-    whweight=0.5,
-    pow=8,
     targstop=.01,
-    whstop=.01,
     kwargs...)
 
     println("\nSolving reweighting problem...\n")
@@ -165,7 +162,7 @@ function rwsolve(prob;
     global bestobjval = Inf
     global nshown = 0
     global iter_calc = 0
-    global plevel = .99
+    global plevel = .95
     global interval = print_interval
 
     # check inputs, add defaults as needed
@@ -186,7 +183,7 @@ function rwsolve(prob;
     if approach==:minerr
         # do something
         if isnothing(method) 
-            method="LD_CCSAQ" # LBFGS seems best when ratio error is most important, CCSAQ when target error is most important
+            method="spg"  # "LD_CCSAQ" # LBFGS seems best when ratio error is most important, CCSAQ when target error is most important
             println("method nothing changed to default: $method")
         end
     elseif approach==:constrain
@@ -195,7 +192,7 @@ function rwsolve(prob;
 
     # initialize result
     # prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
-    result = ReweightResult(approach=approach, method=method)
+    result = ReweightResult(approach=approach, method=method, rwtargets=rwtargets, wh=prob.wh, xmat=prob.xmat, h=length(wh), k=size(xmat)[2])
 
     if approach==:minerr        
         nlopt_algorithms = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
@@ -204,17 +201,32 @@ function rwsolve(prob;
             print_prob()
             println("\nBeginning solve...")
             opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
-            println("\nObjective: $(opt.objective)")
-            println("Return code: $(opt.retcode)")
+            println(fieldnames(typeof(opt)))
+            # success, :iterations, :eseconds, :objval, :sspd, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
+            # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
+            result.success = opt.retcode
+            result.objval = opt.objective
+            result.x =opt.u
         elseif method in optim_algorithms
             print_prob()
             println("\nBeginning solve...")
             opt = rwminerr_optim(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
-            println("\nObjective: $(opt.objective)")
-            println("Return code: $(opt.retcode)")            
+            println(fieldnames(typeof(opt)))
+            # success, :iterations, :eseconds, :objval, :sspd, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
+            # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
+            result.success = opt.retcode
+            result.objval = opt.objective
+            result.x =opt.u 
         elseif method=="spg"
             print_prob()
             opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
+            println(fieldnames(typeof(opt)))
+            # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
+            # (:x, :f, :gnorm, :nit, :nfeval, :ierr, :return_from_callback)
+            # result.success = opt.retcode
+            result.objval = opt.f
+            result.x = opt.x
+            result.iterations = opt.nit
         else
             println("unknown method $method")
             return "not attempted"
@@ -222,15 +234,18 @@ function rwsolve(prob;
         
     elseif approach==:constrain
         if isnothing(method) method=:ipopt end
+        # tulip here
         print_prob()
         opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop)
+        println(fieldnames(typeof(opt)))
+        # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)        
     else
         return "ERROR: approach must be :minerr or :constrain"
     end
 
     tend = time()
-    eseconds = tend - tstart
-    println("neseconds: $eseconds")
+    result.eseconds = tend - tstart
+    println("neseconds: $(result.eseconds)")
 
     result.solver_result = opt
 

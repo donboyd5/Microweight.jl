@@ -24,7 +24,6 @@ using Statistics
 #   k characteristics
 #   xmat: an x-matrix of household characteristics, with h rows and k columns
 #   wh: national weights of households - a vector with h rows and 1 column
-#   geotargets: an s x k matrix of targets, one for each target, for each state
 
 # the above is the minimum set of information needed to solve for:
 #   whs: an h x s matrix that has one weight per household (h) per state (s),
@@ -119,10 +118,10 @@ res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.5, ub=1.5, rweight=0.0)
 fieldnames(typeof(res2))
 res2.f
-# res2.x
-vals = res2.solver_result
-quantile(vals.x)
-qpdiffs(vals.x)
+
+kres = res2
+quantile(kres.x)
+qpdiffs(kres.x)
 
 mw.rwsolve(tp, approach=:minerr, method="xyz")
 

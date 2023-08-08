@@ -124,12 +124,13 @@ end
 Base.@kwdef mutable struct ReweightResult
   # give default values for each field so they don't have to be included in a constructor
   approach::Symbol = :missing
-  method::Any = nothing
-  success::Bool = false
+  method::Any = nothing  
   iterations::Int = -999
-  eseconds::Float64 = -Inf
+  eseconds::Float64 = 0.0
+  success::Any = nothing
   objval::Float64 = Inf
-  sspd::Float64 = Inf
+  # sspd::Float64 = Inf
+  x::Vector{Float64} = []
 
   # targets and results
   rwtargets::Vector{Float64} = []
