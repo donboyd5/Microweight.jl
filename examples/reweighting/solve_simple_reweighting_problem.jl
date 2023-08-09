@@ -169,7 +169,149 @@ quantile(res3.x)
 quantile(res4.x)
 # qpdiffs(res5.x)
 
+##############################################################################
+##
+## Tulip my original, with variants
+##
+##############################################################################
+using JuMP, Tulip
 
+
+h=10; k=2; tp = mw.mtprw(h, k, pctzero=0.1);
+# h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.1);
+
+A = tp.xmat .* tp.wh
+A1 = transpose(A)
+# A1 = A'
+A2 = -A1
+b = tp.rwtargets_calc
+
+N = size(A1)[2]
+scale = (N / 1000.) ./ sum(abs.(A1), dims=2)
+scale = 1.0
+
+A1s = scale .* A1
+A2s = scale .* A2
+bs = scale .* b
+
+tol = .50
+model = Model(Tulip.Optimizer)
+set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
+set_optimizer_attribute(model, "IPM_IterationsLimit", 100) 
+
+@variable(model, r[1:N] >= 0)
+@variable(model, s[1:N] >= 0)
+
+@objective(model, Min, sum(r[i] + s[i] for i in 1:N))
+
+# bound on top by tolerance
+@constraint(model, [i in 1:N], r[i] + s[i] <= tol)
+
+# Ax = b
+@constraint(model, [i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i])
+
+
+optimize!(model)
+
+##############################################################################
+##
+## Tulip
+##
+##############################################################################
+using JuMP, Tulip
+using Random, Distributions
+
+function print_constraints(m::Model)
+  for con_ref in all_constraints(m, VariableRef, MOI.EqualTo{Float64})
+      println(con_ref)
+  end
+  for con_ref in all_constraints(m, VariableRef, MOI.LessThan{Float64})
+      println(con_ref)
+  end
+  # Add more loops for other types of constraints if needed
+end
+
+
+h=10; k=2; tp = mw.mtprw(h, k, pctzero=0.1);
+h=1_000; k=20; tp = mw.mtprw(h, k, pctzero=0.1);
+h=10_000; k=50; tp = mw.mtprw(h, k, pctzero=0.3);
+h=100_000; k=100; tp = mw.mtprw(h, k, pctzero=0.3);
+# h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.1);
+
+A = tp.xmat .* tp.wh
+rnums = .01 .* randn(k) .+ 1.0
+b = tp.rwtargets_calc .* (.001 .* randn(k) .+ 1.0)
+# b = tp.rwtargets
+
+N = size(A)[1]
+scale = (N / 1000.) ./ sum(abs.(A), dims=1)
+scale = 1.0
+
+As = scale .* A
+bs = scale .* b
+
+tol = 10.0
+
+model = Model(Tulip.Optimizer)
+set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
+set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems to be enough
+@variable(model, 0 <= r[1:N] <= tol) # djb r is the amount above 1 e.g., 1 + 0.40, goes with A1s
+@variable(model, 0 <= s[1:N] <= tol) # djb s is the amount below 1 e.g., 1 - 0.40, goes with A2s
+@objective(model, Min, sum(r[j] + s[j] for j in 1:N));  # djb would be clearer to use j as the index here
+
+# Ax = b  - use the scaled matrices and vector; equality constraints
+@constraint(model, vec(sum(As, dims=1)) .+ (As' * r) .- (As' * s) == bs);                              
+# print_constraints(model)
+optimize!(model);
+
+termination_status(model)
+objective_value(model)
+
+r_vec = value.(r)
+s_vec = value.(s)
+
+# Did we satisfy constraints?
+rs = r_vec - s_vec
+x = 1.0 .+ r_vec - s_vec  # note the .+
+b_calc = As' * x
+b
+check = vec(b_calc) ./ b
+
+q = (0, .1, .25, .5, .75, .9, 1)
+quantile!(check, q)
+
+# Are the ratios of new weights to old weights in bounds (within tolerances)?
+quantile!(x, q)
+
+
+##############################################################################
+##
+## Toy problem
+##
+##############################################################################
+
+# Instantiate JuMP model
+lp = Model(Tulip.Optimizer)
+
+# Create variables
+@variable(lp, x >= 0)
+@variable(lp, y >= 0)
+
+# Add constraints
+@constraint(lp, row1, x - y >= -2)
+@constraint(lp, row2, 2*x - y <= 4)
+@constraint(lp, row3, x + 2*y <= 7)
+
+# Set the objective
+@objective(lp, Min, -2*x - y)
+
+# Set some parameters
+set_optimizer_attribute(lp, "OutputLevel", 0)  # disable output
+set_optimizer_attribute(lp, "Presolve_Level", 0)     # disable presolve
+set_optimizer_attribute(lp, "OutputLevel", 1)  
+
+# Solve the problem
+optimize!(lp)
 
 ##############################################################################
 ##
