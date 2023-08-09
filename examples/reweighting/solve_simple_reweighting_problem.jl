@@ -58,6 +58,9 @@ k = 200 # number of characteristics each household has 4
 
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtprw(h, k, pctzero=0.3);
+
+h=100_000; k=27; tp = mw.mtprw(h, k, pctzero=0.7);
+
 fieldnames(typeof(tp))
 
 function qpdiffs(ratio)
@@ -112,6 +115,10 @@ res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.
 res2= mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0, maxiters=2000, print_interval=10, targstop=0.01);
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-9, targstop=.01)
+
+tp2 = tp
+tp2.rwtargets = b
+res2 = mw.rwsolve(tp2, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-9, targstop=.01)
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-5)
@@ -265,7 +272,7 @@ set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems 
 # Ax = b  - use the scaled matrices and vector; equality constraints
 @constraint(model, vec(sum(As, dims=1)) .+ (As' * r) .- (As' * s) == bs);                              
 @constraint(model, (1.0 .+ r .- s) .>= 0.0);  
-@constraint(model, (1.0 .+ r .- s) .<= 10.0);  
+@constraint(model, (1.0 .+ r .- s) .<= 5.0);  
 # print_constraints(model)
 optimize!(model);
 
@@ -288,6 +295,10 @@ quantile!(check, q)
 # Are the ratios of new weights to old weights in bounds (within tolerances)?
 quantile!(x, q)
 
+x
+res2.x
+
+cor(x, res2.x)
 
 ##############################################################################
 ##
