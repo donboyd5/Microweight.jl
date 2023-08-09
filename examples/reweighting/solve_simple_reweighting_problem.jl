@@ -256,13 +256,16 @@ tol = 10.0
 model = Model(Tulip.Optimizer)
 set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
 set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems to be enough
-@variable(model, 0.01 <= r[1:N] <= tol) # djb r is the amount above 1 e.g., 1 + 0.40, goes with A1s
-@variable(model, 0.01 <= s[1:N] <= tol) # djb s is the amount below 1 e.g., 1 - 0.40, goes with A2s
+# @variable(model, 0.0 <= r[1:N] <= tol) # djb r is the amount above 1 e.g., 1 + 0.40, goes with A1s
+# @variable(model, 0.0 <= s[1:N] <= tol) # djb s is the amount below 1 e.g., 1 - 0.40, goes with A2s
+@variable(model,  0.0 <= r[1:N])
+@variable(model,  0.0 <= s[1:N])
 @objective(model, Min, sum(r[j] + s[j] for j in 1:N));  # djb would be clearer to use j as the index here
 
 # Ax = b  - use the scaled matrices and vector; equality constraints
 @constraint(model, vec(sum(As, dims=1)) .+ (As' * r) .- (As' * s) == bs);                              
 @constraint(model, (1.0 .+ r .- s) .>= 0.0);  
+@constraint(model, (1.0 .+ r .- s) .<= 10.0);  
 # print_constraints(model)
 optimize!(model);
 
@@ -273,11 +276,7 @@ r_vec = value.(r)
 s_vec = value.(s)
 
 # Did we satisfy constraints?
-rs = r_vec - s_vec
-
-quantile(rs)
-
-x = 1.0 .+ r_vec - s_vec  # note the .+
+x = 1.0 .+ r_vec .- s_vec  # note the .+
 quantile(x)
 b_calc = As' * x
 b
