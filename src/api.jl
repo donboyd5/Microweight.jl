@@ -181,18 +181,20 @@ function rwsolve(prob;
 
     # check method and decide on solver
     if approach==:minerr
-        # do something
         if isnothing(method) 
             method="spg"  # "LD_CCSAQ" # LBFGS seems best when ratio error is most important, CCSAQ when target error is most important
-            println("method nothing changed to default: $method")
+            println("method nothing changed to :minerr default: $method")
         end
     elseif approach==:constrain
-        # do something else
+        if isnothing(method) 
+            method = "ipopt" 
+            println("method nothing changed to :constrain default: $method")
+        end
     end
 
     # initialize result
     # prob = scale_prob(prob, scaling=scaling, scaling_target_goal=scaling_target_goal)
-    result = ReweightResult(approach=approach, method=method, rwtargets=rwtargets, wh=prob.wh, xmat=prob.xmat, h=length(wh), k=size(xmat)[2])
+    result = ReweightResult(approach=approach, method=method, rwtargets=prob.rwtargets, wh=prob.wh, xmat=prob.xmat, h=length(prob.wh), k=size(prob.xmat)[2])
 
     if approach==:minerr        
         nlopt_algorithms = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
@@ -206,7 +208,7 @@ function rwsolve(prob;
             # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
             result.success = opt.retcode
             result.objval = opt.objective
-            result.x =opt.u
+            result.x = opt.u
         elseif method in optim_algorithms
             print_prob()
             println("\nBeginning solve...")
@@ -232,14 +234,26 @@ function rwsolve(prob;
             return "not attempted"
         end
         
-    elseif approach==:constrain
-        if isnothing(method) method=:ipopt end
+    elseif approach==:constrain        
         # tulip here
-        print_prob()
-        opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop)
-        println(fieldnames(typeof(opt)))
-        # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)        
-    else
+        if method == "ipopt"
+            print_prob()
+            opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop)
+            println(fieldnames(typeof(opt)))
+            # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
+            # status_reliable, :status, :solution_reliable, :solution, :objective_reliable, :objective, :dual_residual_reliable, :dual_feas, :primal_residual_reliable, 
+            #   :primal_feas, :multipliers_reliable, :multipliers, :bounds_multipliers_reliable, :multipliers_L, :multipliers_U, :iter_reliable, :iter, :time_reliable,
+            #   :elapsed_time, :solver_specific_reliable, :solver_specific
+            result.objval = opt.objective
+            result.x = opt.solution
+            result.success = opt.status
+            result.iterations = opt.iter
+        elseif method == "tulip"
+            return "ERROR: tulip not yet implemented"
+        else
+            return "unknown method"
+        end
+    else # some other approach
         return "ERROR: approach must be :minerr or :constrain"
     end
 

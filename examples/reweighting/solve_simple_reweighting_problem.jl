@@ -57,23 +57,23 @@ h = 500_000  # number of households 100
 k = 200 # number of characteristics each household has 4
 
 # the function mtp (make test problem) will create a random problem with these characteristics
-tp = mw.mtprw(h, k, pctzero=0.4);
+tp = mw.mtprw(h, k, pctzero=0.3);
 fieldnames(typeof(tp))
 
 function qpdiffs(ratio)
   rwtargets_calc = tp.xmat' * (ratio .* tp.wh)
   targpdiffs = (rwtargets_calc .- tp.rwtargets) ./ tp.rwtargets 
-  quantile(targpdiffs)
+  Statistics.quantile(targpdiffs)
 end
 
 # LBFGS seems to be best when ratio error is most important, CCSAQ when target error is most important
 algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
 
-# import Microweight as mw  
+# run through different methods and with different parameters
 res= mw.rwsolve(tp, approach=:minerr, print_interval=1);
 res= mw.rwsolve(tp, approach=:minerr, print_interval=1, targstop=.0351);
 
-res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=1, targstop=.036);
+res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=1, targstop=.01);
 
 res= mw.rwsolve(tp, approach=:minerr);
 res= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", print_interval=10);
@@ -132,15 +132,50 @@ res3 = mw.rwsolve(tp, approach=:constrain, lb=.1, ub=5.0, constol=.01)
 
 results = fieldnames(typeof(res3))
 
-res3.objective
-quantile(res3.solution)
-qpdiffs(res3.solution)
+res3.objval
+quantile(res3.x)
+qpdiffs(res3.x)
 
 
 mw.rwsolve(tp, approach=:something)
 
+##############################################################################
+##
+## Compare results under alternative methods
+##
+##############################################################################
 
-# only good to here ....
+res1= mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+res2= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+res3= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+res4= mw.rwsolve(tp, approach=:minerr, method="LD_MMA", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01)
+# res6= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # does not seem to work well
+
+# m = hcat(res1.x, res2.x, res3.x, res4.x)
+m = hcat(res1.x, res2.x, res3.x, res4.x, res5.x)
+m
+cor(m)
+
+qpdiffs(res1.x)
+qpdiffs(res2.x)
+qpdiffs(res3.x)
+qpdiffs(res4.x)
+qpdiffs(res5.x)
+
+quantile(res1.x)
+quantile(res2.x)
+quantile(res3.x)
+quantile(res4.x)
+# qpdiffs(res5.x)
+
+
+
+##############################################################################
+##
+## Exploration
+##
+##############################################################################
 using Optim
 
 function f(x)
@@ -148,6 +183,7 @@ function f(x)
 end
 
 result = Optim.KrylovTrustRegion(f, [1.0, 1.0], 1e-6, bounds = [[0, 10], [0, 10]])
+result = Optim.KrylovTrustRegion(f, [1.0, 1.0], 1e-6, [[0, 10], [0, 10]])
 
 println(result)
 using Optim
