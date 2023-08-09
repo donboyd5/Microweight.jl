@@ -127,6 +127,7 @@ fieldnames(typeof(res2))
 res2.f
 
 kres = res2
+qpdiffs(ones(tp.h))
 quantile(kres.x)
 qpdiffs(kres.x)
 
@@ -247,8 +248,8 @@ h=100_000; k=27; tp = mw.mtprw(h, k, pctzero=0.7);
 # h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.1);
 
 A = tp.xmat .* tp.wh
-rnums = .01 .* randn(k) .+ 1.0
-b = tp.rwtargets_calc .* (.001 .* randn(k) .+ 1.0)
+rnums = .05 .* randn(k) .+ 1.0
+b = tp.rwtargets_calc .* rnums
 # b = tp.rwtargets
 
 N = size(A)[1]
@@ -265,14 +266,23 @@ set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 
 set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems to be enough
 # @variable(model, 0.0 <= r[1:N] <= tol) # djb r is the amount above 1 e.g., 1 + 0.40, goes with A1s
 # @variable(model, 0.0 <= s[1:N] <= tol) # djb s is the amount below 1 e.g., 1 - 0.40, goes with A2s
-@variable(model,  0.0 <= r[1:N])
-@variable(model,  0.0 <= s[1:N])
-@objective(model, Min, sum(r[j] + s[j] for j in 1:N));  # djb would be clearer to use j as the index here
+@variable(model,  0.0 <= r[1:N] <= tol / 2.)
+@variable(model,  0.0 <= s[1:N] <= tol / 2.)
+
+# @variable(model,  0.0 <= r[1:N], start=0.5)
+# @variable(model,  0.0 <= s[1:N], start=0.5)
+
+# @variable(model,  r[1:N])
+# @variable(model,  s[1:N])
+# @objective(model, Min, sum(r[j] + s[j] for j in 1:N));  # djb would be clearer to use j as the index here
+
+@objective(model, Min, sum(r .+ s)); 
 
 # Ax = b  - use the scaled matrices and vector; equality constraints
-@constraint(model, vec(sum(As, dims=1)) .+ (As' * r) .- (As' * s) == bs);                              
+initval = vec(sum(As, dims=1))
+@constraint(model, initval .+ (As' * r) .- (As' * s) == bs);                              
 @constraint(model, (1.0 .+ r .- s) .>= 0.0);  
-@constraint(model, (1.0 .+ r .- s) .<= 5.0);  
+@constraint(model, (1.0 .+ r .- s) .<= tol);  
 # print_constraints(model)
 optimize!(model);
 
