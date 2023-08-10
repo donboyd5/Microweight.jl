@@ -117,8 +117,12 @@ res2= mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-9, targstop=.01)
 
 tp2 = tp
+rnums = .1 .* randn(k) .+ 1.0
+b = tp.rwtargets_calc .* rnums
 tp2.rwtargets = b
+
 res2 = mw.rwsolve(tp2, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-9, targstop=.01)
+res2 = mw.rwsolve(tp2, approach=:minerr, method="spg", lb=.0, ub=2.0, rweight=1e-9, targstop=.01)
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=0.0)
 res2 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-5)
@@ -226,8 +230,15 @@ optimize!(model)
 ## Tulip
 ##
 ##############################################################################
+# issue: https://github.com/PSLmodels/taxdata/issues/381
+# chusloj's original solver.jl before ANY changes I made can be found here:
+# https://github.com/PSLmodels/taxdata/blob/e014837b98f83258bfc425a89ba79c368890f801/puf_stage2/stage2.py
+# https://github.com/PSLmodels/taxdata/blob/e014837b98f83258bfc425a89ba79c368890f801/puf_stage2/dataprep.py
+# https://github.com/PSLmodels/taxdata/blob/e014837b98f83258bfc425a89ba79c368890f801/cps_stage2/solver.jl
+
 using JuMP, Tulip
 using Random, Distributions
+using HiGHS
 
 function print_constraints(m::Model)
   for con_ref in all_constraints(m, VariableRef, MOI.EqualTo{Float64})
@@ -259,15 +270,27 @@ scale = vec((N / 1000.) ./ sum(abs.(A), dims=1))
 As = A .* scale'
 bs = b .* scale
 
-tol = 10.0
+# tol = 10.0
 
 model = Model(Tulip.Optimizer)
 set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
 set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems to be enough
-# @variable(model, 0.0 <= r[1:N] <= tol) # djb r is the amount above 1 e.g., 1 + 0.40, goes with A1s
-# @variable(model, 0.0 <= s[1:N] <= tol) # djb s is the amount below 1 e.g., 1 - 0.40, goes with A2s
-@variable(model,  0.0 <= r[1:N] <= tol / 2.)
-@variable(model,  0.0 <= s[1:N] <= tol / 2.)
+# set_optimizer_attribute(model, "Threads", 12)  
+
+model = Model(HiGHS.Optimizer)
+set_attribute(model, "presolve", "on")
+# set_attribute(model, "time_limit", 60.0)
+# set_attribute(model, "threads", 12)
+# set_optimizer_attribute(model, "solver", "ipm")  
+# set_optimizer_attribute(model, "solver", "simplex")  
+
+
+# for both solvers....
+tol = 2.0
+@variable(model, 0.0 <= r[1:N] <= tol) # djb r is the amount above 1 e.g., 1 + 0.40, goes with A1s
+@variable(model, 0.0 <= s[1:N] <= tol) # djb s is the amount below 1 e.g., 1 - 0.40, goes with A2s
+# @variable(model,  0.0 <= r[1:N] <= tol / 2.)
+# @variable(model,  0.0 <= s[1:N] <= tol / 2.)
 
 # @variable(model,  0.0 <= r[1:N], start=0.5)
 # @variable(model,  0.0 <= s[1:N], start=0.5)
@@ -280,7 +303,11 @@ set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems 
 
 # Ax = b  - use the scaled matrices and vector; equality constraints
 initval = vec(sum(As, dims=1))
-@constraint(model, initval .+ (As' * r) .- (As' * s) == bs);                              
+
+# compare these two!!!
+@constraint(model, initval .+ (As' * r) .- (As' * s) == bs);        
+# @constraint(model, [i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i])
+
 @constraint(model, (1.0 .+ r .- s) .>= 0.0);  
 @constraint(model, (1.0 .+ r .- s) .<= tol);  
 # print_constraints(model)
@@ -289,13 +316,13 @@ optimize!(model);
 termination_status(model)
 objective_value(model)
 
+# Did we satisfy constraints?
 r_vec = value.(r)
 s_vec = value.(s)
 
-# Did we satisfy constraints?
 x = 1.0 .+ r_vec .- s_vec  # note the .+
 quantile(x)
-b_calc = As' * x
+b_calc = A' * x
 b
 check = vec(b_calc) ./ b
 
