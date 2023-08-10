@@ -82,7 +82,7 @@ end
 
 ##############################################################################
 ##
-## Results struct
+## Results structs
 ##
 ##############################################################################
 # mutable struct Result
@@ -119,3 +119,39 @@ end
   solver_result = nothing
   problem = nothing
 end
+
+
+Base.@kwdef mutable struct ReweightResult
+  # give default values for each field so they don't have to be included in a constructor
+  approach::Symbol = :missing
+  method::Any = nothing  
+  iterations::Int = -999
+  eseconds::Float64 = 0.0
+  success::Any = nothing
+  objval::Float64 = Inf
+  # sspd::Float64 = Inf
+  x::Vector{Float64} = []
+
+  # targets and results
+  rwtargets::Vector{Float64} = []
+  rwtargets_calc::Vector{Float64} = []
+  targ_pdiffs::Array{Float64,2} = Array{Float64}(undef, 0, 0)
+  targ_pdqtiles::Vector{Float64} = []
+
+  # result returned from the solver
+  solver_result = nothing
+
+  # problem information
+  h::Int = 0
+  k::Int = 0
+  wh::Vector{Float64} = []
+  xmat::Array{Float64,2} = Array{Float64}(undef, 0, 0)
+  scaling::Vector{Float64} = []
+  # problem = nothing
+
+  # bounds and constraints
+  # xlb::Float64 = 0.
+  # xub::Float64 = 100.
+end  
+
+
