@@ -188,7 +188,6 @@ quantile(res4.x)
 ##############################################################################
 using JuMP, Tulip
 
-
 h=10; k=2; tp = mw.mtprw(h, k, pctzero=0.1);
 # h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.1);
 
@@ -227,7 +226,7 @@ optimize!(model)
 
 ##############################################################################
 ##
-## Tulip
+## Tulip - this is the one to use
 ##
 ##############################################################################
 # issue: https://github.com/PSLmodels/taxdata/issues/381
@@ -235,6 +234,10 @@ optimize!(model)
 # https://github.com/PSLmodels/taxdata/blob/e014837b98f83258bfc425a89ba79c368890f801/puf_stage2/stage2.py
 # https://github.com/PSLmodels/taxdata/blob/e014837b98f83258bfc425a89ba79c368890f801/puf_stage2/dataprep.py
 # https://github.com/PSLmodels/taxdata/blob/e014837b98f83258bfc425a89ba79c368890f801/cps_stage2/solver.jl
+
+# r_val = array['r']
+# s_val = array['s']
+# z_val = (1. + r_val - s_val) * s006 * 100
 
 using JuMP, Tulip
 using Random, Distributions
@@ -252,6 +255,7 @@ end
 
 
 h=10; k=2; tp = mw.mtprw(h, k, pctzero=0.1);
+h=100; k=10; tp = mw.mtprw(h, k, pctzero=0.1);
 h=1_000; k=20; tp = mw.mtprw(h, k, pctzero=0.1);
 h=10_000; k=50; tp = mw.mtprw(h, k, pctzero=0.3);
 h=100_000; k=100; tp = mw.mtprw(h, k, pctzero=0.3);
@@ -277,8 +281,8 @@ set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 
 set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems to be enough
 # set_optimizer_attribute(model, "Threads", 12)  
 
-model = Model(HiGHS.Optimizer)
-set_attribute(model, "presolve", "on")
+# model = Model(HiGHS.Optimizer)
+# set_attribute(model, "presolve", "on")
 # set_attribute(model, "time_limit", 60.0)
 # set_attribute(model, "threads", 12)
 # set_optimizer_attribute(model, "solver", "ipm")  
@@ -286,9 +290,12 @@ set_attribute(model, "presolve", "on")
 
 
 # for both solvers....
-tol = 2.0
+tol = 10.0
 @variable(model, 0.0 <= r[1:N] <= tol) # djb r is the amount above 1 e.g., 1 + 0.40, goes with A1s
 @variable(model, 0.0 <= s[1:N] <= tol) # djb s is the amount below 1 e.g., 1 - 0.40, goes with A2s
+
+# @variable(model, 0.0 <= r[1:N])
+# @variable(model, 0.0 <= s[1:N]) 
 # @variable(model,  0.0 <= r[1:N] <= tol / 2.)
 # @variable(model,  0.0 <= s[1:N] <= tol / 2.)
 
@@ -305,7 +312,8 @@ tol = 2.0
 initval = vec(sum(As, dims=1))
 
 # compare these two!!!
-@constraint(model, initval .+ (As' * r) .- (As' * s) == bs);        
+# @constraint(model, initval .+ (As' * r) .- (As' * s) .== bs); # note .==
+@constraint(model, initval + (As' * r) - (As' * s) .== bs); # note .==; broadcasting not needed on LHS with equal size vectors
 # @constraint(model, [i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i])
 
 @constraint(model, (1.0 .+ r .- s) .>= 0.0);  
@@ -319,6 +327,11 @@ objective_value(model)
 # Did we satisfy constraints?
 r_vec = value.(r)
 s_vec = value.(s)
+
+bs
+initval .+ (As' * r_vec) .- (As' * s_vec)
+initval + (As' * r_vec) - (As' * s_vec) 
+
 
 x = 1.0 .+ r_vec .- s_vec  # note the .+
 quantile(x)
@@ -336,35 +349,6 @@ x
 res2.x
 
 cor(x, res2.x)
-
-##############################################################################
-##
-## Toy problem
-##
-##############################################################################
-
-# Instantiate JuMP model
-lp = Model(Tulip.Optimizer)
-
-# Create variables
-@variable(lp, x >= 0)
-@variable(lp, y >= 0)
-
-# Add constraints
-@constraint(lp, row1, x - y >= -2)
-@constraint(lp, row2, 2*x - y <= 4)
-@constraint(lp, row3, x + 2*y <= 7)
-
-# Set the objective
-@objective(lp, Min, -2*x - y)
-
-# Set some parameters
-set_optimizer_attribute(lp, "OutputLevel", 0)  # disable output
-set_optimizer_attribute(lp, "Presolve_Level", 0)     # disable presolve
-set_optimizer_attribute(lp, "OutputLevel", 1)  
-
-# Solve the problem
-optimize!(lp)
 
 ##############################################################################
 ##
@@ -417,3 +401,96 @@ res = optimize(f, g!, lower_bounds, upper_bounds, initial_x, Fminbox(inner_optim
 res = optimize(f, g!, initial_x, Fminbox(inner_optimizer))
 
 
+##############################################################################
+##
+## Test equivalency of expressions for JuMP Tulip
+##
+##############################################################################
+# @constraint(model, initval .+ (A' * r) .- (A' * s) == b);        
+# @constraint(model, [i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i])
+
+# sum(r[i] + s[i] for i in 1:N)
+# [i in 1:N], r[i] + s[i] <= tol
+# [i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i]
+
+[i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i]
+
+h=10
+k=2
+Random.seed!(3); rnums = .05 .* randn(k) .+ 1.0; r = randn(h); s = randn(k)
+
+tp = mw.mtprw(h, k)
+A = tp.xmat .* tp.wh
+b = tp.rwtargets_calc
+
+A' * r
+
+m, n = size(A)
+sum([[A[i, j]*r[i] for j in 1:n] for i in 1:m])
+
+using JuMP, GLPK
+
+n = 3
+# model = Model(GLPK.Optimizer)
+model = Model(Tulip.Optimizer)
+
+@variable(model, x[1:n])
+@variable(model, y[1:n])
+@constraint(model, con[i=1:n], x[i] + y[i] == 10)
+
+x_values = [3, 4, 5]  # Example values
+y_values = [7, 6, 5]  # These values are chosen so that x[i] + y[i] = 10 for all i
+
+x_values = [3., 4., 5.]  # Example values
+y_values = [7., 6., 5.]  
+
+for i in 1:n
+    set_value(x[i], x_values[i])
+    set_value(y[i], y_values[i])
+end
+
+model = Model()
+@variable(model, x)
+@constraint(model, con, x <= 5)
+
+x_value = 3
+set_value(con, x_value) # 3
+
+point = Dict(x => 1.9);
+primal_feasibility_report(model, point)
+
+@variable(model, 0.0 <= r[1:n])
+
+# chuslog approach
+b = [-18.0, -45.0] # correct
+b = [-18.0, -5.0] # incorrect -- but chusloj still says true
+b = [-8.0, -5.0] # incorrect
+
+b = [-18.0, -5.0] 
+A1 = [1.0 2.0 3.0;
+      4.  5. 6.]
+A2 = -A1
+N = 3
+r = [1., 2., 3.]; s = [4., 5., 6.]
+i = 2
+[i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i]
+
+# Dummy values
+N = 3
+b = [1.0, 2.0, 3.0]
+A1 = rand(3,3)
+A2 = rand(3,3)
+r = rand(3)
+s = rand(3)
+
+result1 = [sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) for i in 1:length(b)]
+result2 = A1 * r + A2 * s
+
+
+# my approach
+A = A1'
+(A' * r) .- (A' * s) == b # one element only true if all are true
+(A' * r) .- (A' * s) .== b  # two element bit vector
+
+# Rescale variables in the problem and their associated coefficients to make the magnitudes of all coefficients in the 1e-4 to 1e4 range. 
+# For example, that might mean rescaling a variable from measuring distance in centimeters to kilometers
