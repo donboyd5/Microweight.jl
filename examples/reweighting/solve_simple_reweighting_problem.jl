@@ -306,7 +306,9 @@ tol = 10.0
 # @variable(model,  s[1:N])
 # @objective(model, Min, sum(r[j] + s[j] for j in 1:N));  # djb would be clearer to use j as the index here
 
-@objective(model, Min, sum(r .+ s)); 
+# @objective(model, Min, sum(r .+ s)); 
+
+@objective(model, Min, sum(r + s)); 
 
 # Ax = b  - use the scaled matrices and vector; equality constraints
 initval = vec(sum(As, dims=1))
@@ -316,8 +318,12 @@ initval = vec(sum(As, dims=1))
 @constraint(model, initval + (As' * r) - (As' * s) .== bs); # note .==; broadcasting not needed on LHS with equal size vectors
 # @constraint(model, [i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i])
 
-@constraint(model, (1.0 .+ r .- s) .>= 0.0);  
-@constraint(model, (1.0 .+ r .- s) .<= tol);  
+@constraint(model, (1.0 .+ r .- s) .>= 0.0);  # must keepf broadcasting?
+@constraint(model, (1.0 .+ r .- s) .<= tol);  # must keepf broadcasting?
+
+# @constraint(model, (1.0 + r - s) .>= 0.0);  # get rid of broadcasting?
+# @constraint(model, (1.0 + r - s) .<= tol);  
+
 # print_constraints(model)
 optimize!(model);
 
@@ -328,9 +334,9 @@ objective_value(model)
 r_vec = value.(r)
 s_vec = value.(s)
 
-bs
-initval .+ (As' * r_vec) .- (As' * s_vec)
-initval + (As' * r_vec) - (As' * s_vec) 
+# bs
+# initval .+ (As' * r_vec) .- (As' * s_vec)
+# initval + (As' * r_vec) - (As' * s_vec) 
 
 
 x = 1.0 .+ r_vec .- s_vec  # note the .+
