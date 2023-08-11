@@ -59,6 +59,12 @@ k = 200 # number of characteristics each household has 4
 # the function mtp (make test problem) will create a random problem with these characteristics
 tp = mw.mtprw(h, k, pctzero=0.3);
 
+h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.3);
+h=1_000; k=6; tp = mw.mtprw(h, k, pctzero=0.3);
+h=10_000; k=20; tp = mw.mtprw(h, k, pctzero=0.3);
+h=100_000; k=50; tp = mw.mtprw(h, k, pctzero=0.3);
+h=300_000; k=100; tp = mw.mtprw(h, k, pctzero=0.3);
+
 h=100_000; k=27; tp = mw.mtprw(h, k, pctzero=0.7);
 
 fieldnames(typeof(tp))
@@ -71,6 +77,49 @@ end
 
 # LBFGS seems to be best when ratio error is most important, CCSAQ when target error is most important
 algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "LD_TNEWTON_RESTART", "LD_TNEWTON_PRECOND_RESTART", "LD_TNEWTON_PRECOND"]
+
+
+##############################################################################
+##
+## Compare results under alternative methods
+##
+##############################################################################
+
+res1 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+res2 = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # returns ones
+res3 = mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+res4 = mw.rwsolve(tp, approach=:minerr, method="LD_MMA", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01)
+res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01)
+
+# res 7 seems to hang up -- maybe scaling?
+res7= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # does not seem to work well
+
+# m = hcat(res1.x, res2.x, res3.x, res4.x)
+m = hcat(res1.x, res2.x, res3.x, res4.x, res5.x, res6.x)
+m
+cor(m)
+
+qpdiffs(res1.x)
+qpdiffs(res2.x)
+qpdiffs(res3.x)
+qpdiffs(res4.x)
+qpdiffs(res5.x)
+qpdiffs(res6.x)
+
+quantile(res1.x)
+quantile(res2.x)
+quantile(res3.x)
+quantile(res4.x)
+quantile(res5.x)
+quantile(res6.x)
+
+##############################################################################
+##
+## Misc playing around
+##
+##############################################################################
+
 
 # run through different methods and with different parameters
 res= mw.rwsolve(tp, approach=:minerr, print_interval=1);
@@ -157,42 +206,12 @@ res3 = mw.rwsolve(tp, approach=:constrain, method="tulip")
 quantile(res3.x)
 qpdiffs(res3.x)
 
-
-##############################################################################
-##
-## Compare results under alternative methods
-##
-##############################################################################
-
-res1= mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res2= mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res3= mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res4= mw.rwsolve(tp, approach=:minerr, method="LD_MMA", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01)
-# res6= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # does not seem to work well
-
-# m = hcat(res1.x, res2.x, res3.x, res4.x)
-m = hcat(res1.x, res2.x, res3.x, res4.x, res5.x)
-m
-cor(m)
-
-qpdiffs(res1.x)
-qpdiffs(res2.x)
-qpdiffs(res3.x)
-qpdiffs(res4.x)
-qpdiffs(res5.x)
-
-quantile(res1.x)
-quantile(res2.x)
-quantile(res3.x)
-quantile(res4.x)
-# qpdiffs(res5.x)
-
 ##############################################################################
 ##
 ## Tulip my original, with variants
 ##
 ##############################################################################
+
 using JuMP, Tulip
 
 h=10; k=2; tp = mw.mtprw(h, k, pctzero=0.1);
