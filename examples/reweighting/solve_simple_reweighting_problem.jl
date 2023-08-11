@@ -35,29 +35,8 @@ using Statistics
 ## create a small test problem using built-in information
 
 # small for initial compilation
-h = 10  # number of households 100
-k = 2 # number of characteristics each household has 4
-
-h = 100  # number of households 100
-k = 4 # number of characteristics each household has 4
-
-h = 1000  # number of households 100
-k = 6 # number of characteristics each household has 4
-
-h = 10000  # number of households 100
-k = 20 # number of characteristics each household has 4
-
-h = 100_000  # number of households 100
-k = 50 # number of characteristics each household has 4
-
-h = 300_000  # number of households 100
-k = 100 # number of characteristics each household has 4
-
-h = 500_000  # number of households 100
-k = 200 # number of characteristics each household has 4
-
-# the function mtp (make test problem) will create a random problem with these characteristics
-tp = mw.mtprw(h, k, pctzero=0.3);
+# h number of households
+# k number of characteristics each household has
 
 h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.3);
 h=1_000; k=6; tp = mw.mtprw(h, k, pctzero=0.3);
