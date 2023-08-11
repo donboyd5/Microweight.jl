@@ -151,6 +151,13 @@ qpdiffs(res3.x)
 
 mw.rwsolve(tp, approach=:something)
 
+res3 = mw.rwsolve(tp, approach=:constrain)
+
+res3 = mw.rwsolve(tp, approach=:constrain, method="tulip")
+quantile(res3.x)
+qpdiffs(res3.x)
+
+
 ##############################################################################
 ##
 ## Compare results under alternative methods
@@ -267,19 +274,32 @@ rnums = .05 .* randn(k) .+ 1.0
 b = tp.rwtargets_calc .* rnums
 # b = tp.rwtargets
 
+ctol = .01
+lower = b .- ctol * abs.(b)
+upper = b .+ ctol * abs.(b)
+
 N = size(A)[1]
 scale = vec((N / 1000.) ./ sum(abs.(A), dims=1))
 # scale = 1.0
 
 As = A .* scale'
 bs = b .* scale
+lowers = lower .* scale
+uppers = upper .* scale
+
 
 # tol = 10.0
 
+##############################################################################
+##
+## the taxdata approach
+##
+##############################################################################
 model = Model(Tulip.Optimizer)
 set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
 set_optimizer_attribute(model, "IPM_IterationsLimit", 100)  # default 100 seems to be enough
-# set_optimizer_attribute(model, "Threads", 12)  
+# set_optimizer_attribute(model, "Threads", 1)  
+# set_optimizer_attribute(model, "Threads", 24)  
 
 # model = Model(HiGHS.Optimizer)
 # set_attribute(model, "presolve", "on")
@@ -315,11 +335,16 @@ initval = vec(sum(As, dims=1))
 
 # compare these two!!!
 # @constraint(model, initval .+ (As' * r) .- (As' * s) .== bs); # note .==
-@constraint(model, initval + (As' * r) - (As' * s) .== bs); # note .==; broadcasting not needed on LHS with equal size vectors
+# @constraint(model, initval + (As' * r) - (As' * s) .== bs); # note .==; broadcasting not needed on LHS with equal size vectors
+
+
+@constraint(model, lowers .<= initval + (As' * r) - (As' * s) .<= uppers); #
 # @constraint(model, [i in 1:length(b)], sum(A1[i,j] * r[j] + A2[i,j] * s[j] for j in 1:N) == b[i])
 
-@constraint(model, (1.0 .+ r .- s) .>= 0.0);  # must keepf broadcasting?
-@constraint(model, (1.0 .+ r .- s) .<= tol);  # must keepf broadcasting?
+
+@constraint(model, 0.0 .<= (1.0 .+ r .- s) .<= tol); # all dots needed for broadcasting
+# @constraint(model, (1.0 .+ r .- s) .>= 0.0);  # must keepf broadcasting?
+# @constraint(model, (1.0 .+ r .- s) .<= tol);  # must keepf broadcasting?
 
 # @constraint(model, (1.0 + r - s) .>= 0.0);  # get rid of broadcasting?
 # @constraint(model, (1.0 + r - s) .<= tol);  
@@ -327,8 +352,10 @@ initval = vec(sum(As, dims=1))
 # print_constraints(model)
 optimize!(model);
 
-termination_status(model)
+# termination_status(model)
 objective_value(model)
+simplex_iterations(model)
+barrier_iterations(model)
 
 # Did we satisfy constraints?
 r_vec = value.(r)
@@ -338,10 +365,12 @@ s_vec = value.(s)
 # initval .+ (As' * r_vec) .- (As' * s_vec)
 # initval + (As' * r_vec) - (As' * s_vec) 
 
-
-x = 1.0 .+ r_vec .- s_vec  # note the .+
+# x = 1.0 .+ r_vec .- s_vec  # note the .+
+x = 1.0 .+ (r_vec - s_vec) # note the .+ this works too - must broadcast when adding 1.0
 quantile(x)
 b_calc = A' * x
+lower
+upper
 b
 check = vec(b_calc) ./ b
 
@@ -351,10 +380,7 @@ quantile!(check, q)
 # Are the ratios of new weights to old weights in bounds (within tolerances)?
 quantile!(x, q)
 
-x
-res2.x
 
-cor(x, res2.x)
 
 ##############################################################################
 ##

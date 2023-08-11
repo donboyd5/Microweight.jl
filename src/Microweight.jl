@@ -81,6 +81,7 @@ using LeastSquaresOptim, LsqFit, MINPACK, NLsolve, Optim
 using Optimization, OptimizationNLopt, OptimizationOptimisers, OptimizationOptimJL
 using NLPModels, NLPModelsIpopt, SparseArrays
 using SPGBox
+using JuMP, Tulip
 # using OptimizationMOI, Ipopt
 # using Mads  # haven't figured out how to make it work well
 # import Pkg; Pkg.precompile()

@@ -249,7 +249,12 @@ function rwsolve(prob;
             result.success = opt.status
             result.iterations = opt.iter
         elseif method == "tulip"
-            return "ERROR: tulip not yet implemented"
+            print_prob()
+            opt = rwmconstrain_tulip(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters)
+            result.objval = opt.objval
+            result.x = opt.x
+            result.iterations = opt.iterations
+            return opt
         else
             return "unknown method"
         end
