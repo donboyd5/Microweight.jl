@@ -221,7 +221,7 @@ function rwsolve(prob;
             result.x =opt.u 
         elseif method=="spg"
             print_prob()
-            opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
+            opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop, scaling=scaling)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # (:x, :f, :gnorm, :nit, :nfeval, :ierr, :return_from_callback)

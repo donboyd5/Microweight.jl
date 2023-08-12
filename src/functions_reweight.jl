@@ -28,16 +28,15 @@ function rwscaleAb(A, b)
 end
 
 
-
 function rwscale(wh, xmat, rwtargets)
-  # scale xmat so that mean value is 1.0, and scale rwtargets accordingly
-  scale = vec(sum(abs.(xmat), dims=1)) ./ size(xmat)[1] 
-  # scale = fill(1., k) # unscaled
-  xmat = xmat ./ scale' 
-  rwtargets = rwtargets ./ scale
-  # mean(abs.(xmat), dims=1)
+  println("scaling!")
+  maxcoeff = vec(maximum(abs.(xmat .* wh), dims=1)) # largest coefficient in each column
+  scale = 1e0 ./ maxcoeff
+  xmat = xmat .* scale'
+  rwtargets = rwtargets .* scale
   return xmat, rwtargets
 end
+
 
 function rwscale_old(xmat, rwtargets)
   # scale xmat so that mean value is 1.0, and scale rwtargets accordingly
@@ -103,6 +102,34 @@ end
 # %% minimum error solve functions
 
 function rwminerr_spg(wh, xmat, rwtargets;
+  ratio0=ones(length(wh)),
+  method="spg",
+  lb=0.1,
+  ub=10.0,
+  rweight=0.5,
+  maxiters=1000,
+  targstop=.01,
+  scaling=false)
+
+  # short term approach to scaling: 
+  if scaling
+    xmat, rwtargets = rwscale(wh, xmat, rwtargets)
+  end
+
+  f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop) # note it is targstop2
+
+  lower = fill(lb, length(ratio0)) # can't use scalar
+  upper = fill(ub, length(ratio0))
+
+  x = ratio0  
+  # println("targstop: $targstop")
+
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg)
+  return opt
+end
+
+
+function rwminerr_spg_save(wh, xmat, rwtargets;
   ratio0=ones(length(wh)),
   method="spg",
   lb=0.1,
