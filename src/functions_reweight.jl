@@ -12,7 +12,24 @@
 
 # %% utility functions
 
-function rwscale(xmat, rwtargets)
+function rwscaleAb(A, b)
+  # my A has m=# vars, n=#constraints (transpose of the usual A)
+  # try to scale A so that largest coefficient (in absolute value) of each COLUMN is about 1
+  # or perhaps have them in 1e-4, 1e4
+  # scale b accordingly
+
+  println("scaling!")
+  maxcoeff = vec(maximum(abs.(A), dims=1)) # largest coefficient in each column
+  scale = 1e0 ./ maxcoeff
+  A = A .* scale'
+  b = b .* scale
+
+  return A, b
+end
+
+
+
+function rwscale(wh, xmat, rwtargets)
   # scale xmat so that mean value is 1.0, and scale rwtargets accordingly
   scale = vec(sum(abs.(xmat), dims=1)) ./ size(xmat)[1] 
   # scale = fill(1., k) # unscaled
@@ -21,6 +38,19 @@ function rwscale(xmat, rwtargets)
   # mean(abs.(xmat), dims=1)
   return xmat, rwtargets
 end
+
+function rwscale_old(xmat, rwtargets)
+  # scale xmat so that mean value is 1.0, and scale rwtargets accordingly
+  scale = vec(sum(abs.(xmat), dims=1)) ./ size(xmat)[1] 
+  # scale = fill(1., k) # unscaled
+  xmat = xmat ./ scale' 
+  rwtargets = rwtargets ./ scale
+  # mean(abs.(xmat), dims=1)
+  return xmat, rwtargets
+end
+
+
+
 
 # %% opt functions
 
@@ -222,7 +252,54 @@ function rwmconstrain_ipopt(wh, xmat, rwtargets;
 end
 
 
+
 function rwmconstrain_tulip(wh, xmat, rwtargets;
+  lb=0.1,
+  ub=10.0,
+  constol=0.01,
+  scaling=false,
+  maxiters=100)
+
+  N = length(wh)
+  A = xmat .* wh
+  initval = vec(sum(A, dims=1))
+  b = rwtargets .- initval
+
+  if scaling
+    A, b = rwscaleAb(A, b)
+  end
+
+  lcon = b .- abs.(b)*constol
+  ucon = b .+ abs.(b)*constol
+
+  model = Model(Tulip.Optimizer)
+  set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
+  set_optimizer_attribute(model, "IPM_IterationsLimit", maxiters)  # default 100 seems to be enough
+
+  # we split the amount by which x is above or below 1 into two parts, r and s
+  # this allows us to minimize the sum of the absolute values of the differences in ratios from 1
+  @variable(model, 0.0 <= r[1:N] <= lb + ub) # r is the part of the ration that is above 1 e.g., 1 + 0.40
+  @variable(model, 0.0 <= s[1:N] <= lb + ub) # s is the part below 1
+
+  @objective(model, Min, sum(r + s)); 
+
+  # constraints
+  # initval = vec(sum(A, dims=1))
+  @constraint(model, lcon .<= (A' * r) - (A' * s) .<= ucon); 
+  @constraint(model, lb .<= 1.0 .+ (r - s) .<= ub); # all dots needed for broadcasting
+
+  JuMP.optimize!(model);
+
+  objval = objective_value(model)
+  iterations = barrier_iterations(model)
+  x = 1.0 .+ (JuMP.value.(r) - JuMP.value.(s)) 
+  
+  opt = (objval=objval, iterations=iterations, x=x)
+
+  return opt
+end
+
+function rwmconstrain_tulip_save(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
   constol=0.01,
@@ -241,10 +318,10 @@ function rwmconstrain_tulip(wh, xmat, rwtargets;
   # scale = vec((N / 1000.) ./ sum(abs.(A), dims=1))
   scale = 1.0  # for no scaling
 
-  As = A .* scale'
-  bs = rwtargets .* scale
-  lcons = lcon .* scale
-  ucons = ucon .* scale
+  A = A .* scale'
+  b = rwtargets .* scale
+  lcon = lcon .* scale
+  ucon = ucon .* scale
 
   model = Model(Tulip.Optimizer)
   set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
@@ -258,8 +335,8 @@ function rwmconstrain_tulip(wh, xmat, rwtargets;
   @objective(model, Min, sum(r + s)); 
 
   # constraints
-  initval = vec(sum(As, dims=1))
-  @constraint(model, lcons .<= initval + (As' * r) - (As' * s) .<= ucons); 
+  initval = vec(sum(A, dims=1))
+  @constraint(model, lcon .<= initval + (A' * r) - (A' * s) .<= ucon); 
   @constraint(model, lb .<= 1.0 .+ (r - s) .<= ub); # all dots needed for broadcasting
 
   JuMP.optimize!(model);
@@ -274,3 +351,50 @@ function rwmconstrain_tulip(wh, xmat, rwtargets;
   return opt
 end
 
+function rwmconstrain_tulip_experiment(wh, xmat, rwtargets;
+  lb=0.1,
+  ub=10.0,
+  constol=0.01,
+  scaling=false,
+  maxiters=100)
+
+  lvar = fill(lb, length(wh))
+  uvar = fill(ub, length(wh))
+
+  # unscaled problem
+  A = (xmat .* wh)'
+  lcon = (rwtargets .- abs.(rwtargets)*constol)'
+  ucon = (rwtargets .+ abs.(rwtargets)*constol)'
+
+  # scale the problem
+  N = size(A)[2]
+  # scale = vec((N / 1000.) ./ sum(abs.(A), dims=1))
+  scale = 1.0  # for no scaling
+
+  model = Model(Tulip.Optimizer)
+  set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
+  set_optimizer_attribute(model, "IPM_IterationsLimit", maxiters)  # default 100 seems to be enough
+
+  # we split the amount by which x is above or below 1 into two parts, r and s
+  # this allows us to minimize the sum of the absolute values of the differences in ratios from 1
+  @variable(model, 0.0 <= r[1:N] <= lb + ub) # r is the part of the ration that is above 1 e.g., 1 + 0.40
+  @variable(model, 0.0 <= s[1:N] <= lb + ub) # s is the part below 1
+
+  @objective(model, Min, sum(r + s)); 
+
+  # constraints
+  initval = vec(sum(A, dims=1))
+  @constraint(model, lcon .<= initval + (A * r) - (A * s) .<= ucon); 
+  @constraint(model, lb .<= 1.0 .+ (r - s) .<= ub); # all dots needed for broadcasting
+
+  JuMP.optimize!(model);
+
+  objval = objective_value(model)
+  iterations = barrier_iterations(model)
+  x = 1.0 .+ (JuMP.value.(r) - JuMP.value.(s)) 
+  
+  # return a named tuple (??)
+  opt = (objval=objval, iterations=iterations, x=x)
+
+  return opt
+end

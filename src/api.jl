@@ -250,7 +250,7 @@ function rwsolve(prob;
             result.iterations = opt.iter
         elseif method == "tulip"
             print_prob()
-            opt = rwmconstrain_tulip(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters)
+            opt = rwmconstrain_tulip(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, scaling=scaling)
             result.objval = opt.objval
             result.x = opt.x
             result.iterations = opt.iterations

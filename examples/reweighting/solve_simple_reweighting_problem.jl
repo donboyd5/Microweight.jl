@@ -38,6 +38,7 @@ using Statistics
 # h number of households
 # k number of characteristics each household has
 
+h=10; k=2; tp = mw.mtprw(h, k, pctzero=0.3);
 h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.3);
 h=1_000; k=6; tp = mw.mtprw(h, k, pctzero=0.3);
 h=10_000; k=20; tp = mw.mtprw(h, k, pctzero=0.3);
@@ -69,7 +70,8 @@ res2 = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweig
 res3 = mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
 res4 = mw.rwsolve(tp, approach=:minerr, method="LD_MMA", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
 res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01)
-res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01)
+res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=false)
+res6a = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=true)
 
 # res 7 seems to hang up -- maybe scaling?
 res7= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # does not seem to work well
