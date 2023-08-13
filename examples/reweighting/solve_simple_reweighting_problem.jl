@@ -84,8 +84,10 @@ cor(res5.x, res5a.x)
 res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=false)
 res6a = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=true)
 
-# res 7 seems to hang up -- maybe scaling?
-res7= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # does not seem to work well
+# res 7 seems to hang up even with scaling; investigate solver options
+res7 = mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=200, print_interval=10, targstop=0.01, scaling=false);
+res7a = mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=200, print_interval=1, targstop=0.01, scaling=true);
+qpdiffs(res7.x)
 
 # m = hcat(res1.x, res2.x, res3.x, res4.x)
 m = hcat(res1.x, res2.x, res3.x, res4.x, res5.x, res6.x)

@@ -212,7 +212,7 @@ function rwsolve(prob;
         elseif method in optim_algorithms
             print_prob()
             println("\nBeginning solve...")
-            opt = rwminerr_optim(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
+            opt = rwminerr_optim(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop, scaling=scaling)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :sspd, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
