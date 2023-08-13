@@ -157,9 +157,9 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
   rweight=0.5,
+  targstop=.01,
   scaling=false,
-  maxiters=1000,
-  targstop=.01)
+  maxiters=1000)
 
   # convert the string nloptfname into a proper symbol
   # NLOPT algorithms that (1) find local optima (L), (2) use derivatives (D) -- i.e., LD -- and
@@ -183,9 +183,9 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
    fsym = Symbol(method)
    algorithm = Expr(:call, fsym) # a proper symbol for the function name
 
-   if scaling 
-     xmat, rwtargets = rwscale(xmat, rwtargets)
-   end
+  if scaling
+    xmat, rwtargets = rwscale(wh, xmat, rwtargets)
+  end
 
    fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop)
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
