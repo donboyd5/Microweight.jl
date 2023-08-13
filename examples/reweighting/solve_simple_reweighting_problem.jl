@@ -35,30 +35,10 @@ using Statistics
 ## create a small test problem using built-in information
 
 # small for initial compilation
-h = 10  # number of households 100
-k = 2 # number of characteristics each household has 4
+# h number of households
+# k number of characteristics each household has
 
-h = 100  # number of households 100
-k = 4 # number of characteristics each household has 4
-
-h = 1000  # number of households 100
-k = 6 # number of characteristics each household has 4
-
-h = 10000  # number of households 100
-k = 20 # number of characteristics each household has 4
-
-h = 100_000  # number of households 100
-k = 50 # number of characteristics each household has 4
-
-h = 300_000  # number of households 100
-k = 100 # number of characteristics each household has 4
-
-h = 500_000  # number of households 100
-k = 200 # number of characteristics each household has 4
-
-# the function mtp (make test problem) will create a random problem with these characteristics
-tp = mw.mtprw(h, k, pctzero=0.3);
-
+h=10; k=2; tp = mw.mtprw(h, k, pctzero=0.3);
 h=100; k=4; tp = mw.mtprw(h, k, pctzero=0.3);
 h=1_000; k=6; tp = mw.mtprw(h, k, pctzero=0.3);
 h=10_000; k=20; tp = mw.mtprw(h, k, pctzero=0.3);
@@ -85,15 +65,33 @@ algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "L
 ##
 ##############################################################################
 
-res1 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res2 = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # returns ones
-res3 = mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res4 = mw.rwsolve(tp, approach=:minerr, method="LD_MMA", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01)
-res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01)
+res1 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=false);
+res1a = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=true);
+quantile(res1a.x)
+qpdiffs(res1a.x)
 
-# res 7 seems to hang up -- maybe scaling?
-res7= mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # does not seem to work well
+res2 = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=false); # returns ones
+res2a = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=true);
+cor(res2.x, res2a.x) # returns ones
+
+res3 = mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=false);
+res3a = mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=true);
+
+res4 = mw.rwsolve(tp, approach=:minerr, method="LD_MMA", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
+
+res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01, scaling=false)
+res5a = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01, scaling=true)
+cor(res5.x, res5a.x)
+
+res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=false)
+res6a = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=true)
+quantile(res6a.x)
+qpdiffs(res6a.x)
+
+# res 7 seems to hang up even with scaling; investigate solver options
+res7 = mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=200, print_interval=10, targstop=0.01, scaling=false);
+res7a = mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=200, print_interval=1, targstop=0.01, scaling=true);
+qpdiffs(res7a.x)
 
 # m = hcat(res1.x, res2.x, res3.x, res4.x)
 m = hcat(res1.x, res2.x, res3.x, res4.x, res5.x, res6.x)

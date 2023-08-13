@@ -12,7 +12,33 @@
 
 # %% utility functions
 
-function rwscale(xmat, rwtargets)
+function rwscaleAb(A, b)
+  # my A has m=# vars, n=#constraints (transpose of the usual A)
+  # try to scale A so that largest coefficient (in absolute value) of each COLUMN is about 1
+  # or perhaps have them in 1e-4, 1e4
+  # scale b accordingly
+
+  println("scaling!")
+  maxcoeff = vec(maximum(abs.(A), dims=1)) # largest coefficient in each column
+  scale = 1e0 ./ maxcoeff
+  A = A .* scale'
+  b = b .* scale
+
+  return A, b
+end
+
+
+function rwscale(wh, xmat, rwtargets)
+  println("scaling!")
+  maxcoeff = vec(maximum(abs.(xmat .* wh), dims=1)) # largest coefficient in each column
+  scale = 1e0 ./ maxcoeff
+  xmat = xmat .* scale'
+  rwtargets = rwtargets .* scale
+  return xmat, rwtargets
+end
+
+
+function rwscale_old(xmat, rwtargets)
   # scale xmat so that mean value is 1.0, and scale rwtargets accordingly
   scale = vec(sum(abs.(xmat), dims=1)) ./ size(xmat)[1] 
   # scale = fill(1., k) # unscaled
@@ -21,6 +47,9 @@ function rwscale(xmat, rwtargets)
   # mean(abs.(xmat), dims=1)
   return xmat, rwtargets
 end
+
+
+
 
 # %% opt functions
 
@@ -79,6 +108,34 @@ function rwminerr_spg(wh, xmat, rwtargets;
   ub=10.0,
   rweight=0.5,
   maxiters=1000,
+  targstop=.01,
+  scaling=false)
+
+  # short term approach to scaling: 
+  if scaling
+    xmat, rwtargets = rwscale(wh, xmat, rwtargets)
+  end
+
+  f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop) # note it is targstop2
+
+  lower = fill(lb, length(ratio0)) # can't use scalar
+  upper = fill(ub, length(ratio0))
+
+  x = ratio0  
+  # println("targstop: $targstop")
+
+  opt = spgbox(f, (g,x) -> ReverseDiff.gradient!(g,f,x), x, lower=lower, upper=upper, eps=1e-16, nitmax=10000, nfevalmax=20000, m=10, iprint=0, callback=cb_spg)
+  return opt
+end
+
+
+function rwminerr_spg_save(wh, xmat, rwtargets;
+  ratio0=ones(length(wh)),
+  method="spg",
+  lb=0.1,
+  ub=10.0,
+  rweight=0.5,
+  maxiters=1000,
   targstop=.01)
 
   f = (ratio) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop) # note it is targstop2
@@ -100,9 +157,9 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
   rweight=0.5,
+  targstop=.01,
   scaling=false,
-  maxiters=1000,
-  targstop=.01)
+  maxiters=1000)
 
   # convert the string nloptfname into a proper symbol
   # NLOPT algorithms that (1) find local optima (L), (2) use derivatives (D) -- i.e., LD -- and
@@ -126,9 +183,9 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
    fsym = Symbol(method)
    algorithm = Expr(:call, fsym) # a proper symbol for the function name
 
-   if scaling 
-     xmat, rwtargets = rwscale(xmat, rwtargets)
-   end
+  if scaling
+    xmat, rwtargets = rwscale(wh, xmat, rwtargets)
+  end
 
    fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop)
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
@@ -156,9 +213,9 @@ function rwminerr_optim(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
   rweight=0.5,
+  targstop=.01,
   scaling=false,
-  maxiters=1000,
-  targstop=.01)
+  maxiters=1000)
 
   # convert the string method into a proper symbol
   # allowable_algorithms = ["LBFGS", "KrylovTrustRegion"]
@@ -174,9 +231,9 @@ function rwminerr_optim(wh, xmat, rwtargets;
    fsym = Symbol(method)
    algorithm = Expr(:call, fsym) # a proper symbol for the function name
 
-   if scaling 
-     xmat, rwtargets = rwscale(xmat, rwtargets)
-   end
+  if scaling
+    xmat, rwtargets = rwscale(wh, xmat, rwtargets)
+  end
 
    fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop)
    fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
@@ -194,9 +251,13 @@ function rwmconstrain_ipopt(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
   constol=0.01,
-  scaling=false,
   targstop=nothing,
+  scaling=false,
   maxiters=1000)
+
+  if scaling
+    xmat, rwtargets = rwscale(wh, xmat, rwtargets)
+  end
 
   lvar = fill(lb, length(wh))
   uvar = fill(ub, length(wh))
@@ -222,6 +283,7 @@ function rwmconstrain_ipopt(wh, xmat, rwtargets;
 end
 
 
+
 function rwmconstrain_tulip(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
@@ -229,22 +291,17 @@ function rwmconstrain_tulip(wh, xmat, rwtargets;
   scaling=false,
   maxiters=100)
 
-  lvar = fill(lb, length(wh))
-  uvar = fill(ub, length(wh))
-
+  N = length(wh)
   A = xmat .* wh
+  initval = vec(sum(A, dims=1))
+  b = rwtargets .- initval
 
-  lcon = rwtargets .- abs.(rwtargets)*constol
-  ucon = rwtargets .+ abs.(rwtargets)*constol
-  
-  N = size(A)[1]
-  # scale = vec((N / 1000.) ./ sum(abs.(A), dims=1))
-  scale = 1.0  # for no scaling
+  if scaling
+    A, b = rwscaleAb(A, b)
+  end
 
-  As = A .* scale'
-  bs = rwtargets .* scale
-  lcons = lcon .* scale
-  ucons = ucon .* scale
+  lcon = b .- abs.(b)*constol
+  ucon = b .+ abs.(b)*constol
 
   model = Model(Tulip.Optimizer)
   set_optimizer_attribute(model, "OutputLevel", 1)  # 0=disable output (default), 1=show iterations
@@ -258,8 +315,8 @@ function rwmconstrain_tulip(wh, xmat, rwtargets;
   @objective(model, Min, sum(r + s)); 
 
   # constraints
-  initval = vec(sum(As, dims=1))
-  @constraint(model, lcons .<= initval + (As' * r) - (As' * s) .<= ucons); 
+  # initval = vec(sum(A, dims=1))
+  @constraint(model, lcon .<= (A' * r) - (A' * s) .<= ucon); 
   @constraint(model, lb .<= 1.0 .+ (r - s) .<= ub); # all dots needed for broadcasting
 
   JuMP.optimize!(model);
@@ -268,9 +325,7 @@ function rwmconstrain_tulip(wh, xmat, rwtargets;
   iterations = barrier_iterations(model)
   x = 1.0 .+ (JuMP.value.(r) - JuMP.value.(s)) 
   
-  # return a named tuple (??)
   opt = (objval=objval, iterations=iterations, x=x)
 
   return opt
 end
-

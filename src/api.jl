@@ -202,7 +202,7 @@ function rwsolve(prob;
         if method in nlopt_algorithms
             print_prob()
             println("\nBeginning solve...")
-            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop, scaling=scaling)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :sspd, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
@@ -212,7 +212,7 @@ function rwsolve(prob;
         elseif method in optim_algorithms
             print_prob()
             println("\nBeginning solve...")
-            opt = rwminerr_optim(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
+            opt = rwminerr_optim(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop, scaling=scaling)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :sspd, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
@@ -221,7 +221,7 @@ function rwsolve(prob;
             result.x =opt.u 
         elseif method=="spg"
             print_prob()
-            opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop)
+            opt = rwminerr_spg(prob.wh, prob.xmat, prob.rwtargets, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop, scaling=scaling)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # (:x, :f, :gnorm, :nit, :nfeval, :ierr, :return_from_callback)
@@ -238,7 +238,7 @@ function rwsolve(prob;
         # tulip here
         if method == "ipopt"
             print_prob()
-            opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop)
+            opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop, scaling=scaling)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # status_reliable, :status, :solution_reliable, :solution, :objective_reliable, :objective, :dual_residual_reliable, :dual_feas, :primal_residual_reliable, 
@@ -250,7 +250,7 @@ function rwsolve(prob;
             result.iterations = opt.iter
         elseif method == "tulip"
             print_prob()
-            opt = rwmconstrain_tulip(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters)
+            opt = rwmconstrain_tulip(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, scaling=scaling)
             result.objval = opt.objval
             result.x = opt.x
             result.iterations = opt.iterations
