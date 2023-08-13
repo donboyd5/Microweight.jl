@@ -251,9 +251,13 @@ function rwmconstrain_ipopt(wh, xmat, rwtargets;
   lb=0.1,
   ub=10.0,
   constol=0.01,
-  scaling=false,
   targstop=nothing,
+  scaling=false,
   maxiters=1000)
+
+  if scaling
+    xmat, rwtargets = rwscale(wh, xmat, rwtargets)
+  end
 
   lvar = fill(lb, length(wh))
   uvar = fill(ub, length(wh))

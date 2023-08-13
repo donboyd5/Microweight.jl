@@ -238,7 +238,7 @@ function rwsolve(prob;
         # tulip here
         if method == "ipopt"
             print_prob()
-            opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop)
+            opt = rwmconstrain_ipopt(prob.wh, prob.xmat, prob.rwtargets; lb=lb, ub=ub, constol=constol, maxiters=maxiters, targstop=targstop, scaling=scaling)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # status_reliable, :status, :solution_reliable, :solution, :objective_reliable, :objective, :dual_residual_reliable, :dual_feas, :primal_residual_reliable, 

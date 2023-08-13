@@ -71,7 +71,11 @@ res1a = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1
 res2 = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01); # returns ones
 res3 = mw.rwsolve(tp, approach=:minerr, method="LD_LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
 res4 = mw.rwsolve(tp, approach=:minerr, method="LD_MMA", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01);
-res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01)
+
+res5 = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01, scaling=false)
+res5a = mw.rwsolve(tp, approach=:constrain, method="ipopt", lb=.1, ub=10.0, constol=.01, scaling=true)
+cor(res5.x, res5a.x)
+
 res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=false)
 res6a = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=true)
 
