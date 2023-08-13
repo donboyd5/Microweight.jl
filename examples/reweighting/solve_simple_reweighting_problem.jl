@@ -67,6 +67,8 @@ algs = ["LD_CCSAQ", "LD_LBFGS", "LD_MMA", "LD_VAR1", "LD_VAR2", "LD_TNEWTON", "L
 
 res1 = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=false);
 res1a = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=true);
+quantile(res1a.x)
+qpdiffs(res1a.x)
 
 res2 = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=false); # returns ones
 res2a = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=true);
@@ -83,6 +85,8 @@ cor(res5.x, res5a.x)
 
 res6 = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=false)
 res6a = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, constol=.01, scaling=true)
+quantile(res6a.x)
+qpdiffs(res6a.x)
 
 # res 7 seems to hang up even with scaling; investigate solver options
 res7 = mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=200, print_interval=10, targstop=0.01, scaling=false);
