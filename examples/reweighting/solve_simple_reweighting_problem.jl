@@ -88,7 +88,7 @@ res6a = mw.rwsolve(tp, approach=:constrain, method="tulip", lb=.1, ub=10.0, cons
 quantile(res6a.x)
 qpdiffs(res6a.x)
 
-# res 7 seems to hang up even with scaling; investigate solver options
+# res 7 seems to hang up even with scaling; investigate solver options - NOTHING MADE SIGNIFICANT IMPROVEMENT
 res7 = mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=200, print_interval=10, targstop=0.01, scaling=false);
 res7a = mw.rwsolve(tp, approach=:minerr, method="LBFGS", lb=.1, ub=10.0, rweight=1e-6, maxiters=200, print_interval=1, targstop=0.01, scaling=true);
 qpdiffs(res7a.x)
