@@ -215,7 +215,7 @@ function rwminerr_optim(wh, xmat, rwtargets;
   rweight=0.5,
   targstop=.01,
   scaling=false,
-  maxiters=1000)
+  maxiters=200)
 
   # convert the string method into a proper symbol
   # allowable_algorithms = ["LBFGS", "KrylovTrustRegion"]
@@ -235,12 +235,18 @@ function rwminerr_optim(wh, xmat, rwtargets;
     xmat, rwtargets = rwscale(wh, xmat, rwtargets)
   end
 
-   fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop)
-   fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
-   fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
+  fp = (ratio, p) -> objfn_reweight(ratio, wh, xmat, rwtargets, rweight=rweight, method=method, targstop2=targstop)
+  # defaults: m=10, alphaguess = LineSearches.InitialStatic(), linesearch = LineSearches.HagerZhang()
+  # algo_hz = Newton(alphaguess = InitialHagerZhang(α0=1.0), linesearch = HagerZhang())
+  fpof = Optimization.OptimizationFunction{true}(fp, Optimization.AutoZygote())
+  fprob = Optimization.OptimizationProblem(fpof, ratio0, lb=lb, ub=ub) # rerun this line when ratio0 changes
 
-  opt = Optimization.solve(fprob, Optim.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
-  # opt = Optimization.solve(fprob, Fminbox(Optim.KrylovTrustRegion()), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
+  # alphaguess = InitialHagerZhang(α0=1.0) slightly better max
+  # linesearch = LineSearches.StrongWolfe(), MoreThuente fast + BAD;  Static BackTracking bad
+  # opt = Optimization.solve(fprob, Optim.LBFGS(m=10, alphaguess = InitialQuadratic(), linesearch = LineSearches.HagerZhang()),
+  #  maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
+  opt = Optimization.solve(fprob, Optim.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # BASE CASE
+  # opt = Optimization.solve(fprob, Fminbox(Optim.KrylovTrustRegion()), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr)
 
   return opt
 end
