@@ -1,4 +1,5 @@
 using Revise
+include("src/Microweight.jl")
 import Microweight as mw  # Revise doesn't work for changes to type definitions
 using Statistics
 # using LineSearches
