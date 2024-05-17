@@ -1,5 +1,10 @@
+# from the Microweight folder, in bash:
+#    julia --project=.
+
+original_dir = pwd()
+
 using Revise
-include("src/Microweight.jl")
+include(joinpath(@__DIR__, "..", "..", "src", "Microweight.jl"))
 import Microweight as mw  # Revise doesn't work for changes to type definitions
 using Statistics
 # using LineSearches
