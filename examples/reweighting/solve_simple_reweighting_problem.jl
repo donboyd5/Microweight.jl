@@ -2,10 +2,11 @@
 #    julia --project=.
 
 original_dir = pwd()
-
+cd(joinpath(@__DIR__, "..", ".."))
+pwd()
 using Revise
 include(joinpath(@__DIR__, "..", "..", "src", "Microweight.jl"))
-import Microweight as mw  # Revise doesn't work for changes to type definitions
+import Main.Microweight as mw  # Revise doesn't work for changes to type definitions
 using Statistics
 # using LineSearches
 
