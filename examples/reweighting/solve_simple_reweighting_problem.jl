@@ -1,9 +1,17 @@
-# from the Microweight folder, in bash:
-#    julia --project=.
+# in terminal (shift-ctrl-tilde):
+#    cd <project folder>
+#    juliaup status (to see default and options)
+#    juliaup release (if needed, or juliaup 1.10.3, or whatever)
+#    julia (an old note said do julia --project=., investigate)
+#    (possibly change julia environment from bottom bar to correspond to default???)
+#    alt-j alt-o to open julia REPL
+# in julia REPL:
+#    ]  (to see what our project environment is; julia environment is shown on bottom bar)
+#    activate .
 
-original_dir = pwd()
-cd(joinpath(@__DIR__, "..", ".."))
-pwd()
+# original_dir = pwd()
+# cd(joinpath(@__DIR__, "..", ".."))
+# pwd()
 using Revise
 include(joinpath(@__DIR__, "..", "..", "src", "Microweight.jl"))
 import Main.Microweight as mw  # Revise doesn't work for changes to type definitions
