@@ -159,7 +159,8 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   rweight=0.5,
   targstop=.01,
   scaling=false,
-  maxiters=1000)
+  maxiters=1000,
+  kwargs...) # default stopval=1e-6
 
   # convert the string nloptfname into a proper symbol
   # NLOPT algorithms that (1) find local optima (L), (2) use derivatives (D) -- i.e., LD -- and
@@ -201,8 +202,15 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   # p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
   # djb todo: pass stopval earlier!!
-  stopval = 1e-12 * size(xmat)[1] * size(xmat)[2] * .6
-  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr_nlopt, stopval=stopval) # , callback=cb_rwminerr cb_test
+  # stopval = 1e-12 * size(xmat)[1] * size(xmat)[2] * .6
+  stopval = get(kwargs, :stopval, nothing)
+  if stopval == nothing
+    stopval = 3e-6
+    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, 
+      callback=cb_rwminerr_nlopt, stopval=stopval, kwargs...) # , callback=cb_rwminerr cb_test
+  else
+    opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr_nlopt; kwargs...) # , callback=cb_rwminerr cb_test
+  end
 
   return opt
 end

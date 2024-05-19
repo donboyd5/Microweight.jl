@@ -202,7 +202,7 @@ function rwsolve(prob;
         if method in nlopt_algorithms
             print_prob()
             println("\nBeginning solve...")
-            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop, scaling=scaling)
+            opt = rwminerr_nlopt(prob.wh, prob.xmat, prob.rwtargets, method=method, lb=lb, ub=ub, rweight=rweight, maxiters=maxiters, targstop=targstop, scaling=scaling; kwargs...)
             println(fieldnames(typeof(opt)))
             # success, :iterations, :eseconds, :objval, :sspd, :rwtargets, :rwtargets_calc, :targ_pdiffs, :targ_pdqtiles, :solver_result, :h, :k, :wh, :xmat, :scaling)
             # (:u, :cache, :alg, :objective, :retcode, :original, :solve_time, :stats)
