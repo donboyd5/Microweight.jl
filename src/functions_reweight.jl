@@ -200,7 +200,9 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   # p_pdiffs = Array{Float64,2}(undef, prob.s, prob.k)
   # p_whpdiffs = Array{Float64,1}(undef, prob.h)
 
-  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr) # , callback=cb_rwminerr cb_test
+  # djb todo: pass stopval earlier!!
+  stopval = 1e-12 * size(xmat)[1] * size(xmat)[2] * .6
+  opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr_nlopt, stopval=stopval) # , callback=cb_rwminerr cb_test
 
   return opt
 end

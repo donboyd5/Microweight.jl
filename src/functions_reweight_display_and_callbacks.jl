@@ -66,6 +66,53 @@ function cb_rwminerr(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiff
     return halt
   end
 
+  function cb_rwminerr_nlopt(ratio, objval, targ_rmse, targpdiffs, ratio_rmse, ratiodiffs, targstop)
+    # we MUST return false for nlopt so this is its own function
+    # list extra variables on the return so that they are available to the callback function
+    # all returned variables must be arguments of the callback function
+    # return objval, targpdiffs, ratiodiffs # values to be used in callback function must be returned here
+    # values other than ratio and objval that are to be used in the callback function must be returned from the objective function
+
+    # declare as global any variables that must persist from one call to the next, and may be changed in the callback
+    # initial values are set in rwsolve() in api.jl 
+    
+    global fcalls  # init val 0
+    global bestobjval  # init val Inf
+    global iter_calc  # init val 0
+
+    fcalls += 1
+    new_iter = false
+  
+    if objval < bestobjval || (fcalls<=5) # && objval > bestobjval)
+        bestobjval = objval
+        iter_calc += 1
+        new_iter = true
+        use_iter = mod(iter_calc, interval) == 0 || iter_calc in (0:2)
+    end
+
+    if !new_iter return false end # don't bother to check stopping criteria
+
+    # get statistics for targets
+    targ_max = maximum(abs.(targpdiffs))
+    targ_ptile = Statistics.quantile!(vec(abs.(targpdiffs)), plevel)
+    #  targ_rmse=targ_rmse,  wtsum_rmse=wtsum_rmse, tot_rmse=tot_rmse,
+
+    # get statistics for ratios
+    ratio_max = maximum(abs.(ratiodiffs))
+    ratio_ptile = Statistics.quantile!(vec(abs.(ratiodiffs)), plevel)
+
+    totseconds = time() - tstart
+
+    if use_iter 
+        rwshow_iter(iter_calc=iter_calc, fcalls=fcalls, totseconds=totseconds, objval=objval,
+                targ_rmse=targ_rmse, targ_max=targ_max, targ_ptile=targ_ptile,
+                ratio_rmse=ratio_rmse, ratio_max=ratio_max, ratio_ptile=ratio_ptile)
+    end
+
+    # halt = targ_max < targstop
+    return false
+  end
+
 
 function rwshow_iter(; iter_calc, fcalls, totseconds, objval, 
     targ_rmse, targ_max, targ_ptile,

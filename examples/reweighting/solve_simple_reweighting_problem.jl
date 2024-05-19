@@ -13,8 +13,10 @@
 # cd(joinpath(@__DIR__, "..", ".."))
 # pwd()
 using Revise
-include(joinpath(@__DIR__, "..", "..", "src", "Microweight.jl"))
-import Main.Microweight as mw  # Revise doesn't work for changes to type definitions
+# include(joinpath(@__DIR__, "..", "..", "src", "Microweight.jl"))
+import Microweight as mw  # Revise doesn't work for changes to type definitions
+# include(joinpath(@__DIR__, "..", "..", "src", "Microweight.jl"))
+# import Main.Microweight as mw  # Revise doesn't work for changes to type definitions
 using Statistics
 # using LineSearches
 
@@ -85,6 +87,7 @@ res1a = mw.rwsolve(tp, approach=:minerr, method="spg", lb=.1, ub=10.0, rweight=1
 quantile(res1a.x)
 qpdiffs(res1a.x)
 
+import Microweight as mw 
 res2 = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=false); # returns ones
 res2a = mw.rwsolve(tp, approach=:minerr, method="LD_CCSAQ", lb=.1, ub=10.0, rweight=1e-6, maxiters=2000, print_interval=10, targstop=0.01, scaling=true);
 cor(res2.x, res2a.x) # returns ones
