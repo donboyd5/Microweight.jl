@@ -205,10 +205,18 @@ function rwminerr_nlopt(wh, xmat, rwtargets;
   # stopval = 1e-12 * size(xmat)[1] * size(xmat)[2] * .6
   stopval = get(kwargs, :stopval, nothing)
   if stopval == nothing
-    stopval = 3e-6
+    # ntargs = size(xmat)[2]
+    # nratios = size(xmat)[1]
+    avgtargerr = .005
+    # avgratioerr = 0.05
+    # stopval = (avgtargerr ^2.) * (1. - rweight) + (avgratioerr^2.) * rweight
+    stopval = (avgtargerr ^2.) * .25
+    println("stopval: ", stopval)
+
     opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, 
       callback=cb_rwminerr_nlopt, stopval=stopval, kwargs...) # , callback=cb_rwminerr cb_test
   else
+    println("stopval: ", stopval)
     opt = Optimization.solve(fprob, NLopt.eval(algorithm), maxiters=maxiters, reltol=1e-16, callback=cb_rwminerr_nlopt; kwargs...) # , callback=cb_rwminerr cb_test
   end
 
